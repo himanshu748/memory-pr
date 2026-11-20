@@ -150,10 +150,20 @@ def run(scenario: str, agent: str, push: bool, base: str) -> None:
         f"{SCENARIOS[scenario]}).\n\n{summary}\n\nThe memory review comments below and sets "
         "the `memory-review` check."
     )
-    url = sh(
-        "gh", "pr", "create", "--base", base.removeprefix("origin/"), "--head", branch,
-        "--title", f"memory: {summary}", "--body", body,
+    created = subprocess.run(
+        ["gh", "pr", "create", "--base", base.removeprefix("origin/"), "--head", branch,
+         "--title", f"memory: {summary}", "--body", body],
+        cwd=ROOT, capture_output=True, text=True,
     )  # fmt: skip
+    if created.returncode != 0:
+        repo = os.environ.get("GITHUB_REPOSITORY", "<owner>/<repo>")
+        sys.exit(
+            f"The branch is pushed but the pull request could not be opened:\n{created.stderr}\n"
+            f"Open it by hand: https://github.com/{repo}/compare/{branch}?expand=1\n"
+            "To let this workflow open pull requests, tick 'Allow GitHub Actions to create and "
+            f"approve pull requests' at https://github.com/{repo}/settings/actions"
+        )
+    url = created.stdout.strip()
     print(url)
     if os.environ.get("GITHUB_ACTIONS"):
         # Pull requests opened with the Actions token do not trigger workflows, so start it.

@@ -32,5 +32,6 @@ jobs:
           cache: pip
       - run: pip install -q -e .
       - name: Agent writes memory and opens a pull request
+        shell: bash  # pipefail, so a failed agent fails the job
         run: |
           python demo/agent.py run --scenario "$SCENARIO" --agent "$AGENT" --push | tee -a "$GITHUB_STEP_SUMMARY"
