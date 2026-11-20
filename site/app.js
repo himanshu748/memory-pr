@@ -62,7 +62,9 @@ function loadDb(graph) {
 /** Read the graph back out of Relate, so the drawing is what the database holds. */
 function readGraph(db, source) {
   const meta = new Map(source.nodes.map((n) => [n.id, n]));
-  const nodes = run(db, 'MATCH (n) RETURN labels(n)[0] AS label, properties(n) AS props').rows.map((row) => {
+  // A note is a labelled node with a name; anything else a visitor creates is left undrawn.
+  const named = 'n.name IS NOT NULL AND size(labels(n)) > 0';
+  const nodes = run(db, `MATCH (n) WHERE ${named} RETURN labels(n)[0] AS label, properties(n) AS props`).rows.map((row) => {
     const { stub, ...props } = row.props;
     const id = `${row.label}/${props.name}`;
     const known = meta.get(id) || {};
@@ -70,7 +72,8 @@ function readGraph(db, source) {
   });
   const rels = run(
     db,
-    'MATCH (a)-[r]->(b) RETURN labels(a)[0] AS al, a.name AS an, type(r) AS type, ' +
+    'MATCH (a)-[r]->(b) WHERE a.name IS NOT NULL AND b.name IS NOT NULL AND size(labels(a)) > 0 AND size(labels(b)) > 0 ' +
+      'RETURN labels(a)[0] AS al, a.name AS an, type(r) AS type, ' +
       'labels(b)[0] AS bl, b.name AS bn, properties(r) AS props',
   ).rows.map((row) => ({ source: `${row.al}/${row.an}`, type: row.type, target: `${row.bl}/${row.bn}`, props: row.props }));
   const order = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
@@ -81,9 +84,12 @@ function readGraph(db, source) {
 
 const rowKey = (row) => JSON.stringify(Object.keys(row).sort().map((k) => [k, row[k]]));
 
-function ruleRows(db) {
+/** A pull request is reviewed with its base branch's rules, which can differ from main's. */
+const rulesOf = (v) => (v && v.pull && v.pull.rules) || data.rules;
+
+function ruleRows(db, rules) {
   const found = new Map();
-  for (const rule of data.rules) {
+  for (const rule of rules) {
     try {
       found.set(rule.id, run(db, rule.cypher).rows);
     } catch {
@@ -115,8 +121,8 @@ function withContext(ids, graph) {
 /** Run every review rule in Relate and keep what the base graph did not already have. */
 function liveFindings(v) {
   const found = [];
-  const now = ruleRows(v.db);
-  for (const rule of data.rules) {
+  const now = ruleRows(v.db, rulesOf(v));
+  for (const rule of rulesOf(v)) {
     for (const row of now.get(rule.id)) {
       if (v.baseline.get(rule.id).has(rowKey(row))) continue;
       found.push({
@@ -138,7 +144,7 @@ function openView(v) {
   if (v.db || !relate) return;
   v.db = loadDb(v.after);
   const base = loadDb(v.before);
-  const rows = ruleRows(base);
+  const rows = ruleRows(base, rulesOf(v));
   base.free();
   // On the memory itself every finding counts; on a pull request only the new ones do.
   v.baseline = new Map([...rows].map(([id, r]) => [id, new Set(v.pull ? r.map(rowKey) : [])]));
@@ -238,13 +244,13 @@ function nodeLabel(n) {
   if (n.label === 'Fact') {
     if (n.empty) return `${n.props.name}\n(empty note)`;
     if (n.stub) return `${n.props.name}\n(no note)`;
-    return `${n.props.predicate}\n${n.props.value}`;
+    return `${n.props.predicate ?? n.props.name}\n${n.props.value ?? ''}`.trim();
   }
   if (n.label === 'Source') {
     const text = n.props.uri ? n.props.uri.split('/').slice(-2).join('/') : n.props.name;
     return n.stub ? `${text}\n(no note)` : text;
   }
-  return n.stub ? `${n.props.name}\n(no note)` : n.props.name;
+  return n.stub ? `${n.props.name}\n(no note)` : String(n.props.name);
 }
 
 function draw({ relayout = false } = {}) {
@@ -459,14 +465,14 @@ function renderReview() {
 function liveLine(v, list) {
   if (v.edited) {
     return (
-      `<p class="live edited">You changed this graph. Relate re-ran the ${data.rules.length} review rules: ` +
+      `<p class="live edited">You changed this graph. Relate re-ran the ${rulesOf(view).length} review rules: ` +
       `${list.length ? plural(list.length, 'problem', 'problems') + ' now' : 'no problems now'}.</p>`
     );
   }
   const exported = v.pull.problems.filter((p) => p.kind === 'finding').length;
   const same = exported === v.live.length;
   return (
-    `<p class="live ${same ? '' : 'edited'}">Relate ran the ${data.rules.length} review rules in this page ` +
+    `<p class="live ${same ? '' : 'edited'}">Relate ran the ${rulesOf(view).length} review rules in this page ` +
     `${same ? 'and got the same result as' : `and found ${v.live.length}, against ${exported} from`} <code>mempr check</code>.</p>`
   );
 }
@@ -580,6 +586,8 @@ const EXAMPLES = [
     'Services on the same database',
     "MATCH (a:Fact {predicate: 'database'})-[:ABOUT]->(x:Entity),\n      (b:Fact {predicate: 'database'})-[:ABOUT]->(y:Entity)\n" +
       "WHERE a.value = b.value AND x.name < y.name AND a.status = 'active' AND b.status = 'active'\n" +
+      "  AND NOT EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(a) WHERE n.status = 'active' }\n" +
+      "  AND NOT EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(b) WHERE n.status = 'active' }\n" +
       'RETURN x, y, a.value AS database',
   ],
   ['Facts per agent', 'MATCH (f:Fact)-[:ASSERTED_BY]->(a:Agent)\nRETURN a.name AS agent, count(f) AS facts\nORDER BY facts DESC'],

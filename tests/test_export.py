@@ -140,3 +140,19 @@ def test_site_demo_data_shows_every_scenario_and_matches_memory():
     assert committed == json.loads(json.dumps(built)), (
         "memory/ or the demo agents changed: run `python demo/build_site.py` and commit the result"
     )
+
+
+def test_pull_with_its_own_base_carries_that_base_rules(repo):
+    rule = "- id: no-node\n  title: t\n  message: m\n  severity: block\n  cypher: |\n"
+    rule += "    MATCH (f:Fact) WHERE f.value STARTS WITH 'node' RETURN f.name AS fact\n"
+    repo.branch("release")
+    (repo.path / "memory-rules.yaml").write_text(rule)
+    repo.commit("release rule")
+    repo.branch("agent/ok", "release")
+    repo.add("ledger-worker", "runtime", "node-20")
+    repo.commit("runtime")
+    data = run(repo, "release..agent/ok")
+    (pull,) = data["pulls"]
+    assert "no-node" not in {r["id"] for r in data["rules"]}
+    assert "no-node" in {r["id"] for r in pull["rules"]}
+    assert any(p.get("rule") == "no-node" for p in pull["problems"])

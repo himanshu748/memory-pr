@@ -188,6 +188,8 @@ def export(repo: Path, rev: str, pulls: list[str], vault: str, rules_file: str) 
             pull = export_pull(repo, base, head, vault, rules, Path(tmp) / f"pull-{i}")
             if pull["review"]["base"] == sha:
                 del pull["before"]  # same graph as `memory`
+            else:
+                pull["rules"] = [vars(rule) for rule in rules]  # may differ from `rev`'s
             out["pulls"].append(pull)
     rules = load_rules(gitutil.read_file(repo, rev, rules_file))
     out["rules"] = [vars(rule) for rule in rules]
