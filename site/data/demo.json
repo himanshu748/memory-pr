@@ -151,9 +151,10 @@
      "name": "payments-api--database--postgres-15",
      "predicate": "database",
      "status": "active",
-     "value": "postgres-15"
+     "value": "postgres-15",
+     "verified": "by-auditor"
     },
-    "text": "---\ntype: Fact\nname: payments-api--database--postgres-15\npredicate: database\nstatus: active\nvalue: postgres-15\nABOUT:\n  - \"[[Entity/payments-api]]\"\nASSERTED_BY:\n  - \"[[Agent/scout]]\"\nSOURCE:\n  - \"[[Source/demo-project-services-payments-api-service-yaml]]\"\n---\n\npayments-api database: postgres-15\n"
+    "text": "---\ntype: Fact\nname: payments-api--database--postgres-15\npredicate: database\nstatus: active\nverified: by-auditor\nvalue: postgres-15\nABOUT:\n  - \"[[Entity/payments-api]]\"\nASSERTED_BY:\n  - \"[[Agent/scout]]\"\nSOURCE:\n  - \"[[Source/demo-project-services-payments-api-service-yaml]]\"\n---\n\npayments-api database: postgres-15\n"
    },
    {
     "file": "memory/Fact/payments-api--migration-tool--pg-migrate.md",
@@ -709,9 +710,10 @@
        "name": "payments-api--database--postgres-15",
        "predicate": "database",
        "status": "active",
-       "value": "postgres-15"
+       "value": "postgres-15",
+       "verified": "by-auditor"
       },
-      "text": "---\ntype: Fact\nname: payments-api--database--postgres-15\npredicate: database\nstatus: active\nvalue: postgres-15\nABOUT:\n  - \"[[Entity/payments-api]]\"\nASSERTED_BY:\n  - \"[[Agent/scout]]\"\nSOURCE:\n  - \"[[Source/demo-project-services-payments-api-service-yaml]]\"\n---\n\npayments-api database: postgres-15\n"
+      "text": "---\ntype: Fact\nname: payments-api--database--postgres-15\npredicate: database\nstatus: active\nvalue: postgres-15\nverified: by-auditor\nABOUT:\n  - \"[[Entity/payments-api]]\"\nASSERTED_BY:\n  - \"[[Agent/scout]]\"\nSOURCE:\n  - \"[[Source/demo-project-services-payments-api-service-yaml]]\"\n---\n\npayments-api database: postgres-15\n"
      },
      {
       "file": "memory/Fact/payments-api--migration-tool--pg-migrate.md",
@@ -1122,7 +1124,7 @@
    },
    "author": "builder-agent",
    "blocked": true,
-   "comment": "<!-- mempr-review -->\n## Memory review: blocked (1 problem)\n\nThis pull request adds **3 notes, 3 links, 5 properties** and removes **nothing** in the memory graph.\n\n### 1. Contradicts a fact already in memory\n`payments-api` has two active values for `database`: `mysql-8` (Fact/payments-api--database--mysql-8) and `postgres-15` (Fact/payments-api--database--postgres-15). Path: (Fact/payments-api--database--mysql-8)-[:ABOUT]->(Entity/payments-api)<-[:ABOUT]-(Fact/payments-api--database--postgres-15)\n\nFix: If the new value replaces the old one, add `SUPERSEDES: - \"[[Fact/<old>]]\"` to the new fact. If the old one is right, drop the new fact.\n\n<details><summary>Graph changes in this pull request</summary>\n\n- added note `Agent/builder`\n- added note `Fact/payments-api--database--mysql-8`\n- added note `Source/demo-project-docs-legacy-payments-api-md`\n- added `Fact/payments-api--database--mysql-8` -[:ABOUT]-> `Entity/payments-api`\n- added `Fact/payments-api--database--mysql-8` -[:ASSERTED_BY]-> `Agent/builder`\n- added `Fact/payments-api--database--mysql-8` -[:SOURCE]-> `Source/demo-project-docs-legacy-payments-api-md`\n- added `Fact/payments-api--database--mysql-8`.body = `payments-api keeps its data in MySQL 8.`\n- added `Fact/payments-api--database--mysql-8`.predicate = `database`\n- added `Fact/payments-api--database--mysql-8`.status = `active`\n- added `Fact/payments-api--database--mysql-8`.value = `mysql-8`\n- added `Source/demo-project-docs-legacy-payments-api-md`.uri = `demo/project/docs/legacy/payments-api.md`\n\n</details>\n\n<sub>Checked by mempr with Relate: base `02938d9`, head `c05cb55`, common ancestor `02938d9`. Each rule is a Cypher query over the merged graph.</sub>\n",
+   "comment": "<!-- mempr-review -->\n## Memory review: blocked (1 problem)\n\nThis pull request adds **3 notes, 3 links, 5 properties** and removes **nothing** in the memory graph.\n\n### 1. Contradicts a fact already in memory\n`payments-api` has two active values for `database`: `mysql-8` (Fact/payments-api--database--mysql-8) and `postgres-15` (Fact/payments-api--database--postgres-15). Path: (Fact/payments-api--database--mysql-8)-[:ABOUT]->(Entity/payments-api)<-[:ABOUT]-(Fact/payments-api--database--postgres-15)\n\nFix: If the new value replaces the old one, add `SUPERSEDES: - \"[[Fact/<old>]]\"` to the new fact. If the old one is right, drop the new fact.\n\n<details><summary>Graph changes in this pull request</summary>\n\n- added note `Agent/builder`\n- added note `Fact/payments-api--database--mysql-8`\n- added note `Source/demo-project-docs-legacy-payments-api-md`\n- added `Fact/payments-api--database--mysql-8` -[:ABOUT]-> `Entity/payments-api`\n- added `Fact/payments-api--database--mysql-8` -[:ASSERTED_BY]-> `Agent/builder`\n- added `Fact/payments-api--database--mysql-8` -[:SOURCE]-> `Source/demo-project-docs-legacy-payments-api-md`\n- added `Fact/payments-api--database--mysql-8`.body = `payments-api keeps its data in MySQL 8.`\n- added `Fact/payments-api--database--mysql-8`.predicate = `database`\n- added `Fact/payments-api--database--mysql-8`.status = `active`\n- added `Fact/payments-api--database--mysql-8`.value = `mysql-8`\n- added `Source/demo-project-docs-legacy-payments-api-md`.uri = `demo/project/docs/legacy/payments-api.md`\n\n</details>\n\n<sub>Checked by mempr with Relate: base `563a959`, head `b8207ef`, common ancestor `563a959`. Each rule is a Cypher query over the merged graph.</sub>\n",
    "description": "trusts an outdated design note and contradicts memory",
    "id": "agent/builder-contradiction",
    "problems": [
@@ -1218,7 +1220,7 @@
       "{}"
      ]
     ],
-    "base": "02938d90c3feac6aa360f206dac738e4bab5e43d",
+    "base": "563a959cb09caaaef34b4597fd8eefda2a764e65",
     "blocked": true,
     "dropped": [],
     "file_issues": [],
@@ -1238,8 +1240,8 @@
      }
     ],
     "git_conflicts": [],
-    "head": "c05cb5542acac2c04598e35a93776bd3d78925d8",
-    "merge_base": "02938d90c3feac6aa360f206dac738e4bab5e43d",
+    "head": "b8207ef2d26b90bdb5cffbde169e1279e9694944",
+    "merge_base": "563a959cb09caaaef34b4597fd8eefda2a764e65",
     "problems": 1,
     "property_conflicts": [],
     "removed": []
@@ -1420,9 +1422,10 @@
        "name": "payments-api--database--postgres-15",
        "predicate": "database",
        "status": "active",
-       "value": "postgres-15"
+       "value": "postgres-15",
+       "verified": "by-auditor"
       },
-      "text": "---\ntype: Fact\nname: payments-api--database--postgres-15\npredicate: database\nstatus: active\nvalue: postgres-15\nABOUT:\n  - \"[[Entity/payments-api]]\"\nASSERTED_BY:\n  - \"[[Agent/scout]]\"\nSOURCE:\n  - \"[[Source/demo-project-services-payments-api-service-yaml]]\"\n---\n\npayments-api database: postgres-15\n"
+      "text": "---\ntype: Fact\nname: payments-api--database--postgres-15\npredicate: database\nstatus: active\nvalue: postgres-15\nverified: by-auditor\nABOUT:\n  - \"[[Entity/payments-api]]\"\nASSERTED_BY:\n  - \"[[Agent/scout]]\"\nSOURCE:\n  - \"[[Source/demo-project-services-payments-api-service-yaml]]\"\n---\n\npayments-api database: postgres-15\n"
      },
      {
       "file": "memory/Fact/payments-api--migration-tool--pg-migrate.md",
@@ -1839,7 +1842,7 @@
    },
    "author": "planner-agent",
    "blocked": true,
-   "comment": "<!-- mempr-review -->\n## Memory review: blocked (3 problems)\n\nThis pull request adds **3 notes, 4 links, 5 properties** and removes **nothing** in the memory graph.\n\n### 1. Rests on a fact that was retracted or replaced\nFact/payments-api--backup-job--nightly-pg-dump is active but is derived, 1 step(s) away, from Fact/payments-api--database--postgres-15, which is superseded. Path: Fact/payments-api--backup-job--nightly-pg-dump -[:DERIVED_FROM]-> Fact/payments-api--database--postgres-15\n\nFix: Re-check the derived fact against the current value, then either retract it or point `DERIVED_FROM` at the fact that replaced the old one.\n\n### 2. Rests on a fact that was retracted or replaced\nFact/payments-api--migration-tool--pg-migrate is active but is derived, 1 step(s) away, from Fact/payments-api--database--postgres-15, which is superseded. Path: Fact/payments-api--migration-tool--pg-migrate -[:DERIVED_FROM]-> Fact/payments-api--database--postgres-15\n\nFix: Re-check the derived fact against the current value, then either retract it or point `DERIVED_FROM` at the fact that replaced the old one.\n\n### 3. Rests on a fact that was retracted or replaced\nFact/payments-api--restore-drill--quarterly-pg-restore is active but is derived, 2 step(s) away, from Fact/payments-api--database--postgres-15, which is superseded. Path: Fact/payments-api--restore-drill--quarterly-pg-restore -[:DERIVED_FROM]-> Fact/payments-api--backup-job--nightly-pg-dump -[:DERIVED_FROM]-> Fact/payments-api--database--postgres-15\n\nFix: Re-check the derived fact against the current value, then either retract it or point `DERIVED_FROM` at the fact that replaced the old one.\n\n<details><summary>Graph changes in this pull request</summary>\n\n- added note `Agent/planner`\n- added note `Fact/payments-api--database--cockroachdb-24`\n- added note `Source/demo-project-docs-migration-2026-md`\n- added `Fact/payments-api--database--cockroachdb-24` -[:ABOUT]-> `Entity/payments-api`\n- added `Fact/payments-api--database--cockroachdb-24` -[:ASSERTED_BY]-> `Agent/planner`\n- added `Fact/payments-api--database--cockroachdb-24` -[:SOURCE]-> `Source/demo-project-docs-migration-2026-md`\n- added `Fact/payments-api--database--cockroachdb-24` -[:SUPERSEDES]-> `Fact/payments-api--database--postgres-15`\n- added `Fact/payments-api--database--cockroachdb-24`.body = `payments-api moves to CockroachDB 24.`\n- added `Fact/payments-api--database--cockroachdb-24`.predicate = `database`\n- added `Fact/payments-api--database--cockroachdb-24`.status = `active`\n- added `Fact/payments-api--database--cockroachdb-24`.value = `cockroachdb-24`\n- added `Source/demo-project-docs-migration-2026-md`.uri = `demo/project/docs/migration-2026.md`\n\n</details>\n\n<sub>Checked by mempr with Relate: base `02938d9`, head `12a9a00`, common ancestor `02938d9`. Each rule is a Cypher query over the merged graph.</sub>\n",
+   "comment": "<!-- mempr-review -->\n## Memory review: blocked (3 problems)\n\nThis pull request adds **3 notes, 4 links, 5 properties** and removes **nothing** in the memory graph.\n\n### 1. Rests on a fact that was retracted or replaced\nFact/payments-api--backup-job--nightly-pg-dump is active but is derived, 1 step(s) away, from Fact/payments-api--database--postgres-15, which is superseded. Path: Fact/payments-api--backup-job--nightly-pg-dump -[:DERIVED_FROM]-> Fact/payments-api--database--postgres-15\n\nFix: Re-check the derived fact against the current value, then either retract it or point `DERIVED_FROM` at the fact that replaced the old one.\n\n### 2. Rests on a fact that was retracted or replaced\nFact/payments-api--migration-tool--pg-migrate is active but is derived, 1 step(s) away, from Fact/payments-api--database--postgres-15, which is superseded. Path: Fact/payments-api--migration-tool--pg-migrate -[:DERIVED_FROM]-> Fact/payments-api--database--postgres-15\n\nFix: Re-check the derived fact against the current value, then either retract it or point `DERIVED_FROM` at the fact that replaced the old one.\n\n### 3. Rests on a fact that was retracted or replaced\nFact/payments-api--restore-drill--quarterly-pg-restore is active but is derived, 2 step(s) away, from Fact/payments-api--database--postgres-15, which is superseded. Path: Fact/payments-api--restore-drill--quarterly-pg-restore -[:DERIVED_FROM]-> Fact/payments-api--backup-job--nightly-pg-dump -[:DERIVED_FROM]-> Fact/payments-api--database--postgres-15\n\nFix: Re-check the derived fact against the current value, then either retract it or point `DERIVED_FROM` at the fact that replaced the old one.\n\n<details><summary>Graph changes in this pull request</summary>\n\n- added note `Agent/planner`\n- added note `Fact/payments-api--database--cockroachdb-24`\n- added note `Source/demo-project-docs-migration-2026-md`\n- added `Fact/payments-api--database--cockroachdb-24` -[:ABOUT]-> `Entity/payments-api`\n- added `Fact/payments-api--database--cockroachdb-24` -[:ASSERTED_BY]-> `Agent/planner`\n- added `Fact/payments-api--database--cockroachdb-24` -[:SOURCE]-> `Source/demo-project-docs-migration-2026-md`\n- added `Fact/payments-api--database--cockroachdb-24` -[:SUPERSEDES]-> `Fact/payments-api--database--postgres-15`\n- added `Fact/payments-api--database--cockroachdb-24`.body = `payments-api moves to CockroachDB 24.`\n- added `Fact/payments-api--database--cockroachdb-24`.predicate = `database`\n- added `Fact/payments-api--database--cockroachdb-24`.status = `active`\n- added `Fact/payments-api--database--cockroachdb-24`.value = `cockroachdb-24`\n- added `Source/demo-project-docs-migration-2026-md`.uri = `demo/project/docs/migration-2026.md`\n\n</details>\n\n<sub>Checked by mempr with Relate: base `563a959`, head `02c9c44`, common ancestor `563a959`. Each rule is a Cypher query over the merged graph.</sub>\n",
    "description": "records a database move but forgets the facts derived from the old one",
    "id": "agent/planner-supersede",
    "problems": [
@@ -1998,7 +2001,7 @@
       "{}"
      ]
     ],
-    "base": "02938d90c3feac6aa360f206dac738e4bab5e43d",
+    "base": "563a959cb09caaaef34b4597fd8eefda2a764e65",
     "blocked": true,
     "dropped": [],
     "file_issues": [],
@@ -2041,8 +2044,8 @@
      }
     ],
     "git_conflicts": [],
-    "head": "12a9a00c0564faed1b90b961411b234f6267c763",
-    "merge_base": "02938d90c3feac6aa360f206dac738e4bab5e43d",
+    "head": "02c9c4425e671bdd199642befddb4f4c8dd3588c",
+    "merge_base": "563a959cb09caaaef34b4597fd8eefda2a764e65",
     "problems": 3,
     "property_conflicts": [],
     "removed": []
@@ -2196,14 +2199,14 @@
       "file": "memory/Fact/payments-api--database--postgres-15.md",
       "id": "Fact/payments-api--database--postgres-15",
       "issues": [
-       "key `verified` is set twice (lines 3 and 14); Relate reads this note as empty"
+       "key `verified` is set twice (lines 3 and 7); Relate reads this note as empty"
       ],
       "label": "Fact",
       "props": {
        "body": "payments-api database: postgres-15",
        "name": "payments-api--database--postgres-15"
       },
-      "text": "---\ntype: Fact\nverified: by-auditor\nname: payments-api--database--postgres-15\npredicate: database\nstatus: active\nvalue: postgres-15\nABOUT:\n  - \"[[Entity/payments-api]]\"\nASSERTED_BY:\n  - \"[[Agent/scout]]\"\nSOURCE:\n  - \"[[Source/demo-project-services-payments-api-service-yaml]]\"\nverified: by-scout\n---\n\npayments-api database: postgres-15\n"
+      "text": "---\ntype: Fact\nverified: by-auditor\nname: payments-api--database--postgres-15\npredicate: database\nstatus: active\nverified: by-auditor\nvalue: postgres-15\nABOUT:\n  - \"[[Entity/payments-api]]\"\nASSERTED_BY:\n  - \"[[Agent/scout]]\"\nSOURCE:\n  - \"[[Source/demo-project-services-payments-api-service-yaml]]\"\n---\n\npayments-api database: postgres-15\n"
      },
      {
       "file": "memory/Fact/payments-api--migration-tool--pg-migrate.md",
@@ -2567,556 +2570,11 @@
     ]
    },
    "author": "auditor-agent",
-   "before": {
-    "nodes": [
-     {
-      "file": "memory/Agent/scout.md",
-      "id": "Agent/scout",
-      "label": "Agent",
-      "props": {
-       "name": "scout"
-      },
-      "text": "---\ntype: Agent\nname: scout\n---\n"
-     },
-     {
-      "file": "memory/Entity/checkout-web.md",
-      "id": "Entity/checkout-web",
-      "label": "Entity",
-      "props": {
-       "name": "checkout-web"
-      },
-      "text": "---\ntype: Entity\nname: checkout-web\n---\n"
-     },
-     {
-      "file": "memory/Entity/ledger-worker.md",
-      "id": "Entity/ledger-worker",
-      "label": "Entity",
-      "props": {
-       "name": "ledger-worker"
-      },
-      "text": "---\ntype: Entity\nname: ledger-worker\n---\n"
-     },
-     {
-      "file": "memory/Entity/payments-api.md",
-      "id": "Entity/payments-api",
-      "label": "Entity",
-      "props": {
-       "name": "payments-api"
-      },
-      "text": "---\ntype: Entity\nname: payments-api\n---\n"
-     },
-     {
-      "file": "memory/Fact/checkout-web--owner--team-storefront.md",
-      "id": "Fact/checkout-web--owner--team-storefront",
-      "label": "Fact",
-      "props": {
-       "body": "checkout-web owner: team-storefront",
-       "name": "checkout-web--owner--team-storefront",
-       "predicate": "owner",
-       "status": "active",
-       "value": "team-storefront"
-      },
-      "text": "---\ntype: Fact\nname: checkout-web--owner--team-storefront\npredicate: owner\nstatus: active\nvalue: team-storefront\nABOUT:\n  - \"[[Entity/checkout-web]]\"\nASSERTED_BY:\n  - \"[[Agent/scout]]\"\nSOURCE:\n  - \"[[Source/demo-project-services-checkout-web-service-yaml]]\"\n---\n\ncheckout-web owner: team-storefront\n"
-     },
-     {
-      "file": "memory/Fact/checkout-web--port--3000.md",
-      "id": "Fact/checkout-web--port--3000",
-      "label": "Fact",
-      "props": {
-       "body": "checkout-web port: 3000",
-       "name": "checkout-web--port--3000",
-       "predicate": "port",
-       "status": "active",
-       "value": "3000"
-      },
-      "text": "---\ntype: Fact\nname: checkout-web--port--3000\npredicate: port\nstatus: active\nvalue: \"3000\"\nABOUT:\n  - \"[[Entity/checkout-web]]\"\nASSERTED_BY:\n  - \"[[Agent/scout]]\"\nSOURCE:\n  - \"[[Source/demo-project-services-checkout-web-service-yaml]]\"\n---\n\ncheckout-web port: 3000\n"
-     },
-     {
-      "file": "memory/Fact/checkout-web--runtime--node-22.md",
-      "id": "Fact/checkout-web--runtime--node-22",
-      "label": "Fact",
-      "props": {
-       "body": "checkout-web runtime: node-22",
-       "name": "checkout-web--runtime--node-22",
-       "predicate": "runtime",
-       "status": "active",
-       "value": "node-22"
-      },
-      "text": "---\ntype: Fact\nname: checkout-web--runtime--node-22\npredicate: runtime\nstatus: active\nvalue: node-22\nABOUT:\n  - \"[[Entity/checkout-web]]\"\nASSERTED_BY:\n  - \"[[Agent/scout]]\"\nSOURCE:\n  - \"[[Source/demo-project-services-checkout-web-service-yaml]]\"\n---\n\ncheckout-web runtime: node-22\n"
-     },
-     {
-      "file": "memory/Fact/ledger-worker--database--postgres-15.md",
-      "id": "Fact/ledger-worker--database--postgres-15",
-      "label": "Fact",
-      "props": {
-       "body": "ledger-worker database: postgres-15",
-       "name": "ledger-worker--database--postgres-15",
-       "predicate": "database",
-       "status": "active",
-       "value": "postgres-15"
-      },
-      "text": "---\ntype: Fact\nname: ledger-worker--database--postgres-15\npredicate: database\nstatus: active\nvalue: postgres-15\nABOUT:\n  - \"[[Entity/ledger-worker]]\"\nASSERTED_BY:\n  - \"[[Agent/scout]]\"\nSOURCE:\n  - \"[[Source/demo-project-services-ledger-worker-service-yaml]]\"\n---\n\nledger-worker database: postgres-15\n"
-     },
-     {
-      "file": "memory/Fact/ledger-worker--owner--team-payments.md",
-      "id": "Fact/ledger-worker--owner--team-payments",
-      "label": "Fact",
-      "props": {
-       "body": "ledger-worker owner: team-payments",
-       "name": "ledger-worker--owner--team-payments",
-       "predicate": "owner",
-       "status": "active",
-       "value": "team-payments"
-      },
-      "text": "---\ntype: Fact\nname: ledger-worker--owner--team-payments\npredicate: owner\nstatus: active\nvalue: team-payments\nABOUT:\n  - \"[[Entity/ledger-worker]]\"\nASSERTED_BY:\n  - \"[[Agent/scout]]\"\nSOURCE:\n  - \"[[Source/demo-project-services-ledger-worker-service-yaml]]\"\n---\n\nledger-worker owner: team-payments\n"
-     },
-     {
-      "file": "memory/Fact/ledger-worker--queue--kafka.md",
-      "id": "Fact/ledger-worker--queue--kafka",
-      "label": "Fact",
-      "props": {
-       "body": "ledger-worker queue: kafka",
-       "name": "ledger-worker--queue--kafka",
-       "predicate": "queue",
-       "status": "active",
-       "value": "kafka"
-      },
-      "text": "---\ntype: Fact\nname: ledger-worker--queue--kafka\npredicate: queue\nstatus: active\nvalue: kafka\nABOUT:\n  - \"[[Entity/ledger-worker]]\"\nASSERTED_BY:\n  - \"[[Agent/scout]]\"\nSOURCE:\n  - \"[[Source/demo-project-services-ledger-worker-service-yaml]]\"\n---\n\nledger-worker queue: kafka\n"
-     },
-     {
-      "file": "memory/Fact/ledger-worker--runtime--go-1-23.md",
-      "id": "Fact/ledger-worker--runtime--go-1-23",
-      "label": "Fact",
-      "props": {
-       "body": "ledger-worker runtime: go-1.23",
-       "name": "ledger-worker--runtime--go-1-23",
-       "predicate": "runtime",
-       "status": "active",
-       "value": "go-1.23"
-      },
-      "text": "---\ntype: Fact\nname: ledger-worker--runtime--go-1-23\npredicate: runtime\nstatus: active\nvalue: go-1.23\nABOUT:\n  - \"[[Entity/ledger-worker]]\"\nASSERTED_BY:\n  - \"[[Agent/scout]]\"\nSOURCE:\n  - \"[[Source/demo-project-services-ledger-worker-service-yaml]]\"\n---\n\nledger-worker runtime: go-1.23\n"
-     },
-     {
-      "file": "memory/Fact/payments-api--backup-job--nightly-pg-dump.md",
-      "id": "Fact/payments-api--backup-job--nightly-pg-dump",
-      "label": "Fact",
-      "props": {
-       "body": "payments-api backup-job: nightly-pg-dump",
-       "name": "payments-api--backup-job--nightly-pg-dump",
-       "predicate": "backup-job",
-       "status": "active",
-       "value": "nightly-pg-dump"
-      },
-      "text": "---\ntype: Fact\nname: payments-api--backup-job--nightly-pg-dump\npredicate: backup-job\nstatus: active\nvalue: nightly-pg-dump\nABOUT:\n  - \"[[Entity/payments-api]]\"\nASSERTED_BY:\n  - \"[[Agent/scout]]\"\nDERIVED_FROM:\n  - \"[[Fact/payments-api--database--postgres-15]]\"\nSOURCE:\n  - \"[[Source/demo-project-services-payments-api-service-yaml]]\"\n---\n\npayments-api backup-job: nightly-pg-dump\n"
-     },
-     {
-      "file": "memory/Fact/payments-api--database--postgres-15.md",
-      "id": "Fact/payments-api--database--postgres-15",
-      "label": "Fact",
-      "props": {
-       "body": "payments-api database: postgres-15",
-       "name": "payments-api--database--postgres-15",
-       "predicate": "database",
-       "status": "active",
-       "value": "postgres-15",
-       "verified": "by-scout"
-      },
-      "text": "---\ntype: Fact\nname: payments-api--database--postgres-15\npredicate: database\nstatus: active\nvalue: postgres-15\nABOUT:\n  - \"[[Entity/payments-api]]\"\nASSERTED_BY:\n  - \"[[Agent/scout]]\"\nSOURCE:\n  - \"[[Source/demo-project-services-payments-api-service-yaml]]\"\nverified: by-scout\n---\n\npayments-api database: postgres-15\n"
-     },
-     {
-      "file": "memory/Fact/payments-api--migration-tool--pg-migrate.md",
-      "id": "Fact/payments-api--migration-tool--pg-migrate",
-      "label": "Fact",
-      "props": {
-       "body": "payments-api migration-tool: pg-migrate",
-       "name": "payments-api--migration-tool--pg-migrate",
-       "predicate": "migration-tool",
-       "status": "active",
-       "value": "pg-migrate"
-      },
-      "text": "---\ntype: Fact\nname: payments-api--migration-tool--pg-migrate\npredicate: migration-tool\nstatus: active\nvalue: pg-migrate\nABOUT:\n  - \"[[Entity/payments-api]]\"\nASSERTED_BY:\n  - \"[[Agent/scout]]\"\nDERIVED_FROM:\n  - \"[[Fact/payments-api--database--postgres-15]]\"\nSOURCE:\n  - \"[[Source/demo-project-services-payments-api-service-yaml]]\"\n---\n\npayments-api migration-tool: pg-migrate\n"
-     },
-     {
-      "file": "memory/Fact/payments-api--owner--team-payments.md",
-      "id": "Fact/payments-api--owner--team-payments",
-      "label": "Fact",
-      "props": {
-       "body": "payments-api owner: team-payments",
-       "name": "payments-api--owner--team-payments",
-       "predicate": "owner",
-       "status": "active",
-       "value": "team-payments"
-      },
-      "text": "---\ntype: Fact\nname: payments-api--owner--team-payments\npredicate: owner\nstatus: active\nvalue: team-payments\nABOUT:\n  - \"[[Entity/payments-api]]\"\nASSERTED_BY:\n  - \"[[Agent/scout]]\"\nSOURCE:\n  - \"[[Source/demo-project-services-payments-api-service-yaml]]\"\n---\n\npayments-api owner: team-payments\n"
-     },
-     {
-      "file": "memory/Fact/payments-api--queue--kafka.md",
-      "id": "Fact/payments-api--queue--kafka",
-      "label": "Fact",
-      "props": {
-       "body": "payments-api queue: kafka",
-       "name": "payments-api--queue--kafka",
-       "predicate": "queue",
-       "status": "active",
-       "value": "kafka"
-      },
-      "text": "---\ntype: Fact\nname: payments-api--queue--kafka\npredicate: queue\nstatus: active\nvalue: kafka\nABOUT:\n  - \"[[Entity/payments-api]]\"\nASSERTED_BY:\n  - \"[[Agent/scout]]\"\nSOURCE:\n  - \"[[Source/demo-project-services-payments-api-service-yaml]]\"\n---\n\npayments-api queue: kafka\n"
-     },
-     {
-      "file": "memory/Fact/payments-api--restore-drill--quarterly-pg-restore.md",
-      "id": "Fact/payments-api--restore-drill--quarterly-pg-restore",
-      "label": "Fact",
-      "props": {
-       "body": "payments-api restore-drill: quarterly-pg-restore",
-       "name": "payments-api--restore-drill--quarterly-pg-restore",
-       "predicate": "restore-drill",
-       "status": "active",
-       "value": "quarterly-pg-restore"
-      },
-      "text": "---\ntype: Fact\nname: payments-api--restore-drill--quarterly-pg-restore\npredicate: restore-drill\nstatus: active\nvalue: quarterly-pg-restore\nABOUT:\n  - \"[[Entity/payments-api]]\"\nASSERTED_BY:\n  - \"[[Agent/scout]]\"\nDERIVED_FROM:\n  - \"[[Fact/payments-api--backup-job--nightly-pg-dump]]\"\nSOURCE:\n  - \"[[Source/demo-project-services-payments-api-service-yaml]]\"\n---\n\npayments-api restore-drill: quarterly-pg-restore\n"
-     },
-     {
-      "file": "memory/Fact/payments-api--runtime--python-3-12.md",
-      "id": "Fact/payments-api--runtime--python-3-12",
-      "label": "Fact",
-      "props": {
-       "body": "payments-api runtime: python-3.12",
-       "name": "payments-api--runtime--python-3-12",
-       "predicate": "runtime",
-       "status": "active",
-       "value": "python-3.12"
-      },
-      "text": "---\ntype: Fact\nname: payments-api--runtime--python-3-12\npredicate: runtime\nstatus: active\nvalue: python-3.12\nABOUT:\n  - \"[[Entity/payments-api]]\"\nASSERTED_BY:\n  - \"[[Agent/scout]]\"\nSOURCE:\n  - \"[[Source/demo-project-services-payments-api-service-yaml]]\"\n---\n\npayments-api runtime: python-3.12\n"
-     },
-     {
-      "file": "memory/Predicate/owner.md",
-      "id": "Predicate/owner",
-      "label": "Predicate",
-      "props": {
-       "cardinality": "many",
-       "name": "owner"
-      },
-      "text": "---\ntype: Predicate\nname: owner\ncardinality: many\n---\n"
-     },
-     {
-      "file": "memory/Source/demo-project-services-checkout-web-service-yaml.md",
-      "id": "Source/demo-project-services-checkout-web-service-yaml",
-      "label": "Source",
-      "props": {
-       "name": "demo-project-services-checkout-web-service-yaml",
-       "uri": "demo/project/services/checkout-web/service.yaml"
-      },
-      "text": "---\ntype: Source\nname: demo-project-services-checkout-web-service-yaml\nuri: demo/project/services/checkout-web/service.yaml\n---\n"
-     },
-     {
-      "file": "memory/Source/demo-project-services-ledger-worker-service-yaml.md",
-      "id": "Source/demo-project-services-ledger-worker-service-yaml",
-      "label": "Source",
-      "props": {
-       "name": "demo-project-services-ledger-worker-service-yaml",
-       "uri": "demo/project/services/ledger-worker/service.yaml"
-      },
-      "text": "---\ntype: Source\nname: demo-project-services-ledger-worker-service-yaml\nuri: demo/project/services/ledger-worker/service.yaml\n---\n"
-     },
-     {
-      "file": "memory/Source/demo-project-services-payments-api-service-yaml.md",
-      "id": "Source/demo-project-services-payments-api-service-yaml",
-      "label": "Source",
-      "props": {
-       "name": "demo-project-services-payments-api-service-yaml",
-       "uri": "demo/project/services/payments-api/service.yaml"
-      },
-      "text": "---\ntype: Source\nname: demo-project-services-payments-api-service-yaml\nuri: demo/project/services/payments-api/service.yaml\n---\n"
-     }
-    ],
-    "rels": [
-     {
-      "props": {},
-      "source": "Fact/checkout-web--owner--team-storefront",
-      "target": "Entity/checkout-web",
-      "type": "ABOUT"
-     },
-     {
-      "props": {},
-      "source": "Fact/checkout-web--owner--team-storefront",
-      "target": "Agent/scout",
-      "type": "ASSERTED_BY"
-     },
-     {
-      "props": {},
-      "source": "Fact/checkout-web--owner--team-storefront",
-      "target": "Source/demo-project-services-checkout-web-service-yaml",
-      "type": "SOURCE"
-     },
-     {
-      "props": {},
-      "source": "Fact/checkout-web--port--3000",
-      "target": "Entity/checkout-web",
-      "type": "ABOUT"
-     },
-     {
-      "props": {},
-      "source": "Fact/checkout-web--port--3000",
-      "target": "Agent/scout",
-      "type": "ASSERTED_BY"
-     },
-     {
-      "props": {},
-      "source": "Fact/checkout-web--port--3000",
-      "target": "Source/demo-project-services-checkout-web-service-yaml",
-      "type": "SOURCE"
-     },
-     {
-      "props": {},
-      "source": "Fact/checkout-web--runtime--node-22",
-      "target": "Entity/checkout-web",
-      "type": "ABOUT"
-     },
-     {
-      "props": {},
-      "source": "Fact/checkout-web--runtime--node-22",
-      "target": "Agent/scout",
-      "type": "ASSERTED_BY"
-     },
-     {
-      "props": {},
-      "source": "Fact/checkout-web--runtime--node-22",
-      "target": "Source/demo-project-services-checkout-web-service-yaml",
-      "type": "SOURCE"
-     },
-     {
-      "props": {},
-      "source": "Fact/ledger-worker--database--postgres-15",
-      "target": "Entity/ledger-worker",
-      "type": "ABOUT"
-     },
-     {
-      "props": {},
-      "source": "Fact/ledger-worker--database--postgres-15",
-      "target": "Agent/scout",
-      "type": "ASSERTED_BY"
-     },
-     {
-      "props": {},
-      "source": "Fact/ledger-worker--database--postgres-15",
-      "target": "Source/demo-project-services-ledger-worker-service-yaml",
-      "type": "SOURCE"
-     },
-     {
-      "props": {},
-      "source": "Fact/ledger-worker--owner--team-payments",
-      "target": "Entity/ledger-worker",
-      "type": "ABOUT"
-     },
-     {
-      "props": {},
-      "source": "Fact/ledger-worker--owner--team-payments",
-      "target": "Agent/scout",
-      "type": "ASSERTED_BY"
-     },
-     {
-      "props": {},
-      "source": "Fact/ledger-worker--owner--team-payments",
-      "target": "Source/demo-project-services-ledger-worker-service-yaml",
-      "type": "SOURCE"
-     },
-     {
-      "props": {},
-      "source": "Fact/ledger-worker--queue--kafka",
-      "target": "Entity/ledger-worker",
-      "type": "ABOUT"
-     },
-     {
-      "props": {},
-      "source": "Fact/ledger-worker--queue--kafka",
-      "target": "Agent/scout",
-      "type": "ASSERTED_BY"
-     },
-     {
-      "props": {},
-      "source": "Fact/ledger-worker--queue--kafka",
-      "target": "Source/demo-project-services-ledger-worker-service-yaml",
-      "type": "SOURCE"
-     },
-     {
-      "props": {},
-      "source": "Fact/ledger-worker--runtime--go-1-23",
-      "target": "Entity/ledger-worker",
-      "type": "ABOUT"
-     },
-     {
-      "props": {},
-      "source": "Fact/ledger-worker--runtime--go-1-23",
-      "target": "Agent/scout",
-      "type": "ASSERTED_BY"
-     },
-     {
-      "props": {},
-      "source": "Fact/ledger-worker--runtime--go-1-23",
-      "target": "Source/demo-project-services-ledger-worker-service-yaml",
-      "type": "SOURCE"
-     },
-     {
-      "props": {},
-      "source": "Fact/payments-api--backup-job--nightly-pg-dump",
-      "target": "Entity/payments-api",
-      "type": "ABOUT"
-     },
-     {
-      "props": {},
-      "source": "Fact/payments-api--backup-job--nightly-pg-dump",
-      "target": "Agent/scout",
-      "type": "ASSERTED_BY"
-     },
-     {
-      "props": {},
-      "source": "Fact/payments-api--backup-job--nightly-pg-dump",
-      "target": "Fact/payments-api--database--postgres-15",
-      "type": "DERIVED_FROM"
-     },
-     {
-      "props": {},
-      "source": "Fact/payments-api--backup-job--nightly-pg-dump",
-      "target": "Source/demo-project-services-payments-api-service-yaml",
-      "type": "SOURCE"
-     },
-     {
-      "props": {},
-      "source": "Fact/payments-api--database--postgres-15",
-      "target": "Entity/payments-api",
-      "type": "ABOUT"
-     },
-     {
-      "props": {},
-      "source": "Fact/payments-api--database--postgres-15",
-      "target": "Agent/scout",
-      "type": "ASSERTED_BY"
-     },
-     {
-      "props": {},
-      "source": "Fact/payments-api--database--postgres-15",
-      "target": "Source/demo-project-services-payments-api-service-yaml",
-      "type": "SOURCE"
-     },
-     {
-      "props": {},
-      "source": "Fact/payments-api--migration-tool--pg-migrate",
-      "target": "Entity/payments-api",
-      "type": "ABOUT"
-     },
-     {
-      "props": {},
-      "source": "Fact/payments-api--migration-tool--pg-migrate",
-      "target": "Agent/scout",
-      "type": "ASSERTED_BY"
-     },
-     {
-      "props": {},
-      "source": "Fact/payments-api--migration-tool--pg-migrate",
-      "target": "Fact/payments-api--database--postgres-15",
-      "type": "DERIVED_FROM"
-     },
-     {
-      "props": {},
-      "source": "Fact/payments-api--migration-tool--pg-migrate",
-      "target": "Source/demo-project-services-payments-api-service-yaml",
-      "type": "SOURCE"
-     },
-     {
-      "props": {},
-      "source": "Fact/payments-api--owner--team-payments",
-      "target": "Entity/payments-api",
-      "type": "ABOUT"
-     },
-     {
-      "props": {},
-      "source": "Fact/payments-api--owner--team-payments",
-      "target": "Agent/scout",
-      "type": "ASSERTED_BY"
-     },
-     {
-      "props": {},
-      "source": "Fact/payments-api--owner--team-payments",
-      "target": "Source/demo-project-services-payments-api-service-yaml",
-      "type": "SOURCE"
-     },
-     {
-      "props": {},
-      "source": "Fact/payments-api--queue--kafka",
-      "target": "Entity/payments-api",
-      "type": "ABOUT"
-     },
-     {
-      "props": {},
-      "source": "Fact/payments-api--queue--kafka",
-      "target": "Agent/scout",
-      "type": "ASSERTED_BY"
-     },
-     {
-      "props": {},
-      "source": "Fact/payments-api--queue--kafka",
-      "target": "Source/demo-project-services-payments-api-service-yaml",
-      "type": "SOURCE"
-     },
-     {
-      "props": {},
-      "source": "Fact/payments-api--restore-drill--quarterly-pg-restore",
-      "target": "Entity/payments-api",
-      "type": "ABOUT"
-     },
-     {
-      "props": {},
-      "source": "Fact/payments-api--restore-drill--quarterly-pg-restore",
-      "target": "Agent/scout",
-      "type": "ASSERTED_BY"
-     },
-     {
-      "props": {},
-      "source": "Fact/payments-api--restore-drill--quarterly-pg-restore",
-      "target": "Fact/payments-api--backup-job--nightly-pg-dump",
-      "type": "DERIVED_FROM"
-     },
-     {
-      "props": {},
-      "source": "Fact/payments-api--restore-drill--quarterly-pg-restore",
-      "target": "Source/demo-project-services-payments-api-service-yaml",
-      "type": "SOURCE"
-     },
-     {
-      "props": {},
-      "source": "Fact/payments-api--runtime--python-3-12",
-      "target": "Entity/payments-api",
-      "type": "ABOUT"
-     },
-     {
-      "props": {},
-      "source": "Fact/payments-api--runtime--python-3-12",
-      "target": "Agent/scout",
-      "type": "ASSERTED_BY"
-     },
-     {
-      "props": {},
-      "source": "Fact/payments-api--runtime--python-3-12",
-      "target": "Source/demo-project-services-payments-api-service-yaml",
-      "type": "SOURCE"
-     }
-    ]
-   },
    "blocked": true,
-   "comment": "<!-- mempr-review -->\n## Memory review: blocked (3 problems)\n\nThis pull request adds **1 property** and removes **nothing** in the memory graph.\n\n### 1. Both branches changed the same property\n`Fact/payments-api--database--postgres-15`.verified is `by-scout` on the base branch and `by-auditor` in this pull request. Git merges this without a conflict, but the graph can hold only one value.\n\nRebase and keep one value.\n\n### 2. This merge would silently drop 3 links, 3 properties\nGit reports a clean merge, but these facts exist before the merge and are gone after it, although neither branch removed them:\n- lost `Fact/payments-api--database--postgres-15` -[:ABOUT]-> `Entity/payments-api`\n- lost `Fact/payments-api--database--postgres-15` -[:ASSERTED_BY]-> `Agent/scout`\n- lost `Fact/payments-api--database--postgres-15` -[:SOURCE]-> `Source/demo-project-services-payments-api-service-yaml`\n- lost `Fact/payments-api--database--postgres-15`.predicate = `database`\n- lost `Fact/payments-api--database--postgres-15`.status = `active`\n- lost `Fact/payments-api--database--postgres-15`.value = `postgres-15`\n\n### 3. Broken note `Fact/payments-api--database--postgres-15.md`\nKey `verified` is set twice (lines 3 and 14); Relate reads this note as empty.\n\n### Warnings\n- Fact has no author: Fact/payments-api--database--postgres-15 has no `ASSERTED_BY` link.\n\n<details><summary>Graph changes in this pull request</summary>\n\n- added `Fact/payments-api--database--postgres-15`.verified = `by-auditor`\n\n</details>\n\n<sub>Checked by mempr with Relate: base `d7f66d4`, head `697308b`, common ancestor `02938d9`. Each rule is a Cypher query over the merged graph.</sub>\n",
+   "comment": "<!-- mempr-review -->\n## Memory review: blocked (2 problems)\n\nThis pull request adds **1 property** and removes **nothing** in the memory graph.\n\n### 1. This merge would silently drop 3 links, 4 properties\nGit reports a clean merge, but these facts exist before the merge and are gone after it, although neither branch removed them:\n- lost `Fact/payments-api--database--postgres-15` -[:ABOUT]-> `Entity/payments-api`\n- lost `Fact/payments-api--database--postgres-15` -[:ASSERTED_BY]-> `Agent/scout`\n- lost `Fact/payments-api--database--postgres-15` -[:SOURCE]-> `Source/demo-project-services-payments-api-service-yaml`\n- lost `Fact/payments-api--database--postgres-15`.predicate = `database`\n- lost `Fact/payments-api--database--postgres-15`.status = `active`\n- lost `Fact/payments-api--database--postgres-15`.value = `postgres-15`\n- lost `Fact/payments-api--database--postgres-15`.verified = `by-auditor`\n\n### 2. Broken note `Fact/payments-api--database--postgres-15.md`\nKey `verified` is set twice (lines 3 and 7); Relate reads this note as empty.\n\n### Warnings\n- Fact has no author: Fact/payments-api--database--postgres-15 has no `ASSERTED_BY` link.\n\n<details><summary>Graph changes in this pull request</summary>\n\n- added `Fact/payments-api--database--postgres-15`.verified = `by-auditor`\n\n</details>\n\n<sub>Checked by mempr with Relate: base `563a959`, head `697308b`, common ancestor `02938d9`. Each rule is a Cypher query over the merged graph.</sub>\n",
    "description": "works from an old clone; git merges cleanly but the graph loses a note",
    "id": "agent/auditor-stale-clone",
    "problems": [
-    {
-     "kind": "property_conflict",
-     "nodes": [
-      "Fact/payments-api--database--postgres-15"
-     ],
-     "rels": [],
-     "severity": "block",
-     "text": "Fact/payments-api--database--postgres-15.verified is 'by-scout' on the base branch and 'by-auditor' in this pull request.",
-     "title": "Both branches changed the same property"
-    },
     {
      "kind": "dropped",
      "nodes": [
@@ -3144,7 +2602,7 @@
      ],
      "severity": "block",
      "text": "Git reports a clean merge, but these facts are gone after it although neither branch removed them.",
-     "title": "This merge would silently drop 3 links, 3 properties"
+     "title": "This merge would silently drop 3 links, 4 properties"
     },
     {
      "kind": "file_issue",
@@ -3153,7 +2611,7 @@
      ],
      "rels": [],
      "severity": "block",
-     "text": "key `verified` is set twice (lines 3 and 14); Relate reads this note as empty",
+     "text": "key `verified` is set twice (lines 3 and 7); Relate reads this note as empty",
      "title": "Broken note Fact/payments-api--database--postgres-15.md"
     },
     {
@@ -3178,7 +2636,7 @@
       "\"by-auditor\""
      ]
     ],
-    "base": "d7f66d42313ecd6aa58dbd7952b436ec79138a58",
+    "base": "563a959cb09caaaef34b4597fd8eefda2a764e65",
     "blocked": true,
     "dropped": [
      [
@@ -3198,6 +2656,12 @@
       "Fact/payments-api--database--postgres-15",
       "value",
       "\"postgres-15\""
+     ],
+     [
+      "prop",
+      "Fact/payments-api--database--postgres-15",
+      "verified",
+      "\"by-auditor\""
      ],
      [
       "rel",
@@ -3223,7 +2687,7 @@
     ],
     "file_issues": [
      {
-      "detail": "key `verified` is set twice (lines 3 and 14); Relate reads this note as empty",
+      "detail": "key `verified` is set twice (lines 3 and 7); Relate reads this note as empty",
       "kind": "duplicate_key",
       "path": "Fact/payments-api--database--postgres-15.md"
      }
@@ -3241,15 +2705,8 @@
     "git_conflicts": [],
     "head": "697308bb1ff3bcead9d71bee0058b287b3f54c74",
     "merge_base": "02938d90c3feac6aa360f206dac738e4bab5e43d",
-    "problems": 3,
-    "property_conflicts": [
-     {
-      "base_value": "\"by-scout\"",
-      "head_value": "\"by-auditor\"",
-      "key": "verified",
-      "node": "Fact/payments-api--database--postgres-15"
-     }
-    ],
+    "problems": 2,
+    "property_conflicts": [],
     "removed": []
    },
    "title": "memory: Re-verified the payments-api database fact and stamped it."
@@ -3427,9 +2884,10 @@
        "name": "payments-api--database--postgres-15",
        "predicate": "database",
        "status": "active",
-       "value": "postgres-15"
+       "value": "postgres-15",
+       "verified": "by-auditor"
       },
-      "text": "---\ntype: Fact\nname: payments-api--database--postgres-15\npredicate: database\nstatus: active\nvalue: postgres-15\nABOUT:\n  - \"[[Entity/payments-api]]\"\nASSERTED_BY:\n  - \"[[Agent/scout]]\"\nSOURCE:\n  - \"[[Source/demo-project-services-payments-api-service-yaml]]\"\n---\n\npayments-api database: postgres-15\n"
+      "text": "---\ntype: Fact\nname: payments-api--database--postgres-15\npredicate: database\nstatus: active\nverified: by-auditor\nvalue: postgres-15\nABOUT:\n  - \"[[Entity/payments-api]]\"\nASSERTED_BY:\n  - \"[[Agent/scout]]\"\nSOURCE:\n  - \"[[Source/demo-project-services-payments-api-service-yaml]]\"\n---\n\npayments-api database: postgres-15\n"
      },
      {
       "file": "memory/Fact/payments-api--migration-tool--pg-migrate.md",
@@ -3838,7 +3296,7 @@
    },
    "author": "intern-agent",
    "blocked": true,
-   "comment": "<!-- mempr-review -->\n## Memory review: blocked (2 problems)\n\nThis pull request adds **1 note, 3 links, 4 properties** and removes **nothing** in the memory graph.\n\n### 1. Links to a note that does not exist\nFact/ledger-worker--retries--5 -[:ASSERTED_BY]-> Agent/intern, but there is no note `Agent/intern.md`.\n\nFix: Add the missing note or remove the link.\n\n### 2. Links to a note that does not exist\nFact/ledger-worker--retries--5 -[:SOURCE]-> Source/a-chat-i-half-remember, but there is no note `Source/a-chat-i-half-remember.md`.\n\nFix: Add the missing note or remove the link.\n\n<details><summary>Graph changes in this pull request</summary>\n\n- added note `Fact/ledger-worker--retries--5`\n- added `Fact/ledger-worker--retries--5` -[:ABOUT]-> `Entity/ledger-worker`\n- added `Fact/ledger-worker--retries--5` -[:ASSERTED_BY]-> `Agent/intern`\n- added `Fact/ledger-worker--retries--5` -[:SOURCE]-> `Source/a-chat-i-half-remember`\n- added `Fact/ledger-worker--retries--5`.body = `ledger-worker retries 5 times.`\n- added `Fact/ledger-worker--retries--5`.predicate = `retries`\n- added `Fact/ledger-worker--retries--5`.status = `active`\n- added `Fact/ledger-worker--retries--5`.value = `5`\n\n</details>\n\n<sub>Checked by mempr with Relate: base `02938d9`, head `53d1b68`, common ancestor `02938d9`. Each rule is a Cypher query over the merged graph.</sub>\n",
+   "comment": "<!-- mempr-review -->\n## Memory review: blocked (2 problems)\n\nThis pull request adds **1 note, 3 links, 4 properties** and removes **nothing** in the memory graph.\n\n### 1. Links to a note that does not exist\nFact/ledger-worker--retries--5 -[:ASSERTED_BY]-> Agent/intern, but there is no note `Agent/intern.md`.\n\nFix: Add the missing note or remove the link.\n\n### 2. Links to a note that does not exist\nFact/ledger-worker--retries--5 -[:SOURCE]-> Source/a-chat-i-half-remember, but there is no note `Source/a-chat-i-half-remember.md`.\n\nFix: Add the missing note or remove the link.\n\n<details><summary>Graph changes in this pull request</summary>\n\n- added note `Fact/ledger-worker--retries--5`\n- added `Fact/ledger-worker--retries--5` -[:ABOUT]-> `Entity/ledger-worker`\n- added `Fact/ledger-worker--retries--5` -[:ASSERTED_BY]-> `Agent/intern`\n- added `Fact/ledger-worker--retries--5` -[:SOURCE]-> `Source/a-chat-i-half-remember`\n- added `Fact/ledger-worker--retries--5`.body = `ledger-worker retries 5 times.`\n- added `Fact/ledger-worker--retries--5`.predicate = `retries`\n- added `Fact/ledger-worker--retries--5`.status = `active`\n- added `Fact/ledger-worker--retries--5`.value = `5`\n\n</details>\n\n<sub>Checked by mempr with Relate: base `563a959`, head `eb7701c`, common ancestor `563a959`. Each rule is a Cypher query over the merged graph.</sub>\n",
    "description": "writes a fact by hand with no source and a link to a missing note",
    "id": "agent/intern-unsourced",
    "problems": [
@@ -3933,7 +3391,7 @@
       "{}"
      ]
     ],
-    "base": "02938d90c3feac6aa360f206dac738e4bab5e43d",
+    "base": "563a959cb09caaaef34b4597fd8eefda2a764e65",
     "blocked": true,
     "dropped": [],
     "file_issues": [],
@@ -3960,8 +3418,8 @@
      }
     ],
     "git_conflicts": [],
-    "head": "53d1b68e7dc44aa2b9b922b009eaa36ff5d1a5e3",
-    "merge_base": "02938d90c3feac6aa360f206dac738e4bab5e43d",
+    "head": "eb7701cf963b4e0b75d76e03f366930bb81e726d",
+    "merge_base": "563a959cb09caaaef34b4597fd8eefda2a764e65",
     "problems": 2,
     "property_conflicts": [],
     "removed": []
@@ -4142,9 +3600,10 @@
        "name": "payments-api--database--postgres-15",
        "predicate": "database",
        "status": "active",
-       "value": "postgres-15"
+       "value": "postgres-15",
+       "verified": "by-auditor"
       },
-      "text": "---\ntype: Fact\nname: payments-api--database--postgres-15\npredicate: database\nstatus: active\nvalue: postgres-15\nABOUT:\n  - \"[[Entity/payments-api]]\"\nASSERTED_BY:\n  - \"[[Agent/scout]]\"\nSOURCE:\n  - \"[[Source/demo-project-services-payments-api-service-yaml]]\"\n---\n\npayments-api database: postgres-15\n"
+      "text": "---\ntype: Fact\nname: payments-api--database--postgres-15\npredicate: database\nstatus: active\nvalue: postgres-15\nverified: by-auditor\nABOUT:\n  - \"[[Entity/payments-api]]\"\nASSERTED_BY:\n  - \"[[Agent/scout]]\"\nSOURCE:\n  - \"[[Source/demo-project-services-payments-api-service-yaml]]\"\n---\n\npayments-api database: postgres-15\n"
      },
      {
       "file": "memory/Fact/payments-api--migration-tool--pg-migrate.md",
@@ -4545,7 +4004,7 @@
    },
    "author": "mapper-agent",
    "blocked": false,
-   "comment": "<!-- mempr-review -->\n## Memory review: passed\n\nThis pull request adds **2 notes, 3 links, 4 properties** and removes **nothing** in the memory graph.\n\n<details><summary>Graph changes in this pull request</summary>\n\n- added note `Agent/mapper`\n- added note `Fact/checkout-web--calls--payments-api`\n- added `Fact/checkout-web--calls--payments-api` -[:ABOUT]-> `Entity/checkout-web`\n- added `Fact/checkout-web--calls--payments-api` -[:ASSERTED_BY]-> `Agent/mapper`\n- added `Fact/checkout-web--calls--payments-api` -[:SOURCE]-> `Source/demo-project-services-checkout-web-service-yaml`\n- added `Fact/checkout-web--calls--payments-api`.body = `checkout-web calls payments-api to take payments.`\n- added `Fact/checkout-web--calls--payments-api`.predicate = `calls`\n- added `Fact/checkout-web--calls--payments-api`.status = `active`\n- added `Fact/checkout-web--calls--payments-api`.value = `payments-api`\n\n</details>\n\n<sub>Checked by mempr with Relate: base `02938d9`, head `9bd76a1`, common ancestor `02938d9`. Each rule is a Cypher query over the merged graph.</sub>\n",
+   "comment": "<!-- mempr-review -->\n## Memory review: passed\n\nThis pull request adds **2 notes, 3 links, 4 properties** and removes **nothing** in the memory graph.\n\n<details><summary>Graph changes in this pull request</summary>\n\n- added note `Agent/mapper`\n- added note `Fact/checkout-web--calls--payments-api`\n- added `Fact/checkout-web--calls--payments-api` -[:ABOUT]-> `Entity/checkout-web`\n- added `Fact/checkout-web--calls--payments-api` -[:ASSERTED_BY]-> `Agent/mapper`\n- added `Fact/checkout-web--calls--payments-api` -[:SOURCE]-> `Source/demo-project-services-checkout-web-service-yaml`\n- added `Fact/checkout-web--calls--payments-api`.body = `checkout-web calls payments-api to take payments.`\n- added `Fact/checkout-web--calls--payments-api`.predicate = `calls`\n- added `Fact/checkout-web--calls--payments-api`.status = `active`\n- added `Fact/checkout-web--calls--payments-api`.value = `payments-api`\n\n</details>\n\n<sub>Checked by mempr with Relate: base `563a959`, head `633f83d`, common ancestor `563a959`. Each rule is a Cypher query over the merged graph.</sub>\n",
    "description": "learns one new, sourced fact; the check passes",
    "id": "agent/mapper-clean",
    "problems": [],
@@ -4605,14 +4064,14 @@
       "{}"
      ]
     ],
-    "base": "02938d90c3feac6aa360f206dac738e4bab5e43d",
+    "base": "563a959cb09caaaef34b4597fd8eefda2a764e65",
     "blocked": false,
     "dropped": [],
     "file_issues": [],
     "findings": [],
     "git_conflicts": [],
-    "head": "9bd76a19b9e973e7a02bea4e6d14ef6e34ae192e",
-    "merge_base": "02938d90c3feac6aa360f206dac738e4bab5e43d",
+    "head": "633f83db6d12b5158333108f141c2e284b990e1a",
+    "merge_base": "563a959cb09caaaef34b4597fd8eefda2a764e65",
     "problems": 0,
     "property_conflicts": [],
     "removed": []
@@ -4620,7 +4079,7 @@
    "title": "memory: Learned that checkout-web calls payments-api."
   }
  ],
- "rev": "02938d90c3feac6aa360f206dac738e4bab5e43d",
+ "rev": "563a959cb09caaaef34b4597fd8eefda2a764e65",
  "rules": [
   {
    "cypher": "MATCH (a:Fact)-[:ABOUT]->(e:Entity)<-[:ABOUT]-(b:Fact)\nWHERE a.name < b.name\n  AND a.status = 'active' AND b.status = 'active'\n  AND a.predicate = b.predicate AND a.value <> b.value\n  AND NOT EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(a) WHERE n.status = 'active' }\n  AND NOT EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(b) WHERE n.status = 'active' }\n  AND NOT EXISTS { MATCH (p:Predicate {name: a.predicate}) WHERE p.cardinality = 'many' }\nRETURN a.name AS fact, b.name AS other, e.name AS entity,\n       a.predicate AS predicate, a.value AS value, b.value AS other_value\nORDER BY fact, other\n",

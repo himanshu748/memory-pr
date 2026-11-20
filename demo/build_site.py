@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -67,26 +68,26 @@ def build(source: Path = ROOT) -> dict:
             shutil.copyfile(note, target)
         shutil.copyfile(source / ".gitignore", repo / ".gitignore")
         git(repo, "init", "-q", "-b", "main")
+        # As in this repository's history: scout wrote the memory, then the database fact
+        # was re-verified on main. The stale clone starts from before that stamp.
+        note = vault / "Fact" / f"{fact_name('payments-api', 'database', 'postgres-15')}.md"
+        current = note.read_text()
+        note.write_text(re.sub(r"^verified: .*\n", "", current, flags=re.M))
         commit(repo, "scout", "memory: what scout learned from the service files")
+        git(repo, "tag", "stale-base")
+        if note.read_text() != current:
+            note.write_text(current)
+            commit(repo, "scout", "memory: Re-verified the payments-api database fact.")
 
         agent.VAULT = vault  # the scenarios write to the throwaway repository
         specs = []
         for scenario, name in PULLS.items():
             branch = f"agent/{name}-{scenario}"
-            git(repo, "checkout", "-q", "-b", branch, "main")
+            start = "stale-base" if scenario == "stale-clone" else "main"
+            git(repo, "checkout", "-q", "-b", branch, start)
             summary = getattr(agent, f"scenario_{scenario.replace('-', '_')}")(name)
             commit(repo, name, f"memory: {summary}", agent.SCENARIOS[scenario])
             specs.append(branch)
-
-        # The stale clone: while that agent worked, main moved. Another agent stamped the
-        # same note on a different line, so git merges the two branches without a conflict.
-        git(repo, "checkout", "-q", "-b", "main-moved", "main")
-        note = vault / "Fact" / f"{fact_name('payments-api', 'database', 'postgres-15')}.md"
-        head, _, body = note.read_text().rpartition("\n---\n")
-        note.write_text(f"{head}\nverified: by-scout\n---\n{body}")
-        commit(repo, "scout", "memory: Re-verified the payments-api database fact.")
-        stale = f"agent/{PULLS['stale-clone']}-stale-clone"
-        specs[specs.index(stale)] = f"main-moved..{stale}"
 
         return export(repo, "main", specs, "memory", "memory-rules.yaml")
 

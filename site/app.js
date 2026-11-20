@@ -586,8 +586,9 @@ const EXAMPLES = [
   [
     'Break it: write a second port',
     "MATCH (e:Entity {name: 'checkout-web'}), (a:Agent {name: 'scout'})\n" +
-      "CREATE (f:Fact {name: 'checkout-web--port--8080', predicate: 'port', value: '8080', status: 'active'})\n" +
-      'CREATE (f)-[:ABOUT]->(e), (f)-[:ASSERTED_BY]->(a)\nRETURN f',
+      "MERGE (f:Fact {name: 'checkout-web--port--8080'})\n" +
+      "SET f.predicate = 'port', f.value = '8080', f.status = 'active'\n" +
+      'MERGE (f)-[:ABOUT]->(e)\nMERGE (f)-[:ASSERTED_BY]->(a)\nRETURN f.name AS fact, f.value AS port',
   ],
 ];
 
