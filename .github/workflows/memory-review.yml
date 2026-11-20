@@ -64,10 +64,12 @@ jobs:
             gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" \
               -F body=@"$RUNNER_TEMP/comment.md" -q .html_url
           fi
-      - name: Report the check on a pull request the Actions token opened
-        # GitHub holds this workflow for approval on such pull requests, and a run started by
-        # hand is not counted as the pull request's check, so set `memory-review` as a status.
-        if: github.event_name == 'workflow_dispatch'
+      - name: Report the result as a commit status
+        # GitHub holds this workflow for approval on a pull request the Actions token opened,
+        # and a run started by hand is not counted as that pull request's check, so the
+        # result is also set as the `memory-review` status. Every run sets it, so a later
+        # run always replaces an earlier result. A fork's token cannot set it.
+        continue-on-error: true
         env:
           CODE: ${{ steps.review.outputs.code }}
         run: |
