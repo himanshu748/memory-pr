@@ -778,7 +778,8 @@ function wire() {
   document.addEventListener('click', (event) => {
     // Links to a section scroll there without replacing `#pr=…`, which names the open graph.
     const jump = event.target.closest?.('a[href^="#"]');
-    if (!jump) return;
+    // A modified click opens the link in a new tab or window: leave it to the browser.
+    if (!jump || event.button || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
     const v = views.find((x) => x.pull && x.short === jump.dataset.open);
     if (v && v !== view) show(v);
     const section = document.getElementById(jump.getAttribute('href').slice(1));
