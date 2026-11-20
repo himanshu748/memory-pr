@@ -80,6 +80,13 @@ def cmd_retract(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_mcp(args: argparse.Namespace) -> int:
+    from .mcp_server import Settings, serve
+
+    serve(Settings(_repo(args), args.vault, args.base, args.rules, args.remote))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="mempr", description="Pull requests for agent memory, checked with Relate."
@@ -122,6 +129,12 @@ def build_parser() -> argparse.ArgumentParser:
     retract = sub.add_parser("retract", help="mark a fact as retracted")
     retract.add_argument("fact")
     retract.set_defaults(func=cmd_retract)
+
+    mcp = sub.add_parser("mcp", help="serve the memory to an agent over MCP (stdio)")
+    mcp.add_argument("--base", default="origin/main", help="branch proposals start from")
+    mcp.add_argument("--rules", default="memory-rules.yaml", help="extra rules file on the base")
+    mcp.add_argument("--remote", default="origin", help="remote that pull requests are pushed to")
+    mcp.set_defaults(func=cmd_mcp)
     return parser
 
 
