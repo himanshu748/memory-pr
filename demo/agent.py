@@ -156,10 +156,13 @@ def run(scenario: str, agent: str, push: bool, base: str) -> None:
         cwd=ROOT, capture_output=True, text=True,
     )  # fmt: skip
     if created.returncode != 0:
-        repo = os.environ.get("GITHUB_REPOSITORY", "<owner>/<repo>")
+        repo = os.environ.get("GITHUB_REPOSITORY") or sh(
+            "gh", "repo", "view", "--json", "nameWithOwner", "-q", ".nameWithOwner"
+        )
+        target = base.removeprefix("origin/")
         sys.exit(
             f"The branch is pushed but the pull request could not be opened:\n{created.stderr}\n"
-            f"Open it by hand: https://github.com/{repo}/compare/{branch}?expand=1\n"
+            f"Open it by hand: https://github.com/{repo}/compare/{target}...{branch}?expand=1\n"
             "To let this workflow open pull requests, tick 'Allow GitHub Actions to create and "
             f"approve pull requests' at https://github.com/{repo}/settings/actions"
         )
