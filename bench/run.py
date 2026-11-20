@@ -134,10 +134,13 @@ def play(sim: Sim, seed: int, rounds: int, agents: int, mistake_rate: float) -> 
                 sim.add(service, predicate, wrong, agent)
             elif mistake == "supersede-only" and predicate in DERIVED:
                 truth[service][predicate] = wrong  # the system really changed
-                sim.add(
-                    service, predicate, wrong, agent,
-                    supersedes=[fact_name(service, predicate, current)],
-                )  # fmt: skip
+                # The agent replaces what its own clone of the memory holds.
+                held = [
+                    f["fact"]
+                    for f in memory.recall(sim.vault, service)
+                    if f["predicate"] == predicate and f["value"] != wrong
+                ]
+                sim.add(service, predicate, wrong, agent, supersedes=held)
             elif mistake == "stale-clone":
                 note = sim.vault / "Fact" / f"{fact_name(service, predicate, current)}.md"
                 if note.exists():

@@ -45,24 +45,24 @@ At the end a new agent asks the memory about every service.
 
 | | Without the check | With the check |
 | --- | --- | --- |
-| Pull requests merged | 298 | 254 |
-| Pull requests blocked | 0 | 46 |
+| Pull requests merged | 299 | 255 |
+| Pull requests blocked | 0 | 45 |
 | Pull requests fixed after the review, then merged | 0 | 8 |
 | Correct pull requests blocked by mistake | 0 | 0 |
-| Wrong facts in memory at the end | 20 | 2 |
+| Wrong facts in memory at the end | 20 | 1 |
 | Contradictions in memory | 24 | 0 |
 | Facts resting on a replaced fact | 9 | 0 |
 | Notes emptied by a merge git called clean | 3 | 0 |
 | Facts with no source | 20 | 0 |
-| Questions answered correctly (of 240) | 140 | 159 |
-| Questions answered wrongly or with two values | 18 | 2 |
+| Questions answered correctly (of 240) | 140 | 160 |
+| Questions answered wrongly or with two values | 18 | 1 |
 
 Reproduce: `python bench/run.py --seed 1 --seeds 5 --rounds 10 --agents 6 --out docs/benchmark.json`
 (about 2 minutes). The agents, the project and its ground truth are generated in
 [`bench/run.py`](bench/run.py); raw numbers are in [`docs/benchmark.json`](docs/benchmark.json).
 The questions left unanswered in both columns are facts no agent was asked to learn.
-The wrong facts that remain with the check are true changes whose pull request stayed
-blocked, so the memory still holds the older value.
+The one wrong fact that remains with the check is a true change whose pull request
+stayed blocked, so the memory still holds the older value.
 
 ## Run it locally
 
@@ -145,7 +145,9 @@ payments-api database: postgres-15
 
 Rules live in [`src/mempr/default_rules.yaml`](src/mempr/default_rules.yaml). Add your
 own in `memory-rules.yaml` at the repository root; a rule is an id, a severity (`block`
-or `warn`), a message template, and a Cypher query whose rows are the findings.
+or `warn`), a message template, and a Cypher query whose rows are the findings. The
+check reads that file from the base branch, so a pull request cannot change the rules
+it is reviewed with.
 
 | Rule | Blocks | Finds |
 | --- | --- | --- |
