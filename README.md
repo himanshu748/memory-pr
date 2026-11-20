@@ -190,6 +190,45 @@ it is reviewed with.
 | `unsourced-fact` | yes | an active fact with no source |
 | `unattributed-fact` | no | a fact with no author |
 
+## Use it from an agent
+
+`mempr mcp` is an [MCP](https://modelcontextprotocol.io) server over stdio, so Claude Code,
+Cursor, Devin or any other MCP client can use the memory while it works. Add it to the
+client's MCP config (`.mcp.json` for Claude Code, `.cursor/mcp.json` for Cursor), with the
+path of the repository that holds `memory/`:
+
+```json
+{
+  "mcpServers": {
+    "memory": {
+      "command": "uvx",
+      "args": [
+        "--from", "git+https://github.com/himanshu748/memory-pr",
+        "mempr", "--repo", "/absolute/path/to/your/repo", "mcp"
+      ]
+    }
+  }
+}
+```
+
+With `mempr` already installed, the command is `mempr --repo /absolute/path/to/your/repo mcp`
+(Claude Code: `claude mcp add memory -- mempr --repo "$PWD" mcp`).
+
+| Tool | What the agent gets |
+| --- | --- |
+| `recall` | The current facts about an entity, each with its sources and authors. For an entity the memory does not know, the answer is "Nothing known ... Do not guess", not an empty list to fill in. |
+| `query` | The rows of a read-only Cypher query. Writing clauses are refused, and the query runs on a throwaway copy of the files. |
+| `propose_fact` | One fact, written with `mempr.memory.add_fact` and committed on a new branch, plus the review of that branch. `open_pull_request: true` also pushes it and opens the pull request with `gh`. |
+| `retract_fact` | The same for a retraction. |
+| `review` | The review of any branch against a base: the result of `mempr check` as JSON, and the comment text. |
+
+An agent cannot write to the memory directly. A proposal is committed on an `agent/*`
+branch in a temporary git worktree, so the branch you have checked out, your working tree and `main` do not move.
+When the review blocks a proposal, the agent reads why and sends the fix with the same
+`branch`; the fact becomes shared memory only when the pull request is merged.
+`--base` sets the branch proposals start from and are reviewed against (default
+`origin/main`).
+
 ## Use it in your own repository
 
 1. Copy `.github/workflows/memory-review.yml` and install `mempr` in it from this
