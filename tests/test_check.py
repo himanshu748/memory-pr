@@ -159,3 +159,16 @@ def test_a_second_replacement_is_not_a_contradiction_with_the_first_value(repo):
         assert not result.blocked, [f.rule.id for f in result.findings]
         repo.git("checkout", "-q", "main")
         repo.git("merge", "-q", "--no-ff", f"agent/{value}", "-m", f"merge {value}")
+
+
+def test_facts_that_replace_each_other_in_a_circle_are_blocked(repo):
+    repo.branch("agent/circle")
+    repo.add("payments-api", "database", "postgres-16", supersedes=[DB])
+    repo.edit(
+        f"Fact/{DB}",
+        "status: active\n",
+        'status: active\nSUPERSEDES:\n  - "[[Fact/payments-api--database--postgres-16]]"\n',
+    )
+    retract(repo.vault, "payments-api--migration-tool--pg-migrate")
+    repo.commit("circle")
+    assert "supersedes-cycle" in rule_ids(run(repo, head="agent/circle"))

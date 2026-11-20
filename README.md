@@ -151,8 +151,9 @@ it is reviewed with.
 
 | Rule | Blocks | Finds |
 | --- | --- | --- |
-| `contradiction` | yes | two active facts giving one entity different values for one predicate |
+| `contradiction` | yes | two current facts giving one entity different values for one predicate |
 | `stale-derivation` | yes | an active fact derived, up to 6 hops away, from a retracted or replaced fact |
+| `supersedes-cycle` | yes | facts that replace each other in a circle, so none is current |
 | `dangling-link` | yes | a link to a note that does not exist |
 | `unsourced-fact` | yes | an active fact with no source |
 | `unattributed-fact` | no | a fact with no author |

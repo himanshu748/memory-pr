@@ -29,6 +29,20 @@
            a.predicate AS predicate, a.value AS value, b.value AS other_value
     ORDER BY fact, other
 
+- id: supersedes-cycle
+  severity: block
+  title: Facts replace each other in a circle
+  message: >-
+    Fact/{fact} replaces itself through {hops} `SUPERSEDES` link(s), so none of the facts
+    in the circle counts as current. Path: {path}
+  fix: >-
+    Remove the `SUPERSEDES` link that points at the fact that should be current.
+  cypher: |
+    MATCH p = (f:Fact)-[:SUPERSEDES*1..6]->(f)
+    RETURN f.name AS fact, length(p) AS hops,
+           reduce(s = '', n IN nodes(p) |
+                  s + CASE WHEN s = '' THEN '' ELSE ' -[:SUPERSEDES]-> ' END + 'Fact/' + n.name) AS path
+
 - id: stale-derivation
   severity: block
   title: Rests on a fact that was retracted or replaced
