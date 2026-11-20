@@ -37,6 +37,16 @@ test.
 3. The **memory-review** check comments on the pull request and, unless the scenario is
    `clean`, blocks the merge.
 
+An example that is already open: [pull request 2](https://github.com/himanshu748/memory-pr/pull/2),
+where the agent read an outdated design note.
+
+Two repository settings make this work, both set once by the owner:
+
+- **Settings → Actions → General → Workflow permissions**: tick "Allow GitHub Actions to
+  create and approve pull requests", so the agent workflow can open its pull request.
+- **Settings → Branches**: protect `main` and require the `memory-review` status check,
+  so a blocked pull request cannot be merged.
+
 ## Measured result
 
 300 pull requests from simulated agents (5 seeds, 10 rounds, 6 agents per round,
