@@ -9,15 +9,50 @@
 </head>
 <body>
 <header class="top">
-  <div class="brand">
-    <h1>memory-pr</h1>
-    <p>Pull requests for agent memory, reviewed as a graph.</p>
-  </div>
+  <a class="brand" href="#top"><span class="mark" aria-hidden="true"></span>memory-pr</a>
   <div class="top-right">
-    <span id="engine" class="engine" title="The graph database runs inside this page">Starting Relate…</span>
-    <a href="https://github.com/himanshu748/memory-pr">GitHub</a>
+    <span id="engine" class="engine" title="The graph database runs inside this page">Starting Relate</span>
+    <a class="gh" href="https://github.com/himanshu748/memory-pr">GitHub</a>
   </div>
 </header>
+
+<section class="hero" id="top">
+<div class="pitch">
+  <p class="eyebrow">Built on Relate by Neo4j</p>
+  <h1>Pull requests for agent memory.</h1>
+  <p class="lede">Git says the merge is clean. <em>The graph is damaged.</em>
+    memory-pr reviews every change to shared agent memory as graph facts, and blocks the ones that break what your agents know.</p>
+  <div class="cta">
+    <a class="btn primary" href="#explorer" data-open="builder-contradiction">See a blocked pull request</a>
+    <a class="btn" href="#console">Ask the graph in Cypher</a>
+  </div>
+</div>
+<a class="proof" href="#explorer" data-open="builder-contradiction" aria-label="Open the blocked pull request in the explorer">
+  <div class="proof-head"><span>Pull request</span><code id="proof-who">agent/builder-contradiction</code></div>
+  <div class="checks">
+    <div class="check git"><span>git merge</span><strong>Clean. No conflicts.</strong></div>
+    <div class="check mempr"><span>memory-pr review</span><strong>Blocked. Two facts contradict.</strong></div>
+  </div>
+  <div class="path">
+    <div class="fact new"><small><span class="proof-pred">database</span>, added by this pull request</small><b id="proof-new">mysql-8</b></div>
+    <div class="edge"><i>about</i></div>
+    <div class="entity" id="proof-entity">payments-api</div>
+    <div class="edge"><i>about</i></div>
+    <div class="fact"><small><span class="proof-pred">database</span>, already in memory</small><b id="proof-old">postgres-15</b></div>
+  </div>
+  <p class="proof-foot">One service, two active databases. The path is the proof. Open it in the graph.</p>
+</a>
+  <ol class="story">
+    <li><span>1</span><div><strong>What it is</strong>Agents write what they learn as Markdown notes. Every change arrives as a pull request.</div></li>
+    <li><span>2</span><div><strong>The problem</strong>A text diff looks fine while two facts contradict, or a fact rests on one that was replaced.</div></li>
+    <li><span>3</span><div><strong>The proof</strong>Below, the review draws the problem on the graph. It runs live in this page.</div></li>
+  </ol>
+</section>
+
+<section class="explorer-head" id="explorer">
+  <h2>Five pull requests from five agents</h2>
+  <p>Pick one. Green is what it adds, red is what the merge would lose, and the glow marks the problem the review found.</p>
+</section>
 
 <nav id="views" class="views" aria-label="What to show"></nav>
 
@@ -27,10 +62,10 @@
       <div id="legend" class="legend"></div>
       <div class="graph-tools">
         <label><input type="checkbox" id="show-prov" checked> Sources and authors</label>
-        <button id="fit" type="button">Fit</button>
+        <button id="fit" type="button">Whole graph</button>
       </div>
     </div>
-    <div id="cy" class="cy"></div>
+    <div class="cy-wrap"><div id="cy" class="cy"></div></div>
     <p id="graph-note" class="graph-note"></p>
   </section>
 
@@ -39,10 +74,11 @@
     <section id="review" class="pane card"></section>
   </aside>
 
-  <section class="pane console" aria-label="Cypher console">
+  <section class="pane console" id="console" aria-label="Cypher console">
     <div class="console-head">
-      <h2>Ask the graph in Cypher</h2>
-      <span id="target" class="target"></span>
+      <p class="eyebrow">Live in your browser</p>
+      <h2>Ask the graph yourself</h2>
+      <p id="target" class="target"></p>
     </div>
     <div id="examples" class="examples"></div>
     <textarea id="query" spellcheck="false" rows="5" aria-label="Cypher query"></textarea>
