@@ -1,0 +1,13 @@
+{
+  "pr2_open": "A real pull request from an agent. Git finds no conflict.",
+  "pr2_comment": "The memory review reads it as graph facts. It names the contradiction and the path that proves it.",
+  "pr2_check": "The required memory-review check fails, so main does not take this merge.",
+  "pr6": "A correct pull request from another agent passes and can merge.",
+  "live_hero": "The same review runs live in a web page. Nothing to install.",
+  "live_path": "One service, two active databases. The contradiction is drawn as a path.",
+  "live_stale": "A stale clone. Git merges it cleanly. The graph loses a note and its links.",
+  "live_memory": "This is the shared memory on main. Every fact has a source and an author.",
+  "live_cypher": "Ask it in Cypher. Relate runs inside the page as WebAssembly.",
+  "live_break": "Now break it. Write a second port for checkout-web.",
+  "live_fail": "The rules run again in the page and the review finds the contradiction."
+}
