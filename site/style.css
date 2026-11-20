@@ -356,9 +356,9 @@ td { font-family: var(--mono); font-size: 13px; }
 .tabs button { padding: 6px 14px; font-size: 13.5px; border-color: var(--rule); }
 .tabs button.on { background: var(--ink); color: var(--base); border-color: var(--ink); }
 .note-path { margin-left: auto; background: none; color: var(--muted); font-size: 12px; padding: 0; }
-.note { flex: 1; margin: 0; background: var(--ink); color: #f2f0e9; border: 0; padding: var(--s3); font-size: 13px; line-height: 1.55; max-height: none; min-height: 300px; }
-.note.empty { background: none; color: var(--muted); border: 1px dashed #a19e94; }
-.note.empty b { display: block; font-family: var(--sans); font-weight: 500; font-size: 15px; color: var(--ink); margin-bottom: var(--s3); white-space: normal; }
+.md-note { flex: 1; margin: 0; background: var(--ink); color: #f2f0e9; border: 0; padding: var(--s3); font-size: 13px; line-height: 1.55; max-height: none; min-height: 300px; }
+.md-note.empty { background: none; color: var(--muted); border: 1px dashed #a19e94; }
+.md-note.empty b { display: block; font-family: var(--sans); font-weight: 500; font-size: 15px; color: var(--ink); margin-bottom: var(--s3); white-space: normal; }
 .mini { flex: 1; min-height: 300px; border: 1px solid var(--rule); border-radius: 4px; background: var(--base); }
 .outcome { display: flex; flex-direction: column; gap: var(--s3); padding-right: 0; }
 .outcome-empty { color: var(--muted); font-size: 15px; border: 1px dashed var(--rule); border-radius: 4px; padding: var(--s4); margin: auto 0; }
@@ -400,7 +400,7 @@ td { font-family: var(--mono); font-size: 13px; }
   .write-grid > * { padding-inline: 0; }
   .write-grid > * + * { border-left: 0; border-top: 1px solid var(--rule); }
   .note-pane { background: none; }
-  .note, .mini { min-height: 280px; }
+  .md-note, .mini { min-height: 280px; }
   .starters { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-inline: calc(-1 * clamp(16px, 3.2vw, 56px)); padding-inline: clamp(16px, 3.2vw, 56px); }
   .starters button { flex: none; }
   .draft-actions .btn, .outcome-actions .btn { flex: 1 1 auto; }
