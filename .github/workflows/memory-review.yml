@@ -51,6 +51,8 @@ jobs:
           echo "code=$?" >> "$GITHUB_OUTPUT"
           cat "$RUNNER_TEMP/comment.md" >> "$GITHUB_STEP_SUMMARY"
       - name: Comment on the pull request
+        # A fork's token cannot comment; the result is still in the job summary.
+        continue-on-error: true
         run: |
           id=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" --paginate \
             -q '.[] | select(.body | startswith("<!-- mempr-review -->")) | .id' | tail -1)
@@ -62,4 +64,6 @@ jobs:
               -F body=@"$RUNNER_TEMP/comment.md" -q .html_url
           fi
       - name: Block the merge when the review found problems
-        run: exit "${{ steps.review.outputs.code }}"
+        env:
+          CODE: ${{ steps.review.outputs.code }}
+        run: exit "$CODE"
