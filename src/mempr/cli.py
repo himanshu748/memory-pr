@@ -7,7 +7,7 @@ import json
 import sys
 from pathlib import Path
 
-from . import __version__, memory
+from . import __version__, gitutil, memory
 from .check import review
 from .report import render
 from .rules import load_rules
@@ -23,7 +23,8 @@ def _vault(args: argparse.Namespace) -> Path:
 
 
 def cmd_check(args: argparse.Namespace) -> int:
-    rules = load_rules(_repo(args) / args.rules)
+    # Rules come from the base branch, so a pull request cannot switch off its own review.
+    rules = load_rules(gitutil.read_file(_repo(args), args.base, args.rules))
     result = review(_repo(args), args.base, args.head, args.vault, rules)
     if args.json:
         Path(args.json).write_text(json.dumps(result.to_dict(), indent=2) + "\n", "utf-8")
@@ -91,7 +92,9 @@ def build_parser() -> argparse.ArgumentParser:
     check = sub.add_parser("check", help="review merging one revision into another")
     check.add_argument("--base", default="origin/main", help="branch the change merges into")
     check.add_argument("--head", default="HEAD", help="revision with the change")
-    check.add_argument("--rules", default="memory-rules.yaml", help="extra rules file")
+    check.add_argument(
+        "--rules", default="memory-rules.yaml", help="extra rules file, read from the base branch"
+    )
     check.add_argument("--out", help="write the Markdown comment to this file")
     check.add_argument("--json", help="write the review as JSON to this file")
     check.set_defaults(func=cmd_check)

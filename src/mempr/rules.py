@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from importlib import resources
-from pathlib import Path
 
 import yaml
 
@@ -41,10 +40,9 @@ def default_rules() -> list[Rule]:
     return _parse(resources.files("mempr").joinpath("default_rules.yaml").read_text("utf-8"))
 
 
-def load_rules(path: Path | None) -> list[Rule]:
-    """Default rules, with rules from `path` added or replacing a default with the same id."""
+def load_rules(extra: str | None) -> list[Rule]:
+    """Default rules, with rules from the YAML text `extra` added or replacing a default."""
     merged = {rule.id: rule for rule in default_rules()}
-    if path and path.exists():
-        for rule in _parse(path.read_text("utf-8")):
-            merged[rule.id] = rule
+    for rule in _parse(extra) if extra else []:
+        merged[rule.id] = rule
     return list(merged.values())

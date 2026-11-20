@@ -66,3 +66,9 @@ def export_tree(repo: Path, treeish: str, subdir: str, dest: Path) -> Path:
     with tarfile.open(fileobj=io.BytesIO(proc.stdout)) as tar:
         tar.extractall(dest, filter="data")
     return out
+
+
+def read_file(repo: Path, rev: str, path: str) -> str | None:
+    """The file's text at `rev`, or None when it does not exist there."""
+    proc = git(repo, "show", f"{rev}:{path}", check=False)
+    return proc.stdout if proc.returncode == 0 else None
