@@ -14,16 +14,20 @@ def slug(text: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
 
 
-def key(text: str) -> str:
-    """A file-safe name. Text the slug cannot hold exactly gets a hash, so `C++` != `C#`."""
-    base = slug(text)
-    if base == text:
-        return base
-    return f"{base}-{hashlib.sha1(text.encode()).hexdigest()[:6]}".lstrip("-")
-
-
 def fact_name(entity: str, predicate: str, value: str) -> str:
-    return f"{key(entity)}--{key(predicate)}--{key(value)}"
+    """The note name a fact gets when no other value already holds that name."""
+    return f"{slug(entity)}--{slug(predicate)}--{slug(value)}"
+
+
+def _free_name(conn, entity: str, predicate: str, value: str) -> str:
+    """The fact's own note, or a name no other value holds (`C++` and `C#` both slug to `c`)."""
+    base = fact_name(entity, predicate, value)
+    digest = hashlib.sha1(value.encode()).hexdigest()[:6]
+    for name in (base, f"{base}-{digest}"):
+        held = rows(conn, "MATCH (f:Fact {name: $name}) RETURN f.value AS value", {"name": name})
+        if not held or held[0]["value"] is None or str(held[0]["value"]) == value:
+            return name
+    raise ValueError(f"no free note name for {entity} {predicate} {value!r}")
 
 
 RECALL = """
@@ -58,10 +62,8 @@ RETURN f.name AS fact
 """
 
 LINK = {
-    # A fact that replaces another is no longer replaced by it (A -> B -> A again).
     "SUPERSEDES": (
         "MATCH (f:Fact {name: $name}), (o:Fact {name: $other}) "
-        "OPTIONAL MATCH (o)-[back:SUPERSEDES]->(f) DELETE back "
         "MERGE (f)-[:SUPERSEDES]->(o) RETURN o.name AS other"
     ),
     "DERIVED_FROM": (
@@ -97,11 +99,15 @@ def add_fact(
     for label, text in (("entity", entity), ("predicate", predicate), ("agent", agent)):
         if slug(text) != text:
             raise ValueError(f"{label} {text!r} must be lowercase letters, digits and hyphens")
-    name = fact_name(entity, predicate, value)
     vault.mkdir(parents=True, exist_ok=True)
     supersedes, derived_from = supersedes or [], derived_from or []
     with open_vault(vault, in_place=True) as conn:
         _check_before_write(conn, slug(source), source, supersedes + derived_from)
+        name = _free_name(conn, entity, predicate, value)
+        if name in supersedes + derived_from:
+            raise ValueError(f"fact {name!r} cannot replace or rest on itself")
+        # Stating a fact again makes it current: nothing that replaced it still does.
+        rows(conn, "MATCH (:Fact)-[r:SUPERSEDES]->(:Fact {name: $name}) DELETE r", {"name": name})
         rows(
             conn,
             ADD_FACT,

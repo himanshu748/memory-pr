@@ -91,13 +91,25 @@ def test_values_that_differ_only_in_punctuation_stay_separate_facts(repo):
 
 
 def test_going_back_to_an_earlier_value_recalls_that_value(repo):
-    first = _add(repo, "go")
-    second = _add(repo, "rust", supersedes=[first])
-    assert _add(repo, "go", supersedes=[second]) == first
+    names = [_add(repo, "go")]
+    for value in ("rust", "zig", "java"):
+        names.append(_add(repo, value, supersedes=[names[-1]]))
+    assert _add(repo, "go", supersedes=[names[-1]]) == names[0]
     values = [
         r["value"] for r in recall(repo.vault, "payments-api") if r["predicate"] == "language"
     ]
     assert values == ["go"]
+
+
+def test_a_value_keeps_its_note_name_when_stated_again(repo):
+    first = _add(repo, "python-3.12")
+    assert first == "payments-api--language--python-3-12"
+    assert _add(repo, "python-3.12") == first
+    assert _add(repo, "python-3-12") != first
+    values = {
+        r["value"] for r in recall(repo.vault, "payments-api") if r["predicate"] == "language"
+    }
+    assert values == {"python-3.12", "python-3-12"}
 
 
 def test_linking_to_a_fact_that_does_not_exist_writes_nothing(repo):
