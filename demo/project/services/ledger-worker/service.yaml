@@ -1,0 +1,6 @@
+name: ledger-worker
+facts:
+  runtime: go-1.23
+  queue: kafka
+  database: postgres-15
+  owner: team-payments

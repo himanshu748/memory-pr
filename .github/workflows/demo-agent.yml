@@ -1,0 +1,36 @@
+name: demo-agent
+# Run a scripted agent that writes to the shared memory and opens a pull request.
+on:
+  workflow_dispatch:
+    inputs:
+      scenario:
+        description: What the agent does
+        type: choice
+        default: contradiction
+        options: [contradiction, supersede, stale-clone, unsourced, clean]
+      agent:
+        description: Agent name
+        default: builder
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+jobs:
+  agent:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      SCENARIO: ${{ inputs.scenario }}
+      AGENT: ${{ inputs.agent }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -q -e .
+      - name: Agent writes memory and opens a pull request
+        run: |
+          python demo/agent.py run --scenario "$SCENARIO" --agent "$AGENT" --push | tee -a "$GITHUB_STEP_SUMMARY"

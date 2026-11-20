@@ -1,0 +1,13 @@
+__pycache__/
+*.egg-info/
+.venv/
+.pytest_cache/
+.ruff_cache/
+dist/
+build/
+# Relate engine state and regenerated views inside the vault: the notes are the store.
+.relate/
+.cypherlite.*
+memory/**/index.md
+memory/index.md
+memory/log.md
