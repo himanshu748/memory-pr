@@ -45,7 +45,7 @@ test.
 
 - **The shared memory as a graph.** Click any fact for the file it came from, the agent that wrote
   it, what it replaces and what it rests on, and the Markdown note behind it.
-- **What a pull request does to it.** Five scripted pull requests, one per tab: the facts each adds
+- **What a pull request does to it.** Five scripted pull requests, one per card: the facts each adds
   (green) and loses (red, dashed), and every problem the review found drawn on the graph, such as
   the two contradicting facts and the path between them, or the chain of derived facts resting on a
   replaced one.
@@ -242,15 +242,18 @@ When the review blocks a proposal, the agent reads why and sends the fix with th
   step and no second copy of the data.
 - **Cypher** for every read and write: recall, fact writes (`MERGE`), all review rules,
   including the variable-length `DERIVED_FROM*1..6` path query.
-- **Embedded Python library** (`relate-db`), inside the CLI and the GitHub Action.
+- **Embedded Python library** (`relate-db`), inside the CLI, the MCP server and the GitHub
+  Action.
+- **WebAssembly build** (`@relate/relate-wasm`) in the browser view, running the same review
+  rules on the same graph in the page.
 
 ## Data and disclosures
 
 - All data is generated. The sample project under `demo/project/` and the memory under
   `memory/` are fictional. Nothing was recorded; there is no voice or video.
 - The demo agents are scripted and call no model.
-- Built with AI assistance (Devin). Third-party: Relate (`relate-db`), PyYAML, pytest,
-  ruff.
+- Built with AI assistance (Devin). Third-party: Relate (`relate-db`, `@relate/relate-wasm`),
+  PyYAML, the MCP Python SDK, Cytoscape.js (graph drawing in the browser view), pytest, ruff.
 
 ## License
 
