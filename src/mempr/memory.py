@@ -22,10 +22,20 @@ def fact_name(entity: str, predicate: str, value: str) -> str:
 def _free_name(conn, entity: str, predicate: str, value: str) -> str:
     """The fact's own note, or a name no other value holds (`C++` and `C#` both slug to `c`)."""
     base = fact_name(entity, predicate, value)
-    digest = hashlib.sha1(value.encode()).hexdigest()[:6]
-    for name in (base, f"{base}-{digest}"):
-        held = rows(conn, "MATCH (f:Fact {name: $name}) RETURN f.value AS value", {"name": name})
-        if not held or held[0]["value"] is None or str(held[0]["value"]) == value:
+    names = (base, f"{base}-{hashlib.sha1(value.encode()).hexdigest()[:6]}")
+    held = {
+        r["name"]: r["value"]
+        for r in rows(
+            conn,
+            "MATCH (f:Fact) WHERE f.name IN $names RETURN f.name AS name, f.value AS value",
+            {"names": list(names)},
+        )
+    }
+    for name in names:  # the note that already states this value, wherever it is
+        if name in held and str(held[name]) == value:
+            return name
+    for name in names:
+        if held.get(name) is None:
             return name
     raise ValueError(f"no free note name for {entity} {predicate} {value!r}")
 

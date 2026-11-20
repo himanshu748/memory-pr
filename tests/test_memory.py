@@ -90,6 +90,16 @@ def test_values_that_differ_only_in_punctuation_stay_separate_facts(repo):
     assert values == {"C++", "C#"}
 
 
+def test_a_fact_keeps_its_note_after_the_value_it_collided_with_is_deleted(repo):
+    first, second = _add(repo, "C++"), _add(repo, "C#")
+    (repo.vault / "Fact" / f"{first}.md").unlink()
+    assert _add(repo, "C#") == second
+    values = [
+        r["value"] for r in recall(repo.vault, "payments-api") if r["predicate"] == "language"
+    ]
+    assert values == ["C#"]
+
+
 def test_going_back_to_an_earlier_value_recalls_that_value(repo):
     names = [_add(repo, "go")]
     for value in ("rust", "zig", "java"):
