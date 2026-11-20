@@ -7,7 +7,7 @@ import json
 import sys
 from pathlib import Path
 
-from . import __version__, gitutil, memory
+from . import __version__, export, gitutil, memory
 from .check import review
 from .report import render
 from .rules import load_rules
@@ -122,6 +122,7 @@ def build_parser() -> argparse.ArgumentParser:
     retract = sub.add_parser("retract", help="mark a fact as retracted")
     retract.add_argument("fact")
     retract.set_defaults(func=cmd_retract)
+    export.add_parser(sub)
     return parser
 
 
