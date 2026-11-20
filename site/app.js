@@ -164,50 +164,55 @@ function problemsOf(v) {
 
 // ---------------------------------------------------------------- drawing
 
+// The graph is drawn on a canvas, so it reads the page's colour tokens from style.css here.
+const token = (name) => getComputedStyle(document.documentElement).getPropertyValue(`--${name}`).trim();
+const C = Object.fromEntries(
+  ['base', 'surface', 'ink', 'muted', 'rule', 'faint', 'bad', 'bad-wash', 'good', 'good-wash'].map((n) => [n, token(n)]),
+);
+const FONT = 'Geist, "Helvetica Neue", Helvetica, Arial, sans-serif';
 const STYLE = [
   {
     selector: 'node',
     style: {
-      label: 'data(label)', color: '#f2f5fb', 'font-size': 11, 'font-family': 'Inter, system-ui, sans-serif',
+      label: 'data(label)', color: C.ink, 'font-size': 11, 'font-family': FONT,
       'text-wrap': 'wrap', 'text-valign': 'center', 'text-halign': 'center', 'line-height': 1.25,
-      'background-color': '#2c3b5e', 'border-width': 1.5, 'border-color': '#56689a',
+      'background-color': C.surface, 'border-width': 1.2, 'border-color': C.ink,
       width: 'data(w)', height: 'data(h)', shape: 'round-rectangle',
       'overlay-opacity': 0, 'transition-property': 'opacity', 'transition-duration': '150ms',
     },
   },
-  { selector: 'node[kind = "Fact"]', style: { 'background-color': '#1f3a68', 'border-color': '#5b9dff' } },
-  { selector: 'node.old', style: { 'background-color': '#2a2f3c', 'border-color': '#6b7385', color: '#9aa3b5', 'border-style': 'dashed' } },
+  { selector: 'node.old', style: { 'background-color': C.faint, 'border-color': '#a19e94', color: C.muted, 'border-style': 'dashed' } },
   {
     selector: 'node[kind = "Entity"]',
-    style: { shape: 'ellipse', 'background-color': '#f2a23a', 'border-color': '#ffd08a', color: '#1b1405', 'font-size': 12, 'font-weight': 700 },
+    style: { shape: 'ellipse', 'background-color': C.ink, 'border-color': C.ink, color: C.base, 'font-size': 12, 'font-weight': 600 },
   },
-  { selector: 'node[kind = "Agent"]', style: { shape: 'ellipse', 'background-color': '#6d4bd6', 'border-color': '#a994f5' } },
-  { selector: 'node[kind = "Source"]', style: { shape: 'round-tag', 'background-color': '#22524b', 'border-color': '#4fc3ae', 'font-size': 9 } },
-  { selector: 'node[kind = "Predicate"]', style: { shape: 'round-diamond', 'background-color': '#3a3f52', 'border-color': '#8a91a8', 'font-size': 9 } },
-  { selector: 'node.stub', style: { 'background-color': '#12151d', 'border-style': 'dotted', 'border-color': '#ff6b6b', color: '#ff9c9c' } },
-  { selector: 'node.added', style: { 'border-color': '#3ddc84', 'border-width': 4 } },
-  { selector: 'node.changed', style: { 'border-color': '#ffcf4d', 'border-width': 4 } },
-  { selector: 'node.removed', style: { 'border-color': '#ff6b6b', 'border-width': 3, 'border-style': 'dashed', opacity: 0.6 } },
+  { selector: 'node[kind = "Agent"]', style: { shape: 'ellipse', 'border-color': C.muted, color: C.muted } },
+  { selector: 'node[kind = "Source"]', style: { shape: 'round-tag', 'background-color': C.faint, 'border-color': C.muted, color: C.muted, 'font-size': 9 } },
+  { selector: 'node[kind = "Predicate"]', style: { shape: 'round-diamond', 'background-color': C.faint, 'border-color': C.muted, color: C.muted, 'font-size': 9 } },
+  { selector: 'node.stub', style: { 'background-color': C.surface, 'border-style': 'dotted', 'border-color': C.bad, color: C.bad } },
+  { selector: 'node.added', style: { 'border-color': C.good, 'border-width': 3.5, 'background-color': C['good-wash'], color: C.ink } },
+  { selector: 'node.changed', style: { 'border-color': C.ink, 'border-width': 3.5 } },
+  { selector: 'node.removed', style: { 'border-color': C.bad, 'border-width': 2.5, 'border-style': 'dashed', 'background-color': C.surface, color: C.bad } },
   {
     selector: 'edge',
     style: {
-      width: 1.2, 'line-color': '#46506a', 'target-arrow-color': '#46506a', 'target-arrow-shape': 'triangle',
-      'arrow-scale': 0.8, 'curve-style': 'bezier', 'font-size': 8, color: '#aab3c8',
-      'text-background-color': '#0d1220', 'text-background-opacity': 0.9, 'text-background-padding': 2,
+      width: 1, 'line-color': '#a19e94', 'target-arrow-color': '#a19e94', 'target-arrow-shape': 'triangle',
+      'arrow-scale': 0.8, 'curve-style': 'bezier', 'font-size': 8.5, 'font-family': FONT, color: C.muted,
+      'text-background-color': C.surface, 'text-background-opacity': 0.95, 'text-background-padding': 2,
       'text-rotation': 'autorotate', 'overlay-opacity': 0,
     },
   },
-  { selector: 'edge[type = "SOURCE"], edge[type = "ASSERTED_BY"]', style: { 'line-style': 'dotted', 'line-color': '#394259', 'target-arrow-color': '#394259', width: 1 } },
-  { selector: 'edge[type = "DERIVED_FROM"]', style: { 'line-color': '#ff9f43', 'target-arrow-color': '#ff9f43', width: 2.4, label: 'rests on' } },
-  { selector: 'edge[type = "SUPERSEDES"]', style: { 'line-color': '#c77dff', 'target-arrow-color': '#c77dff', width: 2.4, label: 'replaces' } },
-  { selector: 'edge.added', style: { 'line-color': '#3ddc84', 'target-arrow-color': '#3ddc84', width: 2.6 } },
-  { selector: 'edge.removed', style: { 'line-color': '#ff6b6b', 'target-arrow-color': '#ff6b6b', 'line-style': 'dashed', width: 2, label: 'data(lost)' } },
+  { selector: 'edge[type = "SOURCE"], edge[type = "ASSERTED_BY"]', style: { 'line-style': 'dotted', 'line-color': C.rule, 'target-arrow-color': C.rule } },
+  { selector: 'edge[type = "DERIVED_FROM"]', style: { 'line-color': C.ink, 'target-arrow-color': C.ink, width: 2, label: 'rests on' } },
+  { selector: 'edge[type = "SUPERSEDES"]', style: { 'line-color': C.ink, 'target-arrow-color': C.ink, 'line-style': 'dashed', width: 2, label: 'replaces' } },
+  { selector: 'edge.added', style: { 'line-color': C.good, 'target-arrow-color': C.good, width: 2.2 } },
+  { selector: 'edge.removed', style: { 'line-color': C.bad, 'target-arrow-color': C.bad, 'line-style': 'dashed', width: 2, label: 'data(lost)', color: C.bad } },
   { selector: '.hidden', style: { display: 'none' } },
-  { selector: '.dim', style: { opacity: 0.42 } },
-  { selector: 'node.hit', style: { 'underlay-color': '#5b9dff', 'underlay-opacity': 0.45, 'underlay-padding': 7 } },
-  { selector: 'node.hl', style: { 'underlay-color': '#ff4d6d', 'underlay-opacity': 0.5, 'underlay-padding': 8, opacity: 1 } },
-  { selector: 'edge.hl', style: { width: 4, opacity: 1, label: 'data(name)', 'font-size': 9, color: '#fff', 'z-index': 9 } },
-  { selector: 'node:selected', style: { 'underlay-color': '#ffffff', 'underlay-opacity': 0.35, 'underlay-padding': 6 } },
+  { selector: '.dim', style: { opacity: 0.3 } },
+  { selector: 'node.hit', style: { 'underlay-color': C.ink, 'underlay-opacity': 0.14, 'underlay-padding': 7 } },
+  { selector: 'node.hl', style: { 'underlay-color': C.bad, 'underlay-opacity': 0.22, 'underlay-padding': 8, opacity: 1 } },
+  { selector: 'edge.hl', style: { width: 3.5, 'line-color': C.bad, 'target-arrow-color': C.bad, opacity: 1, label: 'data(name)', 'font-size': 9.5, color: C.bad, 'z-index': 9 } },
+  { selector: 'node:selected', style: { 'underlay-color': C.ink, 'underlay-opacity': 0.18, 'underlay-padding': 6 } },
 ];
 
 const EDGE_NAME = { ABOUT: 'about', SOURCE: 'source', ASSERTED_BY: 'written by', DERIVED_FROM: 'rests on', SUPERSEDES: 'replaces' };
@@ -730,7 +735,7 @@ function show(v, { keepHash = false } = {}) {
   $('result').innerHTML = '';
   $('timing').textContent = '';
   $('graph-note').textContent = v.pull
-    ? 'Green: added by the pull request. Red dashed: gone after the merge. Glowing: the problem selected on the right.'
+    ? 'Green: added by the pull request. Red dashed: gone after the merge. Solid red: the problem selected on the right.'
     : 'Drag to move, scroll or pinch to zoom, click a node for its source and author.';
   if (!keepHash) history.replaceState(null, '', `#pr=${encodeURIComponent(v.pull ? v.short : 'main')}`);
 }
