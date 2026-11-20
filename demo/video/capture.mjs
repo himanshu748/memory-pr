@@ -7,7 +7,7 @@
 // (a fresh incognito context is used either way, so GitHub is always logged out).
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { chromium } from 'playwright-core';
 
@@ -16,7 +16,7 @@ const SITE = process.env.SITE || 'https://memory-pr.vercel.app/';
 const BLOCKED = process.env.BLOCKED || '15'; // a pull request the memory review blocks
 const PASSING = process.env.PASSING || '6'; // one it passes
 const REPO = 'https://github.com/himanshu748/memory-pr';
-const OUT = process.env.OUT || join(here, 'out');
+const OUT = resolve(process.env.OUT || join(here, 'out')); // absolute: ffmpeg reads the frame list from inside it
 const CARDS = pathToFileURL(join(here, 'cards.html')).href;
 const captions = JSON.parse(readFileSync(join(here, 'captions.json'), 'utf8'));
 // 1280x720 CSS pixels at 1.5x: text is large on a laptop and the frames are 1920x1080.
