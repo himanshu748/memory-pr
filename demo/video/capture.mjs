@@ -25,7 +25,7 @@ const FPS = 30;
 const browser = process.env.CDP_URL
   ? await chromium.connectOverCDP(process.env.CDP_URL)
   : await chromium.launch({ channel: 'chrome' });
-const context = await browser.newContext({ viewport: VIEW, deviceScaleFactor: SCALE, reducedMotion: 'no-preference' });
+const context = await browser.newContext({ viewport: VIEW, deviceScaleFactor: SCALE, reducedMotion: 'no-preference', colorScheme: 'light' });
 const page = await context.newPage();
 const cdp = await context.newCDPSession(page);
 const sleep = (ms) => page.waitForTimeout(ms);
@@ -77,14 +77,14 @@ async function hud() {
     };
     const top = 'position:fixed;z-index:2147483646;pointer-events:none;';
     el('hud', 'display:none');
-    el('hud-veil', `${top}inset:0;background:#0a0e1a;opacity:1;transition:opacity .45s ease;z-index:2147483647`);
-    el('hud-ring', `${top}border:3px solid #ff4d6d;border-radius:12px;box-shadow:0 0 0 6px #ff4d6d33,0 0 34px #ff4d6d88;opacity:0;transition:opacity .35s ease,left .5s ease,top .5s ease,width .5s ease,height .5s ease`);
+    el('hud-veil', `${top}inset:0;background:#f2f0e9;opacity:1;transition:opacity .45s ease;z-index:2147483647`);
+    el('hud-ring', `${top}border:3px solid #c8321e;border-radius:6px;opacity:0;transition:opacity .35s ease,left .5s ease,top .5s ease,width .5s ease,height .5s ease`);
     el('hud-caption', `${top}left:50%;bottom:26px;transform:translateX(-50%);max-width:1120px;width:max-content;padding:15px 28px;` +
-      'background:#0a0e1af2;border:1px solid #3a4870;border-radius:16px;box-shadow:0 18px 50px #000a;color:#fff;text-align:center;' +
-      'font:600 27px/1.3 Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;letter-spacing:-0.01em;opacity:0;transition:opacity .35s ease');
+      'background:#141412;border-radius:8px;color:#f2f0e9;text-align:center;' +
+      'font:500 27px/1.3 Geist,"Helvetica Neue",Helvetica,Arial,-apple-system,"Segoe UI",Roboto,sans-serif;letter-spacing:-0.01em;opacity:0;transition:opacity .35s ease');
     const pointer = el('hud-pointer', `${top}left:640px;top:420px;width:26px;height:26px;transition:left .7s cubic-bezier(.3,.1,.2,1),top .7s cubic-bezier(.3,.1,.2,1);filter:drop-shadow(0 2px 5px #000c)`);
     pointer.innerHTML = '<svg viewBox="0 0 26 26" width="26" height="26"><path d="M3 2 L3 21 L8.5 16 L12 24 L15.5 22.5 L12 14.8 L19.5 14.8 Z" fill="#fff" stroke="#0a0e1a" stroke-width="1.6" stroke-linejoin="round"/></svg>';
-    el('hud-click', `${top}width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;border:3px solid #5b9dff;opacity:0`);
+    el('hud-click', `${top}width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;border:3px solid #1f3fff;opacity:0`);
   });
 }
 const veil = async (on) => {
@@ -155,31 +155,47 @@ await cdp.send('Page.startScreencast', { format: 'png', everyNthFrame: 1 });
 await card('title', 4600);
 await card('problem', 8400);
 
-// A blocked pull request on GitHub, logged out. Profile pictures are hidden.
-const github = (n) => () =>
-  page.addStyleTag({ content: 'img.avatar, img.avatar-user, .TimelineItem-avatar { visibility: hidden !important; }' });
-const comment = (title) => `.timeline-comment:has(h2:text-is("${title}"))`;
-await open(`${REPO}/pull/2`, github(2));
-await ring('.gh-header-title, h1.gh-header-title, .js-issue-title');
+// A blocked pull request on GitHub, logged out and in the light theme. Profile pictures,
+// the site header with its sign-in buttons and the description are hidden: the story is
+// the review comment and the check.
+const github = () =>
+  page.addStyleTag({
+    content: `img[class*="avatar" i], .TimelineItem-avatar, .js-header-wrapper, header[role="banner"], .flash, .js-stale-session-flash,
+      a[href*="/login"], .timeline-comment-actions, #partial-discussion-sidebar img { visibility: hidden !important; }
+      .js-header-wrapper, header[role="banner"] { display: none !important; }`,
+  });
+const title = 'h1[class*="inlineTitle"]';
+const review = '.timeline-comment:has(a.author:text-is("github-actions"))';
+await open(`${REPO}/pull/2`, github);
+await ring(title);
 await caption('pr2_open');
-await sleep(4200);
+await sleep(4600);
 await ring(null);
-await scrollTo(comment('Memory review: blocked (1 problem)'), 70);
-await ring(comment('Memory review: blocked (1 problem)'), 4);
+await scrollTo(review, 60);
+await ring(`${review} .comment-body > :nth-child(-n+4) >> nth=0`, 6).catch(() => {});
 await caption('pr2_comment');
-await sleep(7000);
+await sleep(3200);
 await ring(null);
-await scrollTo('details.commit-build-statuses', 150);
+await page.locator(review).first().evaluate((node) => scrollBy({ top: Math.min(node.offsetHeight - 420, 260), behavior: 'smooth' }));
+await sleep(4600);
+// The checks box on the conversation tab does not load for logged-out visitors; the Checks tab does.
+await open(`${REPO}/pull/2/checks`, async () => {
+  await github();
+  await page.locator('summary', { hasText: 'memory-review' }).first().click();
+  await page.waitForLoadState('networkidle');
+  await github();
+});
+await ring('h3:has-text("memory-review.yml") >> xpath=ancestor::*[contains(@class,"Box") or self::section][1]', 6).catch(() => {});
 await caption('pr2_check');
-await click('details.commit-build-statuses summary');
-await sleep(1500);
-await ring('details.commit-build-statuses .dropdown-menu, details.commit-build-statuses details-menu, details.commit-build-statuses [role="menu"]', 2).catch(() => {});
-await sleep(4800);
+await sleep(6000);
 
 // A correct pull request passes.
-await open(`${REPO}/pull/6`, github(6));
-await scrollTo(comment('Memory review: passed'), 150);
-await ring(comment('Memory review: passed'), 4);
+await open(`${REPO}/pull/6`, github);
+await ring(title);
+await sleep(1800);
+await ring(null);
+await page.locator(review).last().evaluate((node) => scrollTo({ top: node.getBoundingClientRect().top + scrollY - 60, behavior: 'smooth' }));
+await sleep(1100);
 await caption('pr6');
 await sleep(5200);
 

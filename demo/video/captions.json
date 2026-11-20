@@ -1,8 +1,8 @@
 {
-  "pr2_open": "A real pull request from an agent. Git finds no conflict.",
+  "pr2_open": "A real pull request. An agent wrote this branch. Git finds no conflict.",
   "pr2_comment": "The memory review reads it as graph facts. It names the contradiction and the path that proves it.",
   "pr2_check": "The required memory-review check fails, so main does not take this merge.",
-  "pr6": "A correct pull request from another agent passes and can merge.",
+  "pr6": "A correct change from another agent. The memory review passes.",
   "live_hero": "The same review runs live in a web page. Nothing to install.",
   "live_path": "One service, two active databases. The contradiction is drawn as a path.",
   "live_stale": "A stale clone. Git merges it cleanly. The graph loses a note and its links.",
