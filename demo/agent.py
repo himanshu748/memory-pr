@@ -169,9 +169,11 @@ def run(scenario: str, agent: str, push: bool, base: str) -> None:
     url = created.stdout.strip()
     print(url)
     if os.environ.get("GITHUB_ACTIONS"):
-        # Pull requests opened with the Actions token do not trigger workflows, so start it.
+        # GitHub holds workflows for approval on pull requests the Actions token opens, so
+        # start the review from the base branch; it reports `memory-review` as a status.
         number = url.rstrip("/").rsplit("/", 1)[-1]
-        sh("gh", "workflow", "run", "memory-review.yml", "--ref", branch, "-f", f"pr={number}")
+        target = base.removeprefix("origin/")
+        sh("gh", "workflow", "run", "memory-review.yml", "--ref", target, "-f", f"pr={number}")
 
 
 def main() -> None:
