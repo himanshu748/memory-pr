@@ -776,9 +776,15 @@ function wire() {
     if (event.key === 'Enter' && (event.ctrlKey || event.metaKey) && event.target === $('query')) runQuery();
   });
   document.addEventListener('click', (event) => {
-    const open = event.target.closest?.('[data-open]');
-    const v = open && views.find((x) => x.pull && x.short === open.dataset.open);
+    // Links to a section scroll there without replacing `#pr=…`, which names the open graph.
+    const jump = event.target.closest?.('a[href^="#"]');
+    if (!jump) return;
+    const v = views.find((x) => x.pull && x.short === jump.dataset.open);
     if (v && v !== view) show(v);
+    const section = document.getElementById(jump.getAttribute('href').slice(1));
+    if (!section) return;
+    event.preventDefault();
+    section.scrollIntoView();
   });
   document.addEventListener('change', (event) => {
     if (event.target.id === 'rules' && event.target.value) {
