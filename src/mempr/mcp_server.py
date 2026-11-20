@@ -27,9 +27,13 @@ from .rules import load_rules
 from .vault import GENERATED, open_vault, rows
 
 ROW_LIMIT = 200
-PROTECTED_BRANCHES = {"main", "master"}
+BRANCH_PREFIX = "agent/"  # the only branches this server writes to
 WRITE_CLAUSE = re.compile(
     r"(?<![.\w])(CREATE|MERGE|SET|DELETE|DETACH|REMOVE|DROP|FOREACH|LOAD\s+CSV)(?!\w)", re.I
+)
+REMOTE_URL = re.compile(
+    r"^(?:https?://(?:[^@/]+@)?|ssh://(?:[^@/]+@)?|[^@/:]+@)"
+    r"([^/:]+)(?::\d+)?[:/]([^/]+)/([^/]+?)(?:\.git)?/?$"
 )
 QUOTED = re.compile(r"'(?:\\.|[^'\\])*'|\"(?:\\.|[^\"\\])*\"|`[^`]*`|//[^\n]*|/\*.*?\*/", re.S)
 
@@ -83,6 +87,26 @@ def _branch_exists(repo: Path, branch: str) -> bool:
     return gitutil.git(repo, "rev-parse", "--verify", "--quiet", ref, check=False).returncode == 0
 
 
+def _branch_names(repo: Path, rev: str) -> set[str]:
+    """Every branch name `rev` can stand for: `refs/heads/x`, `origin/x` and `x` are all `x`."""
+    proc = gitutil.git(repo, "rev-parse", "--symbolic-full-name", rev, check=False)
+    full = proc.stdout.strip()
+    names = {rev, full}
+    if full.startswith("refs/heads/"):
+        names.add(full.removeprefix("refs/heads/"))
+    elif full.startswith("refs/remotes/"):
+        names.add(full.removeprefix("refs/remotes/").split("/", 1)[-1])
+    return names - {""}
+
+
+def _github_repo(repo: Path, remote: str) -> str | None:
+    """`host/owner/name` of the remote for `gh --repo`, or None when it is not such a URL."""
+    # The configured URL, not `remote get-url`: that one applies `insteadOf` rewrites.
+    url = gitutil.git(repo, "config", "--get", f"remote.{remote}.url", check=False).stdout.strip()
+    found = REMOTE_URL.match(url)
+    return "/".join(found.groups()) if found else None
+
+
 def _review(cfg: Settings, head: str, base: str) -> dict[str, Any]:
     # Rules come from the base branch, so a proposal cannot switch off its own review.
     rules = load_rules(gitutil.read_file(cfg.repo, base, cfg.rules))
@@ -107,9 +131,17 @@ def _commit_on_branch(
     """
     if memory.slug(agent) != agent or not agent:
         raise ValueError(f"agent {agent!r} must be lowercase letters, digits and hyphens")
-    branch = branch or f"agent/{agent}-{memory.slug(topic)[:48].strip('-')}-{int(time.time())}"
-    if branch in PROTECTED_BRANCHES or branch == base.removeprefix(f"{cfg.remote}/"):
-        raise ValueError(f"refusing to write on {branch!r}: memory changes go through a branch")
+    if branch is None:
+        stem = f"{BRANCH_PREFIX}{agent}-{memory.slug(topic)[:48].strip('-')}-{int(time.time())}"
+        branch, n = stem, 1
+        while _branch_exists(cfg.repo, branch):  # two proposals in one second stay separate
+            n += 1
+            branch = f"{stem}-{n}"
+    if not branch.startswith(BRANCH_PREFIX) or branch in _branch_names(cfg.repo, base):
+        raise ValueError(
+            f"refusing to write on {branch!r}: memory changes go on an {BRANCH_PREFIX}* branch "
+            "that is not the base"
+        )
     if gitutil.git(cfg.repo, "check-ref-format", "--branch", branch, check=False).returncode:
         raise ValueError(f"{branch!r} is not a valid branch name")
     if branch == gitutil.git(cfg.repo, "branch", "--show-current").stdout.strip():
@@ -161,10 +193,13 @@ def _open_pull_request(cfg: Settings, branch: str, base: str, title: str, body: 
     push = gitutil.git(cfg.repo, "push", "-q", "-u", cfg.remote, branch, check=False)
     if push.returncode != 0:
         return {"pushed": False, "error": f"git push failed: {push.stderr.strip()}"}
+    # Name the repository of the remote that was pushed to; gh's own default can differ.
+    target = _github_repo(cfg.repo, cfg.remote)
     try:
         proc = subprocess.run(
-            ["gh", "pr", "create", "--base", base.removeprefix(f"{cfg.remote}/")]
-            + ["--head", branch, "--title", title, "--body", body],
+            ["gh", "pr", "create", "--base", min(_branch_names(cfg.repo, base), key=len)]
+            + ["--head", branch, "--title", title, "--body", body]
+            + (["--repo", target] if target else []),
             cwd=cfg.repo,
             capture_output=True,
             text=True,
@@ -288,9 +323,9 @@ def build_server(cfg: Settings) -> FastMCP:
         that is checked out) and return the review of that branch against the base.
 
         `source` is where you read it (a file path or URL) and is required. `supersedes` and
-        `derived_from` take fact names as returned by recall. Pass `branch` to add to an
-        earlier proposal; leave it out to start a new one. `open_pull_request` also pushes
-        the branch and opens a pull request with `gh`.
+        `derived_from` take fact names as returned by recall. Pass `branch` (an
+        `agent/*` branch) to add to an earlier proposal; leave it out to start a new one.
+        `open_pull_request` also pushes the branch and opens a pull request with `gh`.
         """
 
         def write(vault: Path) -> str:

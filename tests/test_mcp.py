@@ -277,7 +277,9 @@ def test_review_tool_reports_a_branch_made_outside_the_server(agent, repo):
 def test_open_pull_request_pushes_the_branch_and_calls_gh(repo, tmp_path):
     remote = tmp_path / "remote.git"
     repo.git("init", "-q", "--bare", str(remote))
-    repo.git("remote", "add", "origin", str(remote))
+    # fetch URL names a GitHub repository; pushes go to the local bare repository
+    repo.git("remote", "add", "origin", "https://github.com/acme/project.git")
+    repo.git("remote", "set-url", "--push", "origin", str(remote))
     repo.git("push", "-q", "origin", "main")
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
@@ -297,16 +299,66 @@ def test_open_pull_request_pushes_the_branch_and_calls_gh(repo, tmp_path):
         open_pull_request=True,
     )
     assert out["pull_request"] == {"pushed": True, "url": "https://example.invalid/pull/7"}
-    pushed = repo.git("ls-remote", "--heads", "origin", out["branch"])
+    pushed = repo.git("ls-remote", "--heads", str(remote), out["branch"])
     assert pushed.split()[0] == out["commit"]
     args = log.read_text().splitlines()
     assert args[:6] == ["pr", "create", "--base", "main", "--head", out["branch"]]
     assert "memory: ledger-worker queue = kafka" in args[7]
+    assert args[-2:] == ["--repo", "github.com/acme/project"]  # the remote that was pushed to
 
 
 def test_proposing_on_the_checked_out_branch_is_refused(agent, repo):
-    repo.branch("feature/work")
+    repo.branch("agent/work")
     before = state(repo)
-    is_error, text = agent.call("retract_fact", fact=TOOL, agent="builder", branch="feature/work")
+    is_error, text = agent.call("retract_fact", fact=TOOL, agent="builder", branch="agent/work")
     assert is_error and "checked out" in text
     assert state(repo) == before
+
+
+def test_base_branch_cannot_be_written_under_another_name(agent, repo):
+    repo.git("branch", "release", "main")
+    repo.git("branch", "agent/base", "main")
+    before = repo.git("for-each-ref", "refs/heads")
+    fact = {
+        "entity": "checkout-web",
+        "predicate": "port",
+        "value": "3000",
+        "source": "docs/checkout-web.md",
+        "agent": "builder",
+    }
+    for branch, base in [
+        ("release", "refs/heads/release"),
+        ("release", "main"),  # an existing branch that is not a proposal
+        ("agent/base", "refs/heads/agent/base"),
+        ("agent/base", "heads/agent/base"),
+    ]:
+        is_error, text = agent.call("propose_fact", **fact, branch=branch, base=base)
+        assert is_error and "refusing to write" in text, text
+    assert repo.git("for-each-ref", "refs/heads") == before
+
+
+def test_proposals_in_the_same_second_get_separate_branches(agent, repo):
+    async def script(session, _init):
+        out = []
+        for value in ("3000", "8080"):
+            result = await session.call_tool(
+                "propose_fact",
+                {
+                    "entity": "checkout-web",
+                    "predicate": "port",
+                    "value": value,
+                    "source": "docs/checkout-web.md",
+                    "agent": "builder",
+                },
+            )
+            assert not result.isError, result.content[0].text
+            out.append(json.loads(result.content[0].text))
+        return out
+
+    first, second = agent.session(script)
+    if first["branch"].rsplit("-", 1)[-1] == second["branch"].split("-")[-2]:
+        assert second["branch"] == first["branch"] + "-2"  # same second: suffixed
+    assert first["branch"] != second["branch"]
+    for out in (first, second):  # each is its own one-commit proposal, so neither is blocked
+        assert repo.git("rev-list", "--count", f"main..{out['branch']}") == "1"
+        assert out["blocked"] is False

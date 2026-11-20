@@ -190,8 +190,8 @@ With `mempr` already installed, the command is `mempr --repo /absolute/path/to/y
 | `retract_fact` | The same for a retraction. |
 | `review` | The review of any branch against a base: the result of `mempr check` as JSON, and the comment text. |
 
-An agent cannot write to the memory directly. A proposal is committed in a temporary git
-worktree, so the branch you have checked out, your working tree and `main` do not move.
+An agent cannot write to the memory directly. A proposal is committed on an `agent/*`
+branch in a temporary git worktree, so the branch you have checked out, your working tree and `main` do not move.
 When the review blocks a proposal, the agent reads why and sends the fix with the same
 `branch`; the fact becomes shared memory only when the pull request is merged.
 `--base` sets the branch proposals start from and are reviewed against (default
