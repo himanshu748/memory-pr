@@ -1,0 +1,61 @@
+name: memory-review
+# Reviews every pull request as a change to the memory graph, comments the result, and
+# fails when the change would damage the graph. Make the `memory-review` check required
+# on the base branch and a bad memory change cannot be merged.
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: Pull request number to review
+        required: true
+permissions:
+  contents: read
+  pull-requests: write
+concurrency:
+  group: memory-review-${{ github.event.pull_request.number || inputs.pr }}
+  cancel-in-progress: true
+jobs:
+  memory-review:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PR: ${{ github.event.pull_request.number || inputs.pr }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install mempr from the base branch
+        run: |
+          base=$(gh pr view "$PR" --json baseRefName -q .baseRefName)
+          head=$(gh pr view "$PR" --json headRefOid -q .headRefOid)
+          echo "BASE=$base" >> "$GITHUB_ENV"
+          echo "HEAD=$head" >> "$GITHUB_ENV"
+          git fetch -q origin "$base" "$head"
+          git worktree add -q "$RUNNER_TEMP/tool" "origin/$base"
+          pip install -q "$RUNNER_TEMP/tool"
+      - name: Review the memory change
+        id: review
+        run: |
+          set +e
+          mempr check --base "origin/$BASE" --head "$HEAD" \
+            --out "$RUNNER_TEMP/comment.md" --json "$RUNNER_TEMP/review.json"
+          echo "code=$?" >> "$GITHUB_OUTPUT"
+          cat "$RUNNER_TEMP/comment.md" >> "$GITHUB_STEP_SUMMARY"
+      - name: Comment on the pull request
+        run: |
+          id=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" --paginate \
+            -q '.[] | select(.body | startswith("<!-- mempr-review -->")) | .id' | tail -1)
+          if [ -n "$id" ]; then
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$id" \
+              -F body=@"$RUNNER_TEMP/comment.md" -q .html_url
+          else
+            gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" \
+              -F body=@"$RUNNER_TEMP/comment.md" -q .html_url
+          fi
+      - name: Block the merge when the review found problems
+        run: exit "${{ steps.review.outputs.code }}"

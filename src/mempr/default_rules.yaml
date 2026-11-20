@@ -1,0 +1,84 @@
+# Each rule is a Cypher query over the merged memory graph. A row is a finding.
+# The check reports only findings the pull request introduces (absent on the base branch).
+#
+# Graph model (folders are labels, notes are nodes, wikilink lists are relationships):
+#   (:Fact {predicate, value, status})-[:ABOUT]->(:Entity)
+#   (:Fact)-[:ASSERTED_BY]->(:Agent)      (:Fact)-[:SOURCE]->(:Source)
+#   (:Fact)-[:SUPERSEDES]->(:Fact)        (:Fact)-[:DERIVED_FROM]->(:Fact)
+#   (:Predicate {cardinality: one|many})  optional; a predicate holds one value unless it says many
+
+- id: contradiction
+  severity: block
+  title: Contradicts a fact already in memory
+  message: >-
+    `{entity}` has two active values for `{predicate}`: `{value}` (Fact/{fact}) and
+    `{other_value}` (Fact/{other}). Path:
+    (Fact/{fact})-[:ABOUT]->(Entity/{entity})<-[:ABOUT]-(Fact/{other})
+  fix: >-
+    If the new value replaces the old one, add `SUPERSEDES: - "[[Fact/<old>]]"` to the new
+    fact. If the old one is right, drop the new fact.
+  cypher: |
+    MATCH (a:Fact)-[:ABOUT]->(e:Entity)<-[:ABOUT]-(b:Fact)
+    WHERE a.name < b.name
+      AND a.status = 'active' AND b.status = 'active'
+      AND a.predicate = b.predicate AND a.value <> b.value
+      AND NOT (a)-[:SUPERSEDES]->(b) AND NOT (b)-[:SUPERSEDES]->(a)
+      AND NOT EXISTS { MATCH (p:Predicate {name: a.predicate}) WHERE p.cardinality = 'many' }
+    RETURN a.name AS fact, b.name AS other, e.name AS entity,
+           a.predicate AS predicate, a.value AS value, b.value AS other_value
+    ORDER BY fact, other
+
+- id: stale-derivation
+  severity: block
+  title: Rests on a fact that was retracted or replaced
+  message: >-
+    Fact/{fact} is active but is derived, {hops} step(s) away, from Fact/{root}, which is
+    {reason}. Path: {path}
+  fix: >-
+    Re-check the derived fact against the current value, then either retract it or point
+    `DERIVED_FROM` at the fact that replaced the old one.
+  cypher: |
+    MATCH p = (f:Fact)-[:DERIVED_FROM*1..6]->(root:Fact)
+    WHERE f.status = 'active'
+      AND (root.status = 'retracted'
+           OR EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(root) WHERE n.status = 'active' })
+    RETURN f.name AS fact, root.name AS root, length(p) AS hops,
+           CASE WHEN root.status = 'retracted' THEN 'retracted' ELSE 'superseded' END AS reason,
+           reduce(s = '', n IN nodes(p) |
+                  s + CASE WHEN s = '' THEN '' ELSE ' -[:DERIVED_FROM]-> ' END + 'Fact/' + n.name)
+             AS path
+    ORDER BY fact, hops
+
+- id: dangling-link
+  severity: block
+  title: Links to a note that does not exist
+  message: "{source} -[:{type}]-> {target}, but there is no note `{target}.md`."
+  fix: Add the missing note or remove the link.
+  cypher: |
+    MATCH (a)-[r]->(b)
+    WHERE b.stub = true
+    RETURN labels(a)[0] + '/' + a.name AS source, type(r) AS type,
+           labels(b)[0] + '/' + b.name AS target
+    ORDER BY source, type, target
+
+- id: unsourced-fact
+  severity: block
+  title: Fact has no source
+  message: "Fact/{fact} is active but has no `SOURCE` link, so nobody can verify it."
+  fix: Link the file, commit, or document the agent read it from under `SOURCE`.
+  cypher: |
+    MATCH (f:Fact)
+    WHERE f.status = 'active' AND NOT (f)-[:SOURCE]->()
+    RETURN f.name AS fact
+    ORDER BY fact
+
+- id: unattributed-fact
+  severity: warn
+  title: Fact has no author
+  message: "Fact/{fact} has no `ASSERTED_BY` link."
+  fix: Link the agent that wrote the fact under `ASSERTED_BY`.
+  cypher: |
+    MATCH (f:Fact)
+    WHERE NOT (f)-[:ASSERTED_BY]->()
+    RETURN f.name AS fact
+    ORDER BY fact

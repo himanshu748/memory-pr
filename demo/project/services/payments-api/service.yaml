@@ -1,0 +1,11 @@
+# Generated sample project. Not a real system.
+name: payments-api
+facts:
+  database: postgres-15
+  runtime: python-3.12
+  queue: kafka
+  owner: team-payments
+derived:
+  - {predicate: migration-tool, value: pg-migrate, from: [database]}
+  - {predicate: backup-job, value: nightly-pg-dump, from: [database]}
+  - {predicate: restore-drill, value: quarterly-pg-restore, from: [backup-job]}

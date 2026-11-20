@@ -1,0 +1,5 @@
+name: checkout-web
+facts:
+  runtime: node-22
+  port: "3000"
+  owner: team-storefront
