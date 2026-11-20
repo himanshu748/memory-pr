@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from mempr.check import review, three_way
+from mempr.memory import add_fact, retract
 from mempr.report import MARKER, render
 from mempr.rules import default_rules
 
@@ -138,3 +139,23 @@ def test_three_way_keeps_removals_and_reports_only_unexpected_losses():
     assert conflicts == [] and dropped == []
     conflicts, dropped = three_way(ancestor, target, head, frozenset({node, a}))
     assert dropped == [c]
+
+
+def test_a_second_replacement_is_not_a_contradiction_with_the_first_value(repo):
+    for value, old in (("postgres-16", "postgres-15"), ("postgres-17", "postgres-16")):
+        repo.git("checkout", "-q", "-b", f"agent/{value}", "main")
+        add_fact(
+            repo.vault,
+            entity="payments-api",
+            predicate="database",
+            value=value,
+            agent="scout",
+            source="docs/payments-api.md",
+            supersedes=[f"payments-api--database--{old}"],
+        )
+        retract(repo.vault, "payments-api--migration-tool--pg-migrate")
+        repo.commit(f"move to {value}")
+        result = run(repo, head=f"agent/{value}")
+        assert not result.blocked, [f.rule.id for f in result.findings]
+        repo.git("checkout", "-q", "main")
+        repo.git("merge", "-q", "--no-ff", f"agent/{value}", "-m", f"merge {value}")

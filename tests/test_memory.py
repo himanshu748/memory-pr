@@ -4,6 +4,7 @@ import pytest
 
 from mempr import memory
 from mempr.cli import main
+from mempr.memory import add_fact, recall
 from mempr.vault import lint
 
 
@@ -67,3 +68,71 @@ def test_cli_check_exit_code_and_outputs(repo, tmp_path, capsys):
     assert code == 1
     assert "blocked (1 problem)" in out.read_text()
     assert '"blocked": true' in js.read_text()
+
+
+def _add(repo, value, **kwargs):
+    return add_fact(
+        repo.vault,
+        entity="payments-api",
+        predicate="language",
+        value=value,
+        agent="scout",
+        source="docs/payments-api.md",
+        **kwargs,
+    )
+
+
+def test_values_that_differ_only_in_punctuation_stay_separate_facts(repo):
+    assert _add(repo, "C++") != _add(repo, "C#")
+    values = {
+        r["value"] for r in recall(repo.vault, "payments-api") if r["predicate"] == "language"
+    }
+    assert values == {"C++", "C#"}
+
+
+def test_going_back_to_an_earlier_value_recalls_that_value(repo):
+    first = _add(repo, "go")
+    second = _add(repo, "rust", supersedes=[first])
+    assert _add(repo, "go", supersedes=[second]) == first
+    values = [
+        r["value"] for r in recall(repo.vault, "payments-api") if r["predicate"] == "language"
+    ]
+    assert values == ["go"]
+
+
+def test_linking_to_a_fact_that_does_not_exist_writes_nothing(repo):
+    with pytest.raises(KeyError):
+        _add(repo, "go", derived_from=["payments-api--database--mysql-8"])
+    assert repo.git("status", "--porcelain", "--", "memory/Fact") == ""
+
+
+def test_two_sources_with_the_same_note_name_are_refused(repo):
+    with pytest.raises(ValueError):
+        add_fact(
+            repo.vault,
+            entity="payments-api",
+            predicate="language",
+            value="go",
+            agent="scout",
+            source="docs/payments-api-md",
+        )
+
+
+def test_rules_are_read_from_the_base_branch(repo, capsys):
+    repo.git("checkout", "-q", "-b", "agent/sneaky")
+    (repo.path / "memory-rules.yaml").write_text(
+        "rules:\n  - id: contradiction\n    severity: warn\n    title: off\n"
+        "    message: off\n    cypher: RETURN 1 AS x LIMIT 0\n"
+    )
+    add_fact(
+        repo.vault,
+        entity="payments-api",
+        predicate="database",
+        value="mysql-8",
+        agent="scout",
+        source="docs/payments-api.md",
+    )
+    repo.commit("contradict and switch the rule off")
+    code = main(["--repo", str(repo.path), "check", "--base", "main", "--head", "agent/sneaky"])
+    assert code == 1
+    assert "Contradicts a fact already in memory" in capsys.readouterr().out

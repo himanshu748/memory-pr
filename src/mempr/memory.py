@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import re
 from pathlib import Path
 from typing import Any
@@ -13,8 +14,16 @@ def slug(text: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
 
 
+def key(text: str) -> str:
+    """A file-safe name. Text the slug cannot hold exactly gets a hash, so `C++` != `C#`."""
+    base = slug(text)
+    if base == text:
+        return base
+    return f"{base}-{hashlib.sha1(text.encode()).hexdigest()[:6]}".lstrip("-")
+
+
 def fact_name(entity: str, predicate: str, value: str) -> str:
-    return f"{slug(entity)}--{slug(predicate)}--{slug(value)}"
+    return f"{key(entity)}--{key(predicate)}--{key(value)}"
 
 
 RECALL = """
@@ -49,13 +58,27 @@ RETURN f.name AS fact
 """
 
 LINK = {
+    # A fact that replaces another is no longer replaced by it (A -> B -> A again).
     "SUPERSEDES": (
-        "MATCH (f:Fact {name: $name}) MERGE (o:Fact {name: $other}) MERGE (f)-[:SUPERSEDES]->(o)"
+        "MATCH (f:Fact {name: $name}), (o:Fact {name: $other}) "
+        "OPTIONAL MATCH (o)-[back:SUPERSEDES]->(f) DELETE back "
+        "MERGE (f)-[:SUPERSEDES]->(o) RETURN o.name AS other"
     ),
     "DERIVED_FROM": (
-        "MATCH (f:Fact {name: $name}) MERGE (o:Fact {name: $other}) MERGE (f)-[:DERIVED_FROM]->(o)"
+        "MATCH (f:Fact {name: $name}), (o:Fact {name: $other}) "
+        "MERGE (f)-[:DERIVED_FROM]->(o) RETURN o.name AS other"
     ),
 }
+
+
+def _check_before_write(conn, source: str, uri: str, linked: list[str]) -> None:
+    """Refuse a write that would overwrite another source or link to a fact that is not there."""
+    for other in linked:
+        if not rows(conn, "MATCH (f:Fact {name: $name}) RETURN f.name AS name", {"name": other}):
+            raise KeyError(f"no fact named {other!r} to link to")
+    taken = rows(conn, "MATCH (s:Source {name: $name}) RETURN s.uri AS uri", {"name": source})
+    if taken and taken[0]["uri"] not in (None, uri):
+        raise ValueError(f"source {uri!r} has the same note name as {taken[0]['uri']!r}")
 
 
 def add_fact(
@@ -71,9 +94,14 @@ def add_fact(
     derived_from: list[str] | None = None,
 ) -> str:
     """Write one fact into the working-tree vault. Returns the fact's name."""
+    for label, text in (("entity", entity), ("predicate", predicate), ("agent", agent)):
+        if slug(text) != text:
+            raise ValueError(f"{label} {text!r} must be lowercase letters, digits and hyphens")
     name = fact_name(entity, predicate, value)
     vault.mkdir(parents=True, exist_ok=True)
+    supersedes, derived_from = supersedes or [], derived_from or []
     with open_vault(vault, in_place=True) as conn:
+        _check_before_write(conn, slug(source), source, supersedes + derived_from)
         rows(
             conn,
             ADD_FACT,
@@ -88,9 +116,9 @@ def add_fact(
                 "statement": statement or f"{entity} {predicate}: {value}",
             },
         )
-        for other in supersedes or []:
+        for other in supersedes:
             rows(conn, LINK["SUPERSEDES"], {"name": name, "other": other})
-        for other in derived_from or []:
+        for other in derived_from:
             rows(conn, LINK["DERIVED_FROM"], {"name": name, "other": other})
     return name
 
