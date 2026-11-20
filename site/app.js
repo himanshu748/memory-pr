@@ -17,6 +17,9 @@ let views = [];
 let view;
 let problem = null; // the problem drawn on the graph
 let nodeId = null; // the node shown in the detail card
+let engine = 'starting'; // 'starting', 'ready' or 'off'
+const calm = matchMedia('(prefers-reduced-motion: reduce)');
+const coarse = matchMedia('(pointer: coarse)');
 const positions = new Map();
 
 // ---------------------------------------------------------------- Relate
@@ -143,6 +146,7 @@ function liveFindings(v) {
 function openView(v) {
   if (v.db || !relate) return;
   v.db = loadDb(v.after);
+  if (v.apply) v.apply(v.db); // a visitor's draft: the change is written with Cypher
   const base = loadDb(v.before);
   const rows = ruleRows(base, rulesOf(v));
   base.free();
@@ -153,6 +157,7 @@ function openView(v) {
 
 function refresh(v) {
   v.graph = readGraph(v.db, v.after);
+  for (const note of v.notes || []) Object.assign(v.graph.nodes.find((n) => n.id === note.id) || {}, note);
   v.live = liveFindings(v);
 }
 
@@ -192,7 +197,7 @@ const STYLE = [
   { selector: 'node.stub', style: { 'background-color': C.surface, 'border-style': 'dotted', 'border-color': C.bad, color: C.bad } },
   { selector: 'node.added', style: { 'border-color': C.good, 'border-width': 3.5, 'background-color': C['good-wash'], color: C.ink } },
   { selector: 'node.changed', style: { 'border-color': C.ink, 'border-width': 3.5 } },
-  { selector: 'node.removed', style: { 'border-color': C.bad, 'border-width': 2.5, 'border-style': 'dashed', 'background-color': C.surface, color: C.bad } },
+  { selector: 'node.removed', style: { opacity: 0.7, 'border-color': C.bad, 'border-width': 2.5, 'border-style': 'dashed', 'background-color': C.surface, color: C.bad } },
   {
     selector: 'edge',
     style: {
@@ -258,10 +263,12 @@ function nodeLabel(n) {
   return n.stub ? `${n.props.name}\n(no note)` : String(n.props.name);
 }
 
-function draw({ relayout = false } = {}) {
-  const u = (view.union = union(view));
+/** Cytoscape elements for a set of notes and links, each with its state as a class. */
+function elementsOf(nodes, rels) {
   const elements = [];
-  for (const n of u.nodes.values()) {
+  const ids = new Set();
+  for (const n of nodes) {
+    ids.add(n.id);
     const label = nodeLabel(n);
     const lines = label.split('\n');
     const wide = Math.max(...lines.map((l) => l.length));
@@ -276,8 +283,8 @@ function draw({ relayout = false } = {}) {
       classes: [n.state, n.old ? 'old' : '', n.stub ? 'stub' : ''].join(' '),
     });
   }
-  for (const r of u.rels) {
-    if (!u.nodes.has(r.source) || !u.nodes.has(r.target)) continue;
+  for (const r of rels) {
+    if (!ids.has(r.source) || !ids.has(r.target)) continue;
     const name = EDGE_NAME[r.type] || r.type.toLowerCase();
     elements.push({
       group: 'edges',
@@ -285,8 +292,13 @@ function draw({ relayout = false } = {}) {
       classes: r.state,
     });
   }
+  return elements;
+}
+
+function draw({ relayout = false } = {}) {
+  const u = (view.union = union(view));
   cy.elements().remove();
-  cy.add(elements);
+  cy.add(elementsOf(u.nodes.values(), u.rels));
   layout(relayout);
   paint();
 }
@@ -332,7 +344,7 @@ function layout(relayout) {
   if (!view.pull) cy.nodes().forEach((n) => positions.set(n.id(), { ...n.position() }));
 }
 
-function paint({ fit = true } = {}) {
+function paint({ fit = true, glide = true } = {}) {
   const showProv = $('show-prov').checked;
   const focus = new Set(problem ? problem.nodes : []);
   const focusRels = new Set(problem ? problem.rels.map((r) => r.join('|')) : []);
@@ -349,19 +361,67 @@ function paint({ fit = true } = {}) {
     });
   });
   if (!fit) return;
+  const from = { zoom: cy.zoom(), pan: { ...cy.pan() } };
+  cy.stop();
+  frame();
+  if (calm.matches || !glide || !framed) return void (framed = true);
+  // Travel from the last framing to the new one, so a switch reads as one graph changing.
+  const to = { zoom: cy.zoom(), pan: { ...cy.pan() } };
+  cy.viewport(from);
+  cy.animate({ zoom: to.zoom, pan: to.pan }, { duration: 520, easing: 'ease-in-out-cubic' });
+}
+
+let framed = false;
+function frame() {
   const target = problem ? cy.elements('.hl') : cy.elements(':visible');
   const eles = target.length ? target : cy.elements();
   // Show the whole graph when its labels stay readable; otherwise frame the problem.
   cy.fit(cy.elements(':visible'), 28);
   if (cy.zoom() >= 0.72 || !target.length) return;
-  cy.fit(eles, problem ? 70 : 24);
+  cy.fit(eles, Math.min(problem ? 70 : 24, Math.round(cy.width() * 0.045))); // a narrow screen gives the path the room
   if (cy.zoom() > 1.15) {
     cy.zoom(1.15);
     cy.center(eles);
   }
 }
 
+/** What changed arrives: added notes pop in, lost ones fade back, the problem path pulses once. */
+function enliven({ changes = true, on = cy } = {}) {
+  if (calm.matches) return;
+  const settle = (ele) => () => ele.removeStyle();
+  const rest = (n) => (n.hasClass('dim') ? 0.3 : n.hasClass('removed') && !n.hasClass('hl') ? 0.7 : 1);
+  if (changes) {
+    on.nodes('.added').forEach((n, i) => {
+      n.style({ opacity: 0, 'border-width': 14 });
+      n.delay(260 + i * 70).animate({ style: { opacity: rest(n), 'border-width': 3.5 } }, { duration: 420, easing: 'ease-out-cubic', complete: settle(n) });
+    });
+    on.nodes('.removed').forEach((n) => {
+      n.style({ opacity: 1 });
+      n.delay(260).animate({ style: { opacity: rest(n) } }, { duration: 700, complete: settle(n) });
+    });
+  }
+  on.edges('.hl').forEach((e) => {
+    e.delay(changes ? 720 : 120).animate({ style: { width: 9 } }, { duration: 200 }).animate({ style: { width: 3.5 } }, { duration: 420, complete: settle(e) });
+  });
+  on.nodes('.hl').forEach((n) => {
+    if (n.hasClass('added') && changes) return;
+    n.delay(changes ? 720 : 120).animate({ style: { 'underlay-opacity': 0.6, 'underlay-padding': 16 } }, { duration: 200 })
+      .animate({ style: { 'underlay-opacity': 0.22, 'underlay-padding': 8 } }, { duration: 420, complete: settle(n) });
+  });
+}
+
 // ---------------------------------------------------------------- panels
+
+/** What a visitor's pull request adds and removes, counted the way an exported review is. */
+function delta(v) {
+  const u = v.union || union(v);
+  const of = (state) => [
+    ...[...u.nodes.values()].filter((n) => n.state === state).map((n) => ['node', n.id]),
+    ...u.rels.filter((r) => r.state === state).map((r) => ['rel', relKey(r)]),
+  ];
+  const changed = [...u.nodes.values()].filter((n) => n.state === 'changed').map((n) => ['prop', n.id]);
+  return { added: [...of('added'), ...changed], removed: of('removed') };
+}
 
 function count(triples) {
   const kinds = { node: 0, rel: 0, prop: 0 };
@@ -411,12 +471,24 @@ function renderViews() {
     .map((v, i) => {
       const state = !v.pull ? '' : verdict(v).blocked ? 'blocked' : 'passed';
       const chip = v.pull ? `<span class="chip-state ${state}">${state === 'blocked' ? 'Blocked' : 'Passes'}</span>` : '<span class="chip-state base">main</span>';
-      const name = v.pull ? `${esc(v.pull.author)}` : 'Shared memory';
+      const name = v.mine ? 'Your pull request' : v.pull ? `${esc(v.pull.author)}` : 'Shared memory';
       const sub = v.pull ? esc(v.pull.description) : 'What every agent reads today';
       return `<button type="button" data-view="${i}" class="${v === view ? 'on' : ''} ${state}">${chip}<strong>${name}</strong><small>${sub}</small></button>`;
     })
     .join('');
+  // The cobalt marker slides from the last selected card to this one.
+  const nav = $('views');
+  const on = nav.querySelector('.on');
+  const mark = nav.appendChild(document.createElement('i'));
+  mark.className = 'marker';
+  const to = on ? `translate(${on.offsetLeft}px, ${on.offsetTop}px) scaleX(${on.offsetWidth / 100})` : '';
+  mark.style.transform = markAt || to;
+  requestAnimationFrame(() => (mark.style.transform = markAt = to));
+  if (on && nav.scrollWidth > nav.clientWidth + 4) {
+    nav.scrollTo({ left: on.offsetLeft - (nav.clientWidth - on.offsetWidth) / 2, behavior: calm.matches ? 'auto' : 'smooth' });
+  }
 }
+let markAt = '';
 
 /** The first screen's proof: the same contradiction the review finds, read from the data. */
 function renderProof(v) {
@@ -466,7 +538,7 @@ function renderReview() {
       '</div>',
     );
   } else {
-    const r = v.pull.review;
+    const r = v.pull.review || delta(v);
     parts.push(
       `<div class="verdict ${blocked ? 'blocked' : 'passed'}">${
         blocked ? `Merge blocked: ${plural(blocking, 'problem', 'problems')}` : 'Review passed: safe to merge'
@@ -477,8 +549,9 @@ function renderReview() {
     );
     if (list.length) parts.push(problemList(list));
     else parts.push('<p class="ok">Nothing contradicts, nothing is lost, every fact has a source.</p>');
-    if (v.live) parts.push(liveLine(v, list));
-    parts.push(
+    if (v.mine && !v.edited) parts.push(`<p class="live">Relate reviewed your pull request in this page with the ${rulesOf(v).length} rules <code>mempr check</code> runs. <a href="#write">Change it</a>.</p>`);
+    else if (v.live) parts.push(liveLine(v, list));
+    if (v.pull.comment) parts.push(
       '<details><summary>The comment the check posts on the pull request</summary>' +
         `<pre>${esc(v.pull.comment.replace('<!-- mempr-review -->\n', ''))}</pre></details>`,
     );
@@ -588,7 +661,18 @@ function renderDetail() {
   el.innerHTML =
     `<button type="button" class="close" data-close aria-label="Close">×</button>` +
     `<p class="kind">${esc(n.label)}</p><h2>${title}</h2><p class="tags">${tags.join(' ')}</p>` +
-    `<dl>${rows.join('')}</dl>${file}`;
+    `<dl>${rows.join('')}</dl>${editable(n)}${file}`;
+}
+
+/** A current fact in the shared memory can be replaced or retracted by a pull request of your own. */
+function editable(n) {
+  const held = memory.nodes.find((m) => m.id === n.id);
+  if (n.label !== 'Fact' || n.stub || n.empty || !held || held.props.status !== 'active') return '';
+  return (
+    '<div class="actions">' +
+    `<button type="button" data-replace-fact="${esc(n.props.name)}">Replace with a new value</button>` +
+    `<button type="button" data-retract-fact="${esc(n.props.name)}">Retract it</button></div>`
+  );
 }
 
 // ---------------------------------------------------------------- console
@@ -622,11 +706,16 @@ const EXAMPLES = [
       "SET f.predicate = 'port', f.value = '8080', f.status = 'active'\n" +
       'MERGE (f)-[:ABOUT]->(e)\nMERGE (f)-[:ASSERTED_BY]->(a)\nRETURN f.name AS fact, f.value AS port',
   ],
+  [
+    'Write: retract the Postgres fact',
+    "MATCH (f:Fact {name: 'payments-api--database--postgres-15'})\nSET f.status = 'retracted'\nRETURN f.name AS fact, f.status AS status",
+  ],
 ];
+const writes = (label) => /^(Break it|Write)/.test(label);
 
 function renderConsole() {
   $('examples').innerHTML =
-    EXAMPLES.map(([label], i) => `<button type="button" data-example="${i}">${esc(label)}</button>`).join('') +
+    EXAMPLES.map(([label], i) => `<button type="button" data-example="${i}" class="${writes(label) ? 'write-preset' : ''}">${esc(label)}</button>`).join('') +
     '<select id="rules" aria-label="Review rules"><option value="">Review rules (Cypher)</option>' +
     rulesOf(view).map((r) => `<option value="${esc(r.id)}">${esc(r.id)}: ${esc(r.title)}</option>`).join('') +
     '</select>';
@@ -637,7 +726,9 @@ function renderTarget() {
   const what = view.pull ? `the graph after merging “${view.short}”` : 'the shared memory on main';
   $('target').textContent = relate
     ? `Runs in Relate, in this page, on ${what}${view.edited ? ' (with your changes)' : ''}.`
-    : 'Relate could not start in this browser, so the console is off.';
+    : engine === 'starting'
+      ? 'Relate is loading. The console turns on when it is ready.'
+      : 'Relate could not start in this browser, so the console is off.';
   $('run').disabled = $('reset').disabled = !relate;
 }
 
@@ -661,10 +752,24 @@ function nodesIn(value, into) {
   else if (typeof value === 'string') idsIn([value], view.graph).forEach((id) => into.add(id));
 }
 
+let pending = 0;
+/** Show that the query is running, then its result. The query itself takes about a millisecond. */
 function runQuery() {
-  if (!relate) return;
+  if (!relate || !$('query').value.trim()) return;
+  const box = $('console');
+  clearTimeout(pending);
+  box.classList.remove('done');
+  if (calm.matches) return execQuery();
+  box.classList.add('running');
+  pending = setTimeout(() => {
+    execQuery();
+    box.classList.remove('running');
+    box.classList.add('done');
+  }, 180);
+}
+
+function execQuery() {
   const query = $('query').value.trim();
-  if (!query) return;
   const result = $('result');
   let out;
   try {
@@ -685,13 +790,31 @@ function runQuery() {
     renderReview();
     renderDetail();
     renderTarget();
+    renderPlay(); // a write to your own pull request changes its verdict there too
   }
   const hits = new Set();
   out.rows.forEach((row) => Object.values(row).forEach((v) => nodesIn(v, hits)));
   cy.nodes().removeClass('hit');
   hits.forEach((id) => cy.getElementById(id).addClass('hit').removeClass('hidden'));
+  if (!calm.matches) {
+    // The returned rows and the nodes they name light up together.
+    cy.nodes('.hit').forEach((n) => {
+      n.animate({ style: { 'underlay-opacity': 0.5, 'underlay-padding': 15 } }, { duration: 200 })
+        .animate({ style: { 'underlay-opacity': 0.14, 'underlay-padding': 7 } }, { duration: 500, complete: () => n.removeStyle() });
+    });
+  }
   const notes = [];
-  if (wrote.length) notes.push(`Changed the graph: ${wrote.map(([k, n]) => `${n} ${k.replace(/_/g, ' ')}`).join(', ')}.`);
+  if (wrote.length) {
+    const n = verdict(view).blocking;
+    notes.push(
+      `Changed the graph: ${wrote.map(([k, c]) => `${c} ${k.replace(/_/g, ' ')}`).join(', ')}. ` +
+        `The review reran: ${n ? plural(n, 'problem blocks', 'problems block') + ' the merge' : 'nothing blocks the merge'}. ` +
+        '<a href="#review">See the review</a>.',
+    );
+    $('review').classList.remove('swap');
+    void $('review').offsetWidth;
+    $('review').classList.add('swap');
+  }
   if (hits.size) notes.push(`${plural(hits.size, 'node is', 'nodes are')} marked on the graph.`);
   const head = notes.length ? `<p class="note">${notes.join(' ')}</p>` : '';
   if (!out.columns.length) {
@@ -710,10 +833,481 @@ function runQuery() {
     '</tbody></table></div>';
 }
 
+let typing = 0;
+/** Load a query into the box as if typed, then run it. */
 function setQuery(text, go = true) {
-  $('query').value = text;
-  if (go) runQuery();
-  if (window.matchMedia('(max-width: 900px)').matches) $('query').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  const box = $('query');
+  cancelAnimationFrame(typing);
+  clearTimeout(pending);
+  if (window.matchMedia('(max-width: 900px)').matches) box.scrollIntoView({ behavior: calm.matches ? 'auto' : 'smooth', block: 'center' });
+  const done = () => {
+    box.value = text;
+    if (go) runQuery();
+  };
+  if (calm.matches) return done();
+  const start = performance.now();
+  const span = Math.min(480, 140 + text.length * 2);
+  const step = (now) => {
+    const k = Math.min(1, (now - start) / span);
+    box.value = text.slice(0, Math.ceil(text.length * k));
+    if (k < 1) typing = requestAnimationFrame(step);
+    else done();
+  };
+  typing = requestAnimationFrame(step);
+}
+
+// ---------------------------------------------------------------- write a memory
+// The visitor plays an agent: a form becomes a Markdown note, the note becomes a pull request
+// against a copy of the memory in Relate, and the same rules review it. Typed text is data:
+// it reaches Cypher only as parameters and the page only through esc().
+
+let memory; // the page's shared memory: the committed data plus what the visitor merged
+let mini; // the small graph beside the form
+const play = { draft: null, view: null, tab: 'note', mine: [], count: 0, starters: [], error: '', merged: '' };
+const PREDICATES = ['database', 'port', 'owner', 'runtime', 'calls', 'queue', 'region', 'retries'];
+
+/** As `slug` in src/mempr/memory.py. */
+const slug = (text) => String(text).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+const blank = (agent = 'visitor') => ({ kind: 'fact', agent, entity: '', predicate: '', value: '', source: '', supersedes: [], retract: [] });
+const clean = (d) => ({
+  ...blank(), ...d,
+  agent: slug(d.agent || ''), entity: slug(d.entity || ''), predicate: slug(d.predicate || ''),
+  value: String(d.value || '').trim(), source: String(d.source || '').trim(),
+  supersedes: [...(d.supersedes || [])], retract: [...(d.retract || [])],
+});
+
+function sha1(text) {
+  const bytes = [...new TextEncoder().encode(text)];
+  const bits = bytes.length * 8;
+  bytes.push(0x80);
+  while (bytes.length % 64 !== 56) bytes.push(0);
+  for (let i = 7; i >= 0; i--) bytes.push(i > 3 ? 0 : (bits >>> (i * 8)) & 255);
+  const h = [0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0];
+  const rol = (x, n) => (x << n) | (x >>> (32 - n));
+  for (let o = 0; o < bytes.length; o += 64) {
+    const w = [];
+    for (let i = 0; i < 80; i++) {
+      w[i] = i < 16 ? (bytes[o + i * 4] << 24) | (bytes[o + i * 4 + 1] << 16) | (bytes[o + i * 4 + 2] << 8) | bytes[o + i * 4 + 3] : rol(w[i - 3] ^ w[i - 8] ^ w[i - 14] ^ w[i - 16], 1);
+    }
+    let [a, b, c, d, e] = h;
+    for (let i = 0; i < 80; i++) {
+      const [f, k] = i < 20 ? [(b & c) | (~b & d), 0x5a827999] : i < 40 ? [b ^ c ^ d, 0x6ed9eba1] : i < 60 ? [(b & c) | (b & d) | (c & d), 0x8f1bbcdc] : [b ^ c ^ d, 0xca62c1d6];
+      [a, b, c, d, e] = [(rol(a, 5) + f + e + k + w[i]) | 0, a, rol(b, 30), c, d];
+    }
+    [a, b, c, d, e].forEach((x, i) => (h[i] = (h[i] + x) | 0));
+  }
+  return h.map((x) => (x >>> 0).toString(16).padStart(8, '0')).join('');
+}
+
+const factOf = (name) => memory.nodes.find((n) => n.id === `Fact/${name}`);
+
+/** The note a fact is written to, as `_free_name` in src/mempr/memory.py picks it. */
+function factName(d) {
+  if (d.kind === 'retract') return d.target;
+  const base = `${d.entity}--${d.predicate}--${slug(d.value)}`;
+  const held = factOf(base);
+  return held && String(held.props.value) !== d.value ? `${base}-${sha1(d.value).slice(0, 6)}` : base;
+}
+
+/** The Markdown file the pull request would add or change, in the format `mempr add-fact` writes. */
+function noteOf(d) {
+  const name = factName(d);
+  const file = `memory/Fact/${name}.md`;
+  if (d.kind === 'retract') {
+    const held = factOf(name);
+    return { id: `Fact/${name}`, file, text: held && held.text ? held.text.replace(/^status: .*$/m, 'status: retracted') : '' };
+  }
+  const plain = /^[A-Za-z][A-Za-z0-9._/ -]*$/.test(d.value) && !/^(true|false|null|yes|no|on|off)$/i.test(d.value);
+  const links = (key, targets) => (targets.length ? [`${key}:`, ...targets.map((t) => `  - "[[${t}]]"`)] : []);
+  const text = [
+    '---', 'type: Fact', `name: ${name}`, `predicate: ${d.predicate}`, 'status: active', `value: ${plain ? d.value : JSON.stringify(d.value)}`,
+    ...links('ABOUT', [`Entity/${d.entity}`]),
+    ...links('ASSERTED_BY', [`Agent/${d.agent}`]),
+    ...links('SOURCE', d.source ? [`Source/${slug(d.source)}`] : []),
+    ...links('SUPERSEDES', d.supersedes.map((f) => `Fact/${f}`)),
+    '---', '', `${d.entity} ${d.predicate}: ${d.value}`, '',
+  ].join('\n');
+  return { id: `Fact/${name}`, file, text };
+}
+
+const ready = (d) => (d.kind === 'retract' ? !!factOf(d.target) : !!(d.agent && d.entity && d.predicate && d.value));
+
+// The same statements `mempr add-fact` and `mempr retract` run, in src/mempr/memory.py.
+const ADD_FACT =
+  'MERGE (e:Entity {name: $entity}) MERGE (a:Agent {name: $agent}) MERGE (f:Fact {name: $name}) ' +
+  "SET f.predicate = $predicate, f.value = $value, f.status = 'active', f.body = $statement " +
+  'MERGE (f)-[:ABOUT]->(e) MERGE (f)-[:ASSERTED_BY]->(a) RETURN f.name AS fact';
+const ADD_SOURCE =
+  'MATCH (f:Fact {name: $name}) MERGE (s:Source {name: $source}) SET s.uri = $uri MERGE (f)-[:SOURCE]->(s) RETURN s.name AS source';
+const SUPERSEDE = 'MATCH (f:Fact {name: $name}), (o:Fact {name: $other}) MERGE (f)-[:SUPERSEDES]->(o) RETURN o.name AS other';
+const RETRACT = "MATCH (f:Fact {name: $name}) SET f.status = 'retracted' RETURN f.name AS fact";
+
+function applyDraft(db, d) {
+  const name = factName(d);
+  if (d.kind === 'retract') {
+    for (const fact of [name, ...d.retract]) run(db, RETRACT, { name: fact });
+    return;
+  }
+  // Stating a fact again makes it current: nothing that replaced it still does.
+  run(db, 'MATCH (:Fact)-[r:SUPERSEDES]->(:Fact {name: $name}) DELETE r', { name });
+  run(db, ADD_FACT, { name, entity: d.entity, agent: d.agent, predicate: d.predicate, value: d.value, statement: `${d.entity} ${d.predicate}: ${d.value}` });
+  if (d.source) run(db, ADD_SOURCE, { name, source: slug(d.source), uri: d.source });
+  for (const other of d.supersedes) run(db, SUPERSEDE, { name, other });
+  for (const other of d.retract) run(db, RETRACT, { name: other });
+}
+
+/** A draft as a pull request against the page's memory: the same kind of view as the scripted ones. */
+function pullOf(raw) {
+  const d = clean(raw);
+  const title = d.kind === 'retract' ? `Retract ${d.target}` : `${d.entity} ${d.predicate}: ${d.value}`;
+  const v = {
+    pull: { id: `you/${d.agent || 'visitor'}`, author: d.agent, title: `memory: ${title}`, description: title, problems: [], rules: data.rules },
+    short: 'yours', title, before: memory, after: memory, mine: true, draft: d,
+    apply: (db) => applyDraft(db, d),
+    notes: [noteOf(d)],
+  };
+  openView(v);
+  return v;
+}
+
+/** The verdict on a draft, for the check that the page and `mempr check` agree. */
+function reviewDraft(raw) {
+  const v = pullOf(raw);
+  const out = { blocked: verdict(v).blocked, rules: [...new Set(verdict(v).list.filter((p) => p.severity === 'block').map((p) => p.rule))].sort() };
+  v.db.free();
+  return out;
+}
+
+function openPull(entry) {
+  const d = clean(play.draft);
+  play.error = play.merged = '';
+  if (!ready(d)) play.error = 'Fill in the agent, what it is about, what you learned and its value first.';
+  else if (!relate) play.error = engine === 'starting' ? 'Relate is still loading. Try again in a moment.' : 'Relate could not start in this browser, so the review cannot run here.';
+  if (play.error) return renderPlay();
+  let v;
+  try {
+    v = pullOf(d);
+  } catch (err) {
+    play.error = `Relate refused this change: ${err.message}`;
+    return renderPlay();
+  }
+  const old = play.view;
+  if (old) {
+    views.splice(views.indexOf(old), 1);
+    old.db?.free();
+  }
+  views.push(v);
+  play.view = v;
+  play.draft = d;
+  const mineOf = entry || play.mine.find((m) => m.view === old && !m.merged);
+  if (mineOf) Object.assign(mineOf, { draft: d, view: v });
+  else play.mine.push({ id: ++play.count, draft: d, view: v, merged: false });
+  play.tab = 'graph';
+  if (view === old) show(v);
+  else renderViews();
+  renderPlay({ fresh: true });
+}
+
+function mergePull() {
+  const v = play.view;
+  if (!v || verdict(v).blocked) return;
+  memory = { nodes: v.graph.nodes, rels: v.graph.rels };
+  const main = views[0];
+  main.db?.free();
+  Object.assign(main, { before: memory, after: memory, db: null, graph: null, live: null, edited: false });
+  openView(main);
+  views.splice(views.indexOf(v), 1);
+  v.db?.free();
+  play.mine.find((m) => m.view === v).merged = true;
+  play.view = null;
+  play.merged = v.title;
+  play.draft = blank(v.draft.agent);
+  play.tab = 'note';
+  if (view === v) show(main);
+  else {
+    if (view === main) show(main);
+    renderViews();
+  }
+  renderPlay({ fresh: true });
+}
+
+function resetMemory() {
+  const main = views[0];
+  if (play.view) {
+    views.splice(views.indexOf(play.view), 1);
+    play.view.db?.free();
+  }
+  memory = data.memory;
+  main.db?.free();
+  Object.assign(main, { before: memory, after: memory, db: null, graph: null, live: null, edited: false });
+  if (relate) openView(main);
+  else main.graph = memory;
+  Object.assign(play, { draft: blank(), view: null, tab: 'note', mine: [], count: 0, error: '', merged: '' });
+  show(view.mine ? main : view);
+  renderPlay();
+}
+
+/** One-click fixes that edit the draft; the review then runs again. */
+function draftFixes(p, d) {
+  const row = p.row || {};
+  const own = factName(d);
+  if (p.rule === 'contradiction') {
+    const old = row.fact === own ? row.other : row.fact;
+    return [
+      ['Replace the old fact', (x) => x.supersedes.push(old)],
+      ['Retract the old fact', (x) => x.retract.push(old)],
+    ];
+  }
+  if (p.rule === 'unsourced-fact' && row.fact === own) return [['Add a source', (x) => (x.source = sourceFor(x.entity))]];
+  if (p.rule === 'stale-derivation') {
+    const stale = verdict(play.view).list.filter((q) => q.rule === 'stale-derivation').map((q) => q.row.fact);
+    return [[stale.length > 1 ? `Retract the ${stale.length} facts that rest on it` : 'Retract the fact that rests on it', (x) => x.retract.push(...stale.filter((f) => !x.retract.includes(f)))]];
+  }
+  return [];
+}
+
+const sources = () => memory.nodes.filter((n) => n.label === 'Source' && n.props.uri).map((n) => n.props.uri);
+const sourceFor = (entity) => sources().find((uri) => uri.includes(`/${entity}/`)) || sources()[0] || 'docs/notes.md';
+
+/** A short name for a source file: its own name, or its folder when several files share the name. */
+function sourceLabel(uri, all) {
+  const parts = uri.split('/');
+  const file = parts.at(-1);
+  return parts.length > 1 && all.filter((u) => u.split('/').at(-1) === file).length > 1 ? parts.at(-2) : file;
+}
+
+/** Facts the draft could replace: the current ones for the same entity and predicate. */
+function rivals(d) {
+  const about = new Set(memory.rels.filter((r) => r.type === 'ABOUT' && r.target === `Entity/${d.entity}`).map((r) => r.source));
+  // As in recall: a fact is replaced only while the fact that replaced it is still active.
+  const active = new Set(memory.nodes.filter((n) => n.props.status === 'active').map((n) => n.id));
+  const replaced = new Set(memory.rels.filter((r) => r.type === 'SUPERSEDES' && active.has(r.source)).map((r) => r.target));
+  return memory.nodes.filter(
+    (n) => about.has(n.id) && !replaced.has(n.id) && n.props.status === 'active' && n.props.predicate === d.predicate && n.props.name !== factName(d),
+  );
+}
+
+function miniGraph(d, v) {
+  const u = v ? union(v) : null;
+  const known = new Map((u ? [...u.nodes.values()] : memory.nodes).map((n) => [n.id, n]));
+  const own = `Fact/${factName(d)}`;
+  const want = new Set([own, `Entity/${d.entity}`, `Agent/${d.agent}`, ...d.supersedes.map((f) => `Fact/${f}`), ...d.retract.map((f) => `Fact/${f}`)]);
+  if (d.source) want.add(`Source/${slug(d.source)}`);
+  if (d.kind === 'retract') {
+    want.clear();
+    want.add(own);
+    d.retract.forEach((f) => want.add(`Fact/${f}`));
+    memory.rels.filter((r) => r.source === own || (r.target === own && r.type !== 'ABOUT')).forEach((r) => want.add(r.source).add(r.target));
+  }
+  const first = v && verdict(v).list.find((p) => p.severity === 'block');
+  for (const p of v ? verdict(v).list : []) p.nodes.forEach((id) => want.add(id));
+  const label = (id) => id.split('/')[0];
+  const nodes = [...want].filter((id) => !id.endsWith('/')).map((id) => {
+    const n = known.get(id);
+    if (n) return u ? n : { ...n, state: id === own && d.kind === 'retract' ? 'changed' : 'same', old: d.retract.includes(n.props.name) || d.supersedes.includes(n.props.name) || (id === own && d.kind === 'retract') };
+    const props = id === own ? { name: factName(d), predicate: d.predicate, value: d.value } : { name: id.slice(id.indexOf('/') + 1), uri: d.source };
+    return { id, label: label(id), props, state: 'added' };
+  });
+  const drafted = d.kind === 'retract' ? [] : [
+    { source: own, type: 'ABOUT', target: `Entity/${d.entity}` },
+    { source: own, type: 'ASSERTED_BY', target: `Agent/${d.agent}` },
+    ...(d.source ? [{ source: own, type: 'SOURCE', target: `Source/${slug(d.source)}` }] : []),
+    ...d.supersedes.map((f) => ({ source: own, type: 'SUPERSEDES', target: `Fact/${f}` })),
+  ].map((r) => ({ ...r, state: 'added' }));
+  const rels = u ? u.rels : [...memory.rels.map((r) => ({ ...r, state: 'same' })).filter((r) => !drafted.some((x) => relKey(x) === relKey(r))), ...drafted];
+  const box = $('mini');
+  if (!mini) {
+    mini = cytoscape({ container: box, style: STYLE, minZoom: 0.3, maxZoom: 2, boxSelectionEnabled: false, userZoomingEnabled: false, userPanningEnabled: false, autoungrabify: true });
+    new ResizeObserver(fitMini).observe(box);
+  }
+  mini.elements().remove();
+  mini.add(elementsOf(nodes, rels));
+  if (first) {
+    const path = new Set(first.rels.map((r) => r.join('|')));
+    mini.nodes().forEach((n) => first.nodes.includes(n.id()) && n.addClass('hl'));
+    mini.edges().forEach((e) => path.has(e.id()) && e.addClass('hl'));
+  }
+  // Two columns: the new fact with its source and author on the left, what it is about and
+  // the facts it meets on the right.
+  const entity = `Entity/${d.entity}`;
+  const side = { [`Source/${slug(d.source)}`]: [-105, -92], [own]: [-105, 0], [`Agent/${d.agent}`]: [-105, 96], [entity]: [110, 0] };
+  const others = mini.nodes().filter((n) => !side[n.id()]);
+  const facts = others.filter('[kind = "Fact"]');
+  mini.nodes().forEach((n) => side[n.id()] && n.position({ x: side[n.id()][0], y: side[n.id()][1] }));
+  facts.forEach((n, i) => n.position({ x: 110, y: 78 + i * 52 }));
+  others.difference(facts).forEach((n, i) => n.position({ x: -105, y: 180 + i * 56 }));
+  fitMini();
+}
+
+/** Frame the small graph: everything while its labels stay readable, otherwise what changed. */
+function fitMini() {
+  mini.resize();
+  mini.fit(undefined, 22);
+  if (mini.zoom() >= 0.85) return void (mini.zoom() > 1.3 && (mini.zoom(1.3), mini.center()));
+  const changed = mini.elements('.added, .changed, .hl, .old');
+  mini.zoom(0.85);
+  mini.center(changed.length ? changed.union(changed.connectedNodes()) : undefined);
+}
+
+function renderPlay({ fresh = false } = {}) {
+  if (!data || !$('draft')) return;
+  if (!play.draft) play.draft = blank();
+  const d = play.draft;
+  const c = clean(d);
+  const set = (id, value) => { if (document.activeElement !== $(id) && $(id).value !== value) $(id).value = value; };
+  set('d-agent', d.agent); set('d-entity', d.entity); set('d-predicate', d.predicate); set('d-value', d.value);
+  const retracting = d.kind === 'retract';
+  for (const id of ['d-entity', 'd-predicate', 'd-value']) $(id).disabled = retracting;
+  const chip = (attr, value, text, on) => `<button type="button" class="chip-pick ${on ? 'on' : ''}" ${attr}="${esc(value)}" title="${esc(value)}">${esc(text)}</button>`;
+  const agents = [...new Set(['visitor', ...memory.nodes.filter((n) => n.label === 'Agent').map((n) => n.props.name)])];
+  $('d-agents').innerHTML = agents.map((a) => chip('data-agent', a, a, c.agent === a)).join('');
+  $('d-entities').innerHTML = memory.nodes.filter((n) => n.label === 'Entity').map((n) => `<option value="${esc(n.props.name)}">`).join('');
+  const preds = [...new Set([...memory.nodes.filter((n) => n.label === 'Fact' && n.props.predicate).map((n) => n.props.predicate), ...PREDICATES])].sort();
+  $('d-predicates').innerHTML = preds.map((x) => `<option value="${esc(x)}">`).join('');
+  const uris = [...new Set([...sources(), ...(c.source ? [c.source] : [])])];
+  $('d-sources').innerHTML = retracting ? '<span class="quiet">A retraction keeps the fact and its source, and marks it retracted.</span>'
+    : uris.map((u) => chip('data-source', u, sourceLabel(u, uris), c.source === u)).join('') + chip('data-source', '', 'No source', !c.source);
+  const options = rivals(c);
+  $('d-replaces-field').hidden = retracting || !options.length;
+  $('d-replaces').innerHTML = '<option value="">Nothing. This is a new fact.</option>' +
+    options.map((n) => `<option value="${esc(n.props.name)}" ${c.supersedes.includes(n.props.name) ? 'selected' : ''}>${esc(n.props.value)} (Fact/${esc(n.props.name)})</option>`).join('');
+  $('d-also').hidden = !c.retract.length && !retracting;
+  $('d-also').innerHTML = retracting ? `This pull request retracts ${[c.target, ...c.retract].map((f) => `<code>Fact/${esc(f)}</code>`).join(', ')}.`
+    : `Also retracts ${c.retract.map((f) => `<code>Fact/${esc(f)}</code>`).join(', ')}.`;
+  const button = $('open-pull');
+  button.textContent = engine === 'starting' ? 'Relate is loading' : play.view ? 'Review again' : 'Open pull request';
+  button.classList.toggle('loading', engine === 'starting');
+  button.setAttribute('aria-disabled', String(!relate));
+
+  const note = ready(c) ? noteOf(c) : null;
+  $('note-path').textContent = note ? note.file : 'memory/Fact/';
+  $('note').classList.toggle('empty', !note);
+  if (note) $('note').textContent = note.text;
+  else {
+    $('note').innerHTML =
+      '<b>The note your pull request writes appears here. Fill in the form, or start from an example.</b>' +
+      esc('---\ntype: Fact\nname: …\npredicate: …\nstatus: active\nvalue: …\nABOUT:\n  - "[[Entity/…]]"\nASSERTED_BY:\n  - "[[Agent/…]]"\nSOURCE:\n  - "[[Source/…]]"\n---');
+  }
+  document.querySelectorAll('.tabs [data-tab]').forEach((t) => t.classList.toggle('on', t.dataset.tab === play.tab));
+  $('note').hidden = play.tab !== 'note';
+  $('mini').hidden = play.tab !== 'graph';
+  if (play.tab === 'graph' && ready(c)) {
+    const current = play.view && JSON.stringify(play.view.draft) === JSON.stringify(c) ? play.view : null;
+    miniGraph(c, current);
+    if (fresh && current) enliven({ on: mini });
+  } else if (mini) mini.elements().remove();
+
+  $('starters').innerHTML = play.starters.map((s, i) => `<button type="button" data-starter="${i}">${esc(s.starter)}</button>`).join('');
+  $('outcome').innerHTML = outcomeHtml(c);
+  $('outcome').classList.remove('play');
+  if (fresh) {
+    void $('outcome').offsetWidth; // restart the verdict's stamp
+    $('outcome').classList.add('play');
+    // On a narrow screen the verdict is below the form: bring it into view.
+    const box = $('outcome').getBoundingClientRect();
+    if (box.top > innerHeight * 0.75 || box.top < 60) $('outcome').scrollIntoView({ behavior: calm.matches ? 'auto' : 'smooth', block: 'start' });
+  }
+  $('mine').innerHTML = play.mine.length || memory !== data.memory
+    ? '<span class="label">Your pull requests</span>' +
+      play.mine.map((m) => {
+        const state = m.merged ? 'merged' : verdict(m.view).blocked ? 'blocked' : 'passed';
+        const text = { merged: 'Merged', blocked: 'Blocked', passed: 'Passes' }[state];
+        return `<button type="button" class="mine-item ${m.view === play.view ? 'on' : ''}" data-mine="${m.id}" ${m.merged ? 'disabled' : ''}>` +
+          `<span class="chip-state ${state === 'merged' ? 'base' : state}">${text}</span>${esc(m.view.title)}</button>`;
+      }).join('') +
+      '<button type="button" class="mine-reset" data-reset-memory>Reset memory</button>'
+    : '';
+}
+
+function outcomeHtml(c) {
+  const v = play.view;
+  if (play.error) return `<p class="outcome-empty error">${esc(play.error)}</p>`;
+  if (play.merged) {
+    return `<div class="stampbox passed"><strong>Merged</strong><span>${esc(play.merged)}</span></div>` +
+      '<p class="adds">It is part of the shared memory now. Your next pull request is reviewed against it, so you can contradict yourself.</p>';
+  }
+  if (!v) return '<p class="outcome-empty">The review appears here: what the pull request adds, each problem with its path, and the verdict.</p>';
+  const stale = JSON.stringify(v.draft) !== JSON.stringify(c);
+  const { list, blocked, blocking } = verdict(v);
+  const u = union(v);
+  const added = [...u.nodes.values()].filter((n) => n.state === 'added').length;
+  const links = u.rels.filter((r) => r.state === 'added').length;
+  const changed = [...u.nodes.values()].filter((n) => n.state === 'changed').length;
+  const problems = list.map((p, i) => {
+    const fixes = stale ? [] : draftFixes(p, v.draft);
+    return `<li class="problem ${p.severity}"><h4>${esc(p.title)}${p.severity === 'warn' ? ' <em>warning</em>' : ''}</h4><p>${md(p.text)}</p>` +
+      (fixes.length ? `<div class="actions">${fixes.map(([label], f) => `<button type="button" data-draft-fix="${i}:${f}">${esc(label)}</button>`).join('')}</div>` : '') + '</li>';
+  }).join('');
+  return (
+    `<div class="stampbox ${blocked ? 'blocked' : 'passed'}"><strong>${blocked ? 'Merge blocked' : 'Review passed'}</strong>` +
+    `<span>${blocked ? plural(blocking, 'problem', 'problems') : 'Safe to merge'}</span></div>` +
+    `<p class="adds">Memory review of <code>${esc(v.pull.id)}</code>. Adds ${plural(added, 'note', 'notes')} and ${plural(links, 'link', 'links')}` +
+    `${changed ? `, changes ${plural(changed, 'note', 'notes')}` : ''}. Relate ran the ${rulesOf(v).length} rules that <code>mempr check</code> runs.</p>` +
+    (problems ? `<ol class="problems">${problems}</ol>` : '') +
+    (stale ? '<p class="adds">You changed the draft. Review it again.</p>' : '') +
+    '<div class="outcome-actions">' +
+    (!blocked && !stale ? '<button type="button" class="btn primary" data-merge-pull>Merge into memory</button>' : '') +
+    '<a class="btn" href="#explorer" data-open="yours">See it on the full graph</a></div>'
+  );
+}
+
+function wirePlay() {
+  const form = $('draft');
+  if (!form) return;
+  form.addEventListener('input', (event) => {
+    const d = play.draft;
+    const name = event.target.name;
+    if (name === 'replaces') d.supersedes = event.target.value ? [event.target.value] : [];
+    else if (name in d) d[name] = event.target.value;
+    if (name === 'entity' || name === 'predicate') d.supersedes = [];
+    play.error = play.merged = '';
+    renderPlay();
+  });
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    openPull();
+  });
+}
+
+/** Clicks in the playground and on a fact's Replace and Retract buttons. */
+function playClick(t) {
+  const d = t.dataset;
+  const go = (draft, { open = false, focus = '' } = {}) => {
+    Object.assign(play, { draft, error: '', merged: '' });
+    if (open) openPull();
+    else renderPlay();
+    if (focus) {
+      $('write').scrollIntoView();
+      $(focus).focus({ preventScroll: true });
+    }
+  };
+  if (d.starter !== undefined) go({ ...blank(), ...structuredClone(play.starters[Number(d.starter)].draft) }, { open: !!relate });
+  else if (d.agent !== undefined) go({ ...play.draft, agent: d.agent });
+  else if (d.source !== undefined) go({ ...play.draft, source: d.source });
+  else if (d.tab !== undefined) { play.tab = d.tab; renderPlay(); }
+  else if (t.id === 'clear-draft') { play.tab = 'note'; go(blank(play.draft.agent)); }
+  else if (d.draftFix !== undefined) {
+    const [i, f] = d.draftFix.split(':').map(Number);
+    const next = clean(play.view.draft);
+    draftFixes(verdict(play.view).list[i], next)[f][1](next);
+    go(next, { open: true });
+  } else if (d.mergePull !== undefined) mergePull();
+  else if (d.resetMemory !== undefined) resetMemory();
+  else if (d.mine !== undefined) {
+    const entry = play.mine.find((m) => m.id === Number(d.mine));
+    play.draft = clean(entry.draft);
+    openPull(entry);
+  } else if (d.replaceFact !== undefined || d.retractFact !== undefined) {
+    const n = factOf(d.replaceFact ?? d.retractFact);
+    const entity = (memory.rels.find((r) => r.source === n.id && r.type === 'ABOUT') || { target: '/' }).target.split('/')[1];
+    const source = memory.rels.find((r) => r.source === n.id && r.type === 'SOURCE');
+    const uri = source && memory.nodes.find((m) => m.id === source.target)?.props.uri;
+    selectNode(null);
+    play.tab = 'note';
+    if (d.retractFact !== undefined) go({ ...blank(play.draft?.agent), kind: 'retract', target: n.props.name, entity, predicate: n.props.predicate, value: String(n.props.value) }, { focus: 'open-pull' });
+    else go({ ...blank(play.draft?.agent), entity, predicate: n.props.predicate, source: uri || '', supersedes: [n.props.name] }, { focus: 'd-value' });
+  } else return false;
+  return true;
 }
 
 // ---------------------------------------------------------------- wiring
@@ -727,8 +1321,12 @@ function show(v, { keepHash = false } = {}) {
   nodeId = null;
   cy.nodes().removeClass('hit');
   draw();
+  enliven();
   renderViews();
   renderReview();
+  $('review').classList.remove('swap');
+  void $('review').offsetWidth; // restart the verdict's transition
+  $('review').classList.add('swap');
   renderDetail();
   renderTarget();
   renderConsole(); // the rules on offer are the ones this view is reviewed with
@@ -744,6 +1342,7 @@ function selectProblem(i) {
   const p = verdict(view).list[i];
   problem = p === problem ? null : p;
   paint();
+  enliven({ changes: false });
   renderReview();
 }
 
@@ -774,6 +1373,7 @@ function wire() {
       if (n.length) cy.animate({ center: { eles: n }, duration: 200 });
     } else if (d.close !== undefined) selectNode(null);
     else if (d.example !== undefined) setQuery(EXAMPLES[Number(d.example)][1]);
+    else if (playClick(t)) return;
     else if (d.problem !== undefined) selectProblem(Number(d.problem));
   });
   document.addEventListener('keydown', (event) => {
@@ -800,6 +1400,7 @@ function wire() {
     if (event.target.id === 'show-prov') paint();
   });
   $('run').addEventListener('click', runQuery);
+  wirePlay();
   $('fit').addEventListener('click', () => {
     problem = null;
     paint();
@@ -810,9 +1411,79 @@ function wire() {
     view.db = null;
     view.edited = false;
     show(view);
+    renderPlay();
   });
+  $('views').addEventListener('pointermove', (event) => {
+    const card = event.target.closest('button');
+    if (!card) return;
+    const box = card.getBoundingClientRect();
+    card.style.setProperty('--px', `${event.clientX - box.left}px`);
+    card.style.setProperty('--py', `${event.clientY - box.top}px`);
+  }, { passive: true });
+  const touch = () => ($('touch').hidden = !coarse.matches);
+  coarse.addEventListener('change', touch);
+  touch();
+  touchGraph($('touch'));
   cy.on('tap', 'node', (event) => selectNode(event.target.id()));
   cy.on('tap', (event) => event.target === cy && selectNode(null));
+}
+
+/**
+ * Touch handling for the graph. The layer over the canvas lets a vertical swipe scroll the
+ * page (`touch-action: pan-y`), so the graph never traps the scroll. A sideways drag moves
+ * the graph, two fingers zoom and move it, and a tap picks the nearest node.
+ */
+function touchGraph(el) {
+  const points = new Map();
+  let start = null, moved = false, pinch = null;
+  const at = (e) => {
+    const box = el.getBoundingClientRect();
+    return { x: e.clientX - box.left, y: e.clientY - box.top };
+  };
+  el.addEventListener('pointerdown', (e) => {
+    points.set(e.pointerId, at(e));
+    pinch = null;
+    if (points.size === 1) [start, moved] = [at(e), false];
+    cy.stop();
+  });
+  el.addEventListener('pointermove', (e) => {
+    if (!points.has(e.pointerId)) return;
+    const prev = points.get(e.pointerId), now = at(e);
+    points.set(e.pointerId, now);
+    if (points.size === 1) {
+      if (Math.hypot(now.x - start.x, now.y - start.y) > 8) moved = true;
+      if (moved) cy.panBy({ x: now.x - prev.x, y: now.y - prev.y });
+    } else if (points.size === 2) {
+      const [a, b] = [...points.values()];
+      const next = { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, mid: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 } };
+      if (pinch) {
+        cy.zoom({ level: (cy.zoom() * next.d) / pinch.d, renderedPosition: next.mid });
+        cy.panBy({ x: next.mid.x - pinch.mid.x, y: next.mid.y - pinch.mid.y });
+      }
+      pinch = next;
+      moved = true;
+    }
+  });
+  const end = (e) => {
+    const had = points.delete(e.pointerId);
+    pinch = null;
+    if (had && e.type === 'pointerup' && !moved && !points.size) tapAt(start);
+  };
+  el.addEventListener('pointerup', end);
+  el.addEventListener('pointercancel', end);
+}
+
+/** Select the node nearest to a tap. Every node counts as at least 44 px wide and tall. */
+function tapAt(p) {
+  let best = null, gap = Infinity;
+  cy.nodes(':visible').forEach((n) => {
+    const b = n.renderedBoundingBox({ includeLabels: false });
+    const x = (b.x1 + b.x2) / 2, y = (b.y1 + b.y2) / 2;
+    if (Math.abs(p.x - x) > Math.max(b.w, 44) / 2 || Math.abs(p.y - y) > Math.max(b.h, 44) / 2) return;
+    const d = Math.hypot(p.x - x, p.y - y);
+    if (d < gap) [best, gap] = [n, d];
+  });
+  selectNode(best ? best.id() : null);
 }
 
 function renderLegend() {
@@ -831,10 +1502,12 @@ async function startRelate() {
     run(db, 'RETURN 1 AS ok');
     db.free();
     relate = mod;
+    engine = 'ready';
     $('engine').textContent = 'Relate is running in this page';
     $('engine').classList.add('ok');
   } catch (err) {
     console.error(err);
+    engine = 'off';
     $('engine').textContent = 'Relate could not start: showing the exported review';
     $('engine').classList.add('off');
   }
@@ -842,8 +1515,11 @@ async function startRelate() {
 
 async function main() {
   renderLegend();
-  const [response] = await Promise.all([fetch('data/demo.json'), startRelate()]);
-  data = await response.json();
+  // The graph is drawn from the committed data straight away. Relate is a large download,
+  // so it attaches when it arrives and then runs the review and the console.
+  const starting = startRelate();
+  data = await (await fetch('data/demo.json')).json();
+  memory = data.memory;
   views = [
     { pull: null, short: 'main', title: 'Shared memory', before: data.memory, after: data.memory },
     ...data.pulls.map((pull) => ({
@@ -855,7 +1531,7 @@ async function main() {
     })),
   ];
   cy = cytoscape({ container: $('cy'), style: STYLE, minZoom: 0.2, maxZoom: 3, boxSelectionEnabled: false });
-  window.mempr = { cy, views }; // for the curious, in the browser console
+  window.mempr = { cy, views, review: reviewDraft }; // for the curious, and for the check that the page agrees with mempr check
   wire();
   renderConsole();
   // Open every graph up front so each tab shows its verdict from Relate.
@@ -872,8 +1548,30 @@ async function main() {
   renderProof(first);
   new ResizeObserver(() => {
     cy.resize();
-    paint();
+    paint({ glide: false });
   }).observe($('cy'));
+  renderPlay();
+  fetch('data/playground-cases.json')
+    .then((r) => r.json())
+    .then((file) => {
+      play.starters = file.cases.filter((c) => c.starter);
+      renderPlay();
+    })
+    .catch(() => {}); // the starters are a convenience; the form works without them
+  await starting;
+  renderPlay();
+  if (!relate) return renderTarget();
+  views.forEach((v) => openView(v));
+  // The review now comes from Relate: point the graph at its finding, not the exported copy.
+  const now = problem && problemsOf(view).find((p) => p.rule === problem.rule && p.severity === problem.severity);
+  if (now) {
+    problem = now;
+    paint({ fit: false });
+  }
+  renderViews();
+  renderReview();
+  renderDetail();
+  renderTarget();
 }
 
 main().catch((err) => {
