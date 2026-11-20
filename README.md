@@ -259,7 +259,9 @@ When the review blocks a proposal, the agent reads why and sends the fix with th
   `memory/` are fictional. Nothing was recorded; there is no voice or video.
 - The demo agents are scripted and call no model.
 - Built with AI assistance (Devin). Third-party: Relate (`relate-db`, `@relate/relate-wasm`),
-  PyYAML, the MCP Python SDK, Cytoscape.js (graph drawing in the browser view), pytest, ruff.
+  PyYAML, the MCP Python SDK, Cytoscape.js (graph drawing in the browser view), the Geist and
+  Geist Mono fonts (self-hosted, SIL Open Font License), pytest, ruff. The browser view is a
+  static page hosted on Vercel and GitHub Pages.
 
 ## License
 
