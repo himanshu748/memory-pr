@@ -1,0 +1,7 @@
+{
+  "name": "memory-pr-demo-video",
+  "private": true,
+  "type": "module",
+  "scripts": { "capture": "node capture.mjs" },
+  "dependencies": { "playwright-core": "1.65.1" }
+}
