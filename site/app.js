@@ -604,7 +604,7 @@ function renderConsole() {
   $('examples').innerHTML =
     EXAMPLES.map(([label], i) => `<button type="button" data-example="${i}">${esc(label)}</button>`).join('') +
     '<select id="rules" aria-label="Review rules"><option value="">Review rules (Cypher)…</option>' +
-    data.rules.map((r) => `<option value="${esc(r.id)}">${esc(r.id)}: ${esc(r.title)}</option>`).join('') +
+    rulesOf(view).map((r) => `<option value="${esc(r.id)}">${esc(r.id)}: ${esc(r.title)}</option>`).join('') +
     '</select>';
   if (!$('query').value) $('query').value = EXAMPLES[0][1];
 }
@@ -707,6 +707,7 @@ function show(v, { keepHash = false } = {}) {
   renderReview();
   renderDetail();
   renderTarget();
+  renderConsole(); // the rules on offer are the ones this view is reviewed with
   $('result').innerHTML = '';
   $('timing').textContent = '';
   $('graph-note').textContent = v.pull
@@ -738,7 +739,7 @@ function wire() {
     if (!t) return;
     const d = t.dataset;
     if (d.view !== undefined) show(views[Number(d.view)]);
-    else if (d.rule !== undefined) setQuery(data.rules.find((r) => r.id === d.rule).cypher.trim());
+    else if (d.rule !== undefined) setQuery(rulesOf(view).find((r) => r.id === d.rule).cypher.trim());
     else if (d.fix !== undefined) {
       const [i, f] = d.fix.split(':').map(Number);
       setQuery(fixesFor(verdict(view).list[i])[f][1], false);
@@ -757,7 +758,7 @@ function wire() {
   });
   document.addEventListener('change', (event) => {
     if (event.target.id === 'rules' && event.target.value) {
-      setQuery(data.rules.find((r) => r.id === event.target.value).cypher.trim());
+      setQuery(rulesOf(view).find((r) => r.id === event.target.value).cypher.trim());
       event.target.value = '';
     }
     if (event.target.id === 'show-prov') paint();
