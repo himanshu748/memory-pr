@@ -37,6 +37,33 @@ test.
 3. The **memory-review** check comments on the pull request and, unless the scenario is
    `clean`, blocks the merge.
 
+## Measured result
+
+300 pull requests from simulated agents (5 seeds, 10 rounds, 6 agents per round,
+30% of pull requests carry one of four mistakes), replayed with and without the check.
+At the end a new agent asks the memory about every service.
+
+| | Without the check | With the check |
+| --- | --- | --- |
+| Pull requests merged | 298 | 254 |
+| Pull requests blocked | 0 | 46 |
+| Pull requests fixed after the review, then merged | 0 | 8 |
+| Correct pull requests blocked by mistake | 0 | 0 |
+| Wrong facts in memory at the end | 20 | 2 |
+| Contradictions in memory | 24 | 0 |
+| Facts resting on a replaced fact | 9 | 0 |
+| Notes emptied by a merge git called clean | 3 | 0 |
+| Facts with no source | 20 | 0 |
+| Questions answered correctly (of 240) | 140 | 159 |
+| Questions answered wrongly or with two values | 18 | 2 |
+
+Reproduce: `python bench/run.py --seed 1 --seeds 5 --rounds 10 --agents 6 --out docs/benchmark.json`
+(about 2 minutes). The agents, the project and its ground truth are generated in
+[`bench/run.py`](bench/run.py); raw numbers are in [`docs/benchmark.json`](docs/benchmark.json).
+The questions left unanswered in both columns are facts no agent was asked to learn.
+The wrong facts that remain with the check are true changes whose pull request stayed
+blocked, so the memory still holds the older value.
+
 ## Run it locally
 
 Requires Python 3.10+ and git 2.38+.
