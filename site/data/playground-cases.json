@@ -1,0 +1,56 @@
+{
+  "about": "Drafts for the page's Write a memory section. Each is reviewed in the page by Relate and, in tests/test_playground_cases.py, by mempr check; both must reach the verdict written here. A draft with a starter label is offered as a one-click start.",
+  "cases": [
+    {
+      "id": "contradiction",
+      "starter": "Say payments-api uses mysql-8",
+      "draft": { "agent": "visitor", "entity": "payments-api", "predicate": "database", "value": "mysql-8", "source": "demo/project/docs/legacy/payments-api.md" },
+      "blocked": true,
+      "rules": ["contradiction"]
+    },
+    {
+      "id": "contradiction-replaced",
+      "draft": { "agent": "visitor", "entity": "payments-api", "predicate": "database", "value": "mysql-8", "source": "demo/project/docs/legacy/payments-api.md", "supersedes": ["payments-api--database--postgres-15"] },
+      "blocked": true,
+      "rules": ["stale-derivation"]
+    },
+    {
+      "id": "contradiction-replaced-and-dependants-retracted",
+      "draft": { "agent": "visitor", "entity": "payments-api", "predicate": "database", "value": "mysql-8", "source": "demo/project/docs/legacy/payments-api.md", "supersedes": ["payments-api--database--postgres-15"], "retract": ["payments-api--backup-job--nightly-pg-dump", "payments-api--migration-tool--pg-migrate", "payments-api--restore-drill--quarterly-pg-restore"] },
+      "blocked": false,
+      "rules": []
+    },
+    {
+      "id": "unsourced",
+      "starter": "Add a fact with no source",
+      "draft": { "agent": "visitor", "entity": "ledger-worker", "predicate": "retries", "value": "5", "source": "" },
+      "blocked": true,
+      "rules": ["unsourced-fact"]
+    },
+    {
+      "id": "unsourced-given-a-source",
+      "draft": { "agent": "visitor", "entity": "ledger-worker", "predicate": "retries", "value": "5", "source": "demo/project/services/ledger-worker/service.yaml" },
+      "blocked": false,
+      "rules": []
+    },
+    {
+      "id": "clean",
+      "starter": "Record that checkout-web calls ledger-worker",
+      "draft": { "agent": "visitor", "entity": "checkout-web", "predicate": "calls", "value": "ledger-worker", "source": "demo/project/services/checkout-web/service.yaml" },
+      "blocked": false,
+      "rules": []
+    },
+    {
+      "id": "second-port",
+      "draft": { "agent": "visitor", "entity": "checkout-web", "predicate": "port", "value": "8080", "source": "demo/project/services/checkout-web/service.yaml" },
+      "blocked": true,
+      "rules": ["contradiction"]
+    },
+    {
+      "id": "second-port-old-retracted",
+      "draft": { "agent": "visitor", "entity": "checkout-web", "predicate": "port", "value": "8080", "source": "demo/project/services/checkout-web/service.yaml", "retract": ["checkout-web--port--3000"] },
+      "blocked": false,
+      "rules": []
+    }
+  ]
+}

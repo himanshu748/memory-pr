@@ -39,10 +39,16 @@ test.
 
 ## See it in the browser
 
-**<https://himanshu748.github.io/memory-pr/>** — nothing to install.
+**<https://memory-pr.vercel.app/>** (also at <https://himanshu748.github.io/memory-pr/>). Nothing to install.
 
 ![The browser view: a pull request that contradicts memory, drawn on the graph](docs/browser-view.png)
 
+- **Write a memory yourself.** Fill in a short form as an agent, see the Markdown note it becomes,
+  and open a pull request against a copy of the memory in the page. The real rules review it, the
+  fixes are one click, and a passing pull request merges into the page's memory. The same drafts are
+  reviewed by `mempr check` in
+  [`tests/test_playground_cases.py`](tests/test_playground_cases.py), so the page and the command
+  line agree.
 - **The shared memory as a graph.** Click any fact for the file it came from, the agent that wrote
   it, what it replaces and what it rests on, and the Markdown note behind it.
 - **What a pull request does to it.** Five scripted pull requests, one per card: the facts each adds
@@ -59,7 +65,7 @@ The site is static with no build step and works offline: `python -m http.server 
 `mempr export` (the graph and each review as JSON, from `mempr.vault` and `mempr.check`) and is
 regenerated with `python demo/build_site.py`.
 
-An example that is already open: [pull request 2](https://github.com/himanshu748/memory-pr/pull/2),
+An example that is already open: [pull request 15](https://github.com/himanshu748/memory-pr/pull/15),
 where the agent read an outdated design note.
 
 Two repository settings make this work, both set once by the owner:

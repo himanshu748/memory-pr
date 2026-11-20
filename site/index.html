@@ -52,6 +52,48 @@
   </ol>
 </section>
 
+<section class="write" id="write" data-reveal aria-label="Write a memory">
+  <div class="write-head">
+    <p class="eyebrow">Your turn</p>
+    <h2>Write a memory. Open a pull request.</h2>
+    <p>You are the agent. Say what you learned, see the Markdown note it becomes, and let the review decide.
+      <strong>It runs in this page. Nothing is sent anywhere.</strong></p>
+    <div id="starters" class="starters" aria-label="Start from an example"></div>
+  </div>
+  <div class="write-grid">
+    <form id="draft" class="draft" autocomplete="off">
+      <div class="fld"><div class="fld-top"><label for="d-agent">Agent</label><div id="d-agents" class="chips"></div></div>
+        <input id="d-agent" name="agent" maxlength="40" placeholder="your agent's name"></div>
+      <div class="fld"><label for="d-entity">About</label>
+        <input id="d-entity" name="entity" list="d-entities" maxlength="60" placeholder="a service"><datalist id="d-entities"></datalist></div>
+      <div class="fld"><label for="d-predicate">What</label>
+        <input id="d-predicate" name="predicate" list="d-predicates" maxlength="40" placeholder="database, port, owner"><datalist id="d-predicates"></datalist></div>
+      <div class="fld"><label for="d-value">Value</label>
+        <input id="d-value" name="value" maxlength="120" placeholder="what you learned"></div>
+      <div class="fld wide"><span class="label">Source</span>
+        <div id="d-sources" class="chips"></div></div>
+      <div class="fld wide" id="d-replaces-field"><label for="d-replaces">Replaces</label>
+        <select id="d-replaces" name="replaces"></select></div>
+      <p id="d-also" class="also wide" hidden></p>
+      <div class="draft-actions wide">
+        <button type="submit" id="open-pull" class="btn primary">Open pull request</button>
+        <button type="button" id="clear-draft" class="btn">Start over</button>
+      </div>
+    </form>
+    <div class="note-pane">
+      <div class="tabs" role="tablist" aria-label="The change">
+        <button type="button" role="tab" data-tab="note" class="on">Markdown note</button>
+        <button type="button" role="tab" data-tab="graph">As graph</button>
+        <code id="note-path" class="note-path"></code>
+      </div>
+      <pre id="note" class="note" aria-label="The note this writes"></pre>
+      <div id="mini" class="mini" hidden></div>
+    </div>
+    <div id="outcome" class="outcome" aria-live="polite"></div>
+  </div>
+  <div id="mine" class="mine"></div>
+</section>
+
 <section class="measured" id="measured" data-reveal aria-label="Measured result">
   <p class="eyebrow">Measured on 300 simulated pull requests, with the check on</p>
   <ul class="figures">
@@ -103,6 +145,7 @@
       <h2>Ask the graph yourself</h2>
       <p id="target" class="target"></p>
     </div>
+    <p class="hint"><strong>This box can write.</strong> Run a write and the review reruns at once.</p>
     <div id="examples" class="examples"></div>
     <textarea id="query" spellcheck="false" rows="5" aria-label="Cypher query"></textarea>
     <div class="progress" aria-hidden="true"></div>
