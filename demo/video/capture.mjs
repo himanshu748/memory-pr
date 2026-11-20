@@ -12,7 +12,9 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { chromium } from 'playwright-core';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const SITE = process.env.SITE || 'https://himanshu748.github.io/memory-pr/';
+const SITE = process.env.SITE || 'https://memory-pr.vercel.app/';
+const BLOCKED = process.env.BLOCKED || '15'; // a pull request the memory review blocks
+const PASSING = process.env.PASSING || '6'; // one it passes
 const REPO = 'https://github.com/himanshu748/memory-pr';
 const OUT = process.env.OUT || join(here, 'out');
 const CARDS = pathToFileURL(join(here, 'cards.html')).href;
@@ -77,6 +79,9 @@ async function hud() {
     };
     const top = 'position:fixed;z-index:2147483646;pointer-events:none;';
     el('hud', 'display:none');
+    const quiet = document.createElement('style');
+    quiet.textContent = '::-webkit-scrollbar { display: none; }';
+    document.head.appendChild(quiet);
     el('hud-veil', `${top}inset:0;background:#f2f0e9;opacity:1;transition:opacity .45s ease;z-index:2147483647`);
     el('hud-ring', `${top}border:3px solid #c8321e;border-radius:6px;opacity:0;transition:opacity .35s ease,left .5s ease,top .5s ease,width .5s ease,height .5s ease`);
     el('hud-caption', `${top}left:50%;bottom:26px;transform:translateX(-50%);max-width:1120px;width:max-content;padding:15px 28px;` +
@@ -109,11 +114,17 @@ async function ring(target, pad = 8) {
   await sleep(450);
 }
 async function point(target) {
-  const b = await page.locator(target).first().boundingBox();
+  let b = await page.locator(target).first().boundingBox();
+  if (b.y < 80 || b.y + b.height > 600) {
+    // Bring it into the part of the frame the caption does not cover.
+    await page.evaluate((dy) => scrollBy({ top: dy, behavior: 'smooth' }), b.y + b.height / 2 - 380);
+    await sleep(800);
+    b = await page.locator(target).first().boundingBox();
+  }
   const [x, y] = [b.x + Math.min(b.width / 2, 150), b.y + b.height / 2];
   await page.evaluate(([px, py]) => Object.assign(document.getElementById('hud-pointer').style, { left: `${px}px`, top: `${py}px` }), [x, y]);
   await page.mouse.move(x, y, { steps: 12 });
-  await sleep(800);
+  await sleep(650);
   return [x, y];
 }
 async function click(target) {
@@ -131,7 +142,7 @@ async function scrollTo(target, offset = 90) {
   await page.locator(target).first().evaluate((node, off) => {
     scrollTo({ top: node.getBoundingClientRect().top + scrollY - off, behavior: 'smooth' });
   }, offset);
-  await sleep(1100);
+  await sleep(950);
 }
 /** Load a page behind the veil; the wait is cut from the video. */
 async function open(url, ready) {
@@ -145,100 +156,118 @@ async function open(url, ready) {
   await veil(false);
 }
 async function card(id, ms) {
-  await open(`${CARDS}#${id}`);
+  await open(`${CARDS}#${id}`, async () => {
+    await hud();
+    await page.evaluate(() => (document.getElementById('hud-pointer').style.display = 'none'));
+  });
   await sleep(ms);
 }
 
 // ---------------------------------------------------------------- the story
 await cdp.send('Page.startScreencast', { format: 'png', everyNthFrame: 1 });
 
-await card('title', 4600);
-await card('problem', 8400);
+await card('title', 3000);
+await card('problem', 5000);
 
 // A blocked pull request on GitHub, logged out and in the light theme. Profile pictures,
-// the site header with its sign-in buttons and the description are hidden: the story is
-// the review comment and the check.
+// the site header with its sign-in buttons and anything asking to sign in are hidden:
+// the story is the review comment and the check.
 const github = () =>
   page.addStyleTag({
-    content: `img[class*="avatar" i], .TimelineItem-avatar, .js-header-wrapper, header[role="banner"], .flash, .js-stale-session-flash,
-      a[href*="/login"], .timeline-comment-actions, #partial-discussion-sidebar img { visibility: hidden !important; }
+    content: `img[class*="avatar" i], .TimelineItem-avatar, .flash, .js-stale-session-flash, a[href*="/login"], a[href*="/signup"],
+      .timeline-comment-actions, #partial-discussion-sidebar img, .discussion-timeline-actions,
+      .js-timeline-item:not(:has(a.author[href="/apps/github-actions"])) { visibility: hidden !important; }
       .js-header-wrapper, header[role="banner"] { display: none !important; }`,
   });
 const title = 'h1[class*="inlineTitle"]';
 const review = '.timeline-comment:has(a.author:text-is("github-actions"))';
-await open(`${REPO}/pull/2`, github);
+await open(`${REPO}/pull/${BLOCKED}`, github);
 await ring(title);
-await caption('pr2_open');
-await sleep(4600);
+await caption('pr_open');
+await sleep(3000);
 await ring(null);
-await scrollTo(review, 60);
-await ring(`${review} .comment-body > :nth-child(-n+4) >> nth=0`, 6).catch(() => {});
-await caption('pr2_comment');
-await sleep(3200);
-await ring(null);
-await page.locator(review).first().evaluate((node) => scrollBy({ top: Math.min(node.offsetHeight - 420, 260), behavior: 'smooth' }));
-await sleep(4600);
+await page.locator(review).last().evaluate((node) => scrollTo({ top: node.getBoundingClientRect().top + scrollY - 40, behavior: 'smooth' }));
+await sleep(1100);
+await caption('pr_comment');
+await sleep(2600);
+await page.locator(review).last().evaluate((node) => scrollBy({ top: Math.max(0, Math.min(node.offsetHeight - 430, 230)), behavior: 'smooth' }));
+await sleep(3400);
 // The checks box on the conversation tab does not load for logged-out visitors; the Checks tab does.
-await open(`${REPO}/pull/2/checks`, async () => {
+await open(`${REPO}/pull/${BLOCKED}/checks`, async () => {
   await github();
   await page.locator('summary', { hasText: 'memory-review' }).first().click();
   await page.waitForLoadState('networkidle');
   await github();
 });
-await ring('h3:has-text("memory-review.yml") >> xpath=ancestor::*[contains(@class,"Box") or self::section][1]', 6).catch(() => {});
-await caption('pr2_check');
-await sleep(6000);
+await caption('pr_check');
+await sleep(3800);
 
 // A correct pull request passes.
-await open(`${REPO}/pull/6`, github);
-await ring(title);
-await sleep(1800);
-await ring(null);
-await page.locator(review).last().evaluate((node) => scrollTo({ top: node.getBoundingClientRect().top + scrollY - 60, behavior: 'smooth' }));
-await sleep(1100);
-await caption('pr6');
-await sleep(5200);
+await open(`${REPO}/pull/${PASSING}`, github);
+await page.locator(review).last().evaluate((node) => scrollTo({ top: node.getBoundingClientRect().top + scrollY - 40, behavior: 'instant' }));
+await ring(`${review} >> nth=-1`, 4);
+await caption('pr_pass');
+await sleep(3600);
 
-// The live page.
+// The live page. It loads behind the veil, so the first screen's story is played again.
 await open(SITE, () => page.waitForSelector('#engine.ok'));
-await ring('.proof', 6);
+await page.evaluate(() => {
+  const card = document.querySelector('.proof');
+  card.classList.add('still');
+  void card.offsetWidth;
+  card.classList.remove('still');
+});
 await caption('live_hero');
-await sleep(4200);
-await ring(null);
-await click('.proof');
-await scrollTo('#views', 14);
-await caption('live_path');
-await ring('#review .problem', 4);
-await sleep(6500);
-await ring(null);
-await click('#views button:has-text("Auditor")');
-await caption('live_stale');
-await sleep(1200);
-await ring('#review .problem', 4);
-await sleep(6200);
-await ring(null);
-await click('#views button:has-text("Shared Memory")');
-await caption('live_memory');
-await sleep(4800);
+await sleep(4400);
+
+// Write a memory: blocked, fixed in two clicks, merged.
 await caption(null);
-await scrollTo('#console', 14);
+await scrollTo('#write', 62);
+await caption('play_open');
+await click('#starters button >> nth=0');
+await sleep(3000);
+await caption('play_fix1');
+await click('#outcome [data-draft-fix] >> nth=0');
+await sleep(3300);
+await caption('play_fix2');
+await click('#outcome [data-draft-fix] >> nth=0');
+await sleep(2800);
+await caption('play_merge');
+await click('#outcome [data-merge-pull]');
+await sleep(2700);
+
+// The scripted pull requests: a stale clone that git merges cleanly.
+await caption(null);
+await scrollTo('#views', 62);
+await click('#views button:has-text("Auditor")');
+await scrollTo('.layout', 66);
+await caption('live_stale');
+await sleep(500);
+await ring('#review .problems', 4);
+await sleep(4400);
+await ring(null);
+
+// Cypher in the page, then a write that makes the review fail.
+await click('#views button >> nth=0');
+await caption(null);
+await scrollTo('#console .hint', 74); // the query box and its result both fit above the caption
 await caption('live_cypher');
 await click('#examples button:has-text("What rests on the Postgres fact")');
-await sleep(1000);
+await sleep(1300);
 await ring('#result', 4);
-await sleep(5600);
+await sleep(2800);
 await ring(null);
 await caption('live_break');
 await click('#examples button:has-text("Break it")');
-await sleep(4000);
-await scrollTo('#views', 14);
-await caption('live_fail');
+await sleep(500);
+await scrollTo('#review', 76);
 await ring('#review .problems', 4);
-await sleep(6200);
+await sleep(3600);
+await ring(null);
 
-await card('relate', 9000);
-await card('bench', 10500);
-await card('end', 6500);
+await card('relate', 5000);
+await card('bench', 6600);
+await card('end', 4500);
 pause();
 await cdp.send('Page.stopScreencast');
 await context.close();
