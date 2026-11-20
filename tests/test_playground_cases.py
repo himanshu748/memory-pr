@@ -58,6 +58,10 @@ def page_memory(tmp_path_factory) -> Path:
 
 def write(vault: Path, draft: dict) -> None:
     """Make the change the page's form describes."""
+    if draft.get("kind") == "retract":
+        for fact in [draft["target"], *draft.get("retract", [])]:
+            memory.retract(vault, fact)
+        return
     source = draft.get("source") or "a-source-that-is-removed-again"
     name = memory.add_fact(
         vault,

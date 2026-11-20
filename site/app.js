@@ -419,7 +419,8 @@ function delta(v) {
     ...[...u.nodes.values()].filter((n) => n.state === state).map((n) => ['node', n.id]),
     ...u.rels.filter((r) => r.state === state).map((r) => ['rel', relKey(r)]),
   ];
-  return { added: of('added'), removed: of('removed') };
+  const changed = [...u.nodes.values()].filter((n) => n.state === 'changed').map((n) => ['prop', n.id]);
+  return { added: [...of('added'), ...changed], removed: of('removed') };
 }
 
 function count(triples) {
@@ -789,6 +790,7 @@ function execQuery() {
     renderReview();
     renderDetail();
     renderTarget();
+    renderPlay(); // a write to your own pull request changes its verdict there too
   }
   const hits = new Set();
   out.rows.forEach((row) => Object.values(row).forEach((v) => nodesIn(v, hits)));
@@ -942,7 +944,10 @@ const RETRACT = "MATCH (f:Fact {name: $name}) SET f.status = 'retracted' RETURN 
 
 function applyDraft(db, d) {
   const name = factName(d);
-  if (d.kind === 'retract') return run(db, RETRACT, { name });
+  if (d.kind === 'retract') {
+    for (const fact of [name, ...d.retract]) run(db, RETRACT, { name: fact });
+    return;
+  }
   // Stating a fact again makes it current: nothing that replaced it still does.
   run(db, 'MATCH (:Fact)-[r:SUPERSEDES]->(:Fact {name: $name}) DELETE r', { name });
   run(db, ADD_FACT, { name, entity: d.entity, agent: d.agent, predicate: d.predicate, value: d.value, statement: `${d.entity} ${d.predicate}: ${d.value}` });
@@ -1074,7 +1079,9 @@ function sourceLabel(uri, all) {
 /** Facts the draft could replace: the current ones for the same entity and predicate. */
 function rivals(d) {
   const about = new Set(memory.rels.filter((r) => r.type === 'ABOUT' && r.target === `Entity/${d.entity}`).map((r) => r.source));
-  const replaced = new Set(memory.rels.filter((r) => r.type === 'SUPERSEDES').map((r) => r.target));
+  // As in recall: a fact is replaced only while the fact that replaced it is still active.
+  const active = new Set(memory.nodes.filter((n) => n.props.status === 'active').map((n) => n.id));
+  const replaced = new Set(memory.rels.filter((r) => r.type === 'SUPERSEDES' && active.has(r.source)).map((r) => r.target));
   return memory.nodes.filter(
     (n) => about.has(n.id) && !replaced.has(n.id) && n.props.status === 'active' && n.props.predicate === d.predicate && n.props.name !== factName(d),
   );
@@ -1089,6 +1096,7 @@ function miniGraph(d, v) {
   if (d.kind === 'retract') {
     want.clear();
     want.add(own);
+    d.retract.forEach((f) => want.add(`Fact/${f}`));
     memory.rels.filter((r) => r.source === own || (r.target === own && r.type !== 'ABOUT')).forEach((r) => want.add(r.source).add(r.target));
   }
   const first = v && verdict(v).list.find((p) => p.severity === 'block');
@@ -1164,7 +1172,7 @@ function renderPlay({ fresh = false } = {}) {
   $('d-replaces').innerHTML = '<option value="">Nothing. This is a new fact.</option>' +
     options.map((n) => `<option value="${esc(n.props.name)}" ${c.supersedes.includes(n.props.name) ? 'selected' : ''}>${esc(n.props.value)} (Fact/${esc(n.props.name)})</option>`).join('');
   $('d-also').hidden = !c.retract.length && !retracting;
-  $('d-also').innerHTML = retracting ? `This pull request retracts <code>Fact/${esc(c.target)}</code>.`
+  $('d-also').innerHTML = retracting ? `This pull request retracts ${[c.target, ...c.retract].map((f) => `<code>Fact/${esc(f)}</code>`).join(', ')}.`
     : `Also retracts ${c.retract.map((f) => `<code>Fact/${esc(f)}</code>`).join(', ')}.`;
   const button = $('open-pull');
   button.textContent = engine === 'starting' ? 'Relate is loading' : play.view ? 'Review again' : 'Open pull request';
@@ -1403,6 +1411,7 @@ function wire() {
     view.db = null;
     view.edited = false;
     show(view);
+    renderPlay();
   });
   $('views').addEventListener('pointermove', (event) => {
     const card = event.target.closest('button');
