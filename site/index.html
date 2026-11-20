@@ -19,9 +19,10 @@
 </header>
 
 <section class="hero" id="top">
+<canvas id="field" class="field" aria-hidden="true"></canvas>
 <div class="pitch">
   <p class="eyebrow">Built on Relate by Neo4j</p>
-  <h1>Pull requests for agent memory.</h1>
+  <h1><span class="line"><span>Pull requests for</span></span> <span class="line"><span>agent memory.</span></span></h1>
   <p class="lede">Git says the merge is clean. <em>The graph is damaged.</em>
     memory-pr reviews every change to shared agent memory as graph facts, and blocks the ones that break what your agents know.</p>
   <div class="cta">
@@ -32,14 +33,14 @@
 <a class="proof" href="#explorer" data-open="builder-contradiction" aria-label="Open the blocked pull request in the explorer">
   <div class="proof-head"><span>Pull request</span><code id="proof-who">agent/builder-contradiction</code></div>
   <div class="checks">
-    <div class="check git"><span>git merge</span><strong>Clean. No conflicts.</strong></div>
-    <div class="check mempr"><span>memory-pr review</span><strong>Blocked. Two facts contradict.</strong></div>
+    <div class="check git"><span>git merge</span><strong><svg class="tick" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 8.6l3.4 3.4L13.5 4.4" pathLength="1"/></svg>Clean. No conflicts.</strong></div>
+    <div class="check mempr"><span>memory-pr review</span><strong class="stamp">Blocked. Two facts contradict.</strong></div>
   </div>
   <div class="path">
     <div class="fact new"><small><span class="proof-pred">database</span>, added by this pull request</small><b id="proof-new">mysql-8</b></div>
-    <div class="edge"><i>about</i></div>
+    <div class="edge"><svg viewBox="0 0 4 30" preserveAspectRatio="none" aria-hidden="true"><line x1="2" y1="0" x2="2" y2="30" pathLength="1"/></svg><i>about</i></div>
     <div class="entity" id="proof-entity">payments-api</div>
-    <div class="edge"><i>about</i></div>
+    <div class="edge"><svg viewBox="0 0 4 30" preserveAspectRatio="none" aria-hidden="true"><line x1="2" y1="0" x2="2" y2="30" pathLength="1"/></svg><i>about</i></div>
     <div class="fact"><small><span class="proof-pred">database</span>, already in memory</small><b id="proof-old">postgres-15</b></div>
   </div>
   <p class="proof-foot">One service, two active databases. The path is the proof. Open it in the graph.</p>
@@ -51,7 +52,27 @@
   </ol>
 </section>
 
-<section class="explorer-head" id="explorer">
+<section class="measured" id="measured" data-reveal aria-label="Measured result">
+  <p class="eyebrow">Measured on 300 simulated pull requests, with the check on</p>
+  <ul class="figures">
+    <li><b data-count="1" data-from="20">1</b><strong>Wrong facts left in memory</strong><small>20 without the check</small></li>
+    <li><b data-count="0" data-from="24">0</b><strong>Contradictions in memory</strong><small>24 without the check</small></li>
+    <li><b data-count="160" data-from="140">160</b><strong>Questions answered correctly, of 240</strong><small>140 without the check</small></li>
+    <li><b data-count="0" data-from="45">0</b><strong>Correct pull requests blocked</strong><small>45 pull requests blocked, none by mistake</small></li>
+  </ul>
+</section>
+
+<section class="how" data-reveal aria-label="How it works">
+  <p class="eyebrow">How it works</p>
+  <ol class="flow">
+    <li><b>Agent</b><span>Writes what it learned as a Markdown note.</span></li>
+    <li><b>Pull request</b><span>Carries the change, like any code change.</span></li>
+    <li><b>Review as a graph</b><span>Relate reads the notes as facts and runs Cypher rules.</span></li>
+    <li><b><i class="good">Merge</i> or <i class="bad">block</i></b><span>A required check decides. The path is the reason.</span></li>
+  </ol>
+</section>
+
+<section class="explorer-head" id="explorer" data-reveal>
   <h2>Five pull requests from five agents</h2>
   <p>Pick one. Green is what it adds, dashed red is what the merge would lose, and solid red marks the problem the review found.</p>
 </section>
@@ -67,7 +88,7 @@
         <button id="fit" type="button">Whole graph</button>
       </div>
     </div>
-    <div class="cy-wrap"><div id="cy" class="cy"></div></div>
+    <div class="cy-wrap"><div id="cy" class="cy"></div><div id="touch" class="touch" hidden></div></div>
     <p id="graph-note" class="graph-note"></p>
   </section>
 
@@ -84,6 +105,7 @@
     </div>
     <div id="examples" class="examples"></div>
     <textarea id="query" spellcheck="false" rows="5" aria-label="Cypher query"></textarea>
+    <div class="progress" aria-hidden="true"></div>
     <div class="console-actions">
       <button id="run" type="button" class="primary">Run</button>
       <button id="reset" type="button" title="Throw away your changes to this graph">Reset this graph</button>
@@ -93,12 +115,22 @@
   </section>
 </main>
 
-<footer class="foot">
-  All data is generated: a fictional project and scripted agents. Nothing was recorded.
-  The graph runs in <a href="https://relatedb.ai">Relate</a> compiled to WebAssembly; nothing leaves this page.
+<footer class="foot" data-reveal>
+  <div class="foot-about">
+    <a class="brand" href="#top"><span class="mark" aria-hidden="true"></span>memory-pr</a>
+    <p>All data is generated: a fictional project and scripted agents. Nothing was recorded.
+    The graph runs in <a href="https://relatedb.ai">Relate</a> compiled to WebAssembly. Nothing leaves this page.</p>
+  </div>
+  <nav class="foot-links" aria-label="Project links">
+    <a href="https://github.com/himanshu748/memory-pr">Source on GitHub</a>
+    <a href="https://github.com/himanshu748/memory-pr/pull/12">A blocked pull request</a>
+    <a href="https://github.com/himanshu748/memory-pr/pull/6">A passing pull request</a>
+    <a href="https://relatedb.ai">Relate</a>
+  </nav>
 </footer>
 
 <script src="vendor/cytoscape/cytoscape.min.js"></script>
 <script type="module" src="app.js"></script>
+<script type="module" src="motion.js"></script>
 </body>
 </html>

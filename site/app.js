@@ -17,6 +17,9 @@ let views = [];
 let view;
 let problem = null; // the problem drawn on the graph
 let nodeId = null; // the node shown in the detail card
+let engine = 'starting'; // 'starting', 'ready' or 'off'
+const calm = matchMedia('(prefers-reduced-motion: reduce)');
+const coarse = matchMedia('(pointer: coarse)');
 const positions = new Map();
 
 // ---------------------------------------------------------------- Relate
@@ -192,7 +195,7 @@ const STYLE = [
   { selector: 'node.stub', style: { 'background-color': C.surface, 'border-style': 'dotted', 'border-color': C.bad, color: C.bad } },
   { selector: 'node.added', style: { 'border-color': C.good, 'border-width': 3.5, 'background-color': C['good-wash'], color: C.ink } },
   { selector: 'node.changed', style: { 'border-color': C.ink, 'border-width': 3.5 } },
-  { selector: 'node.removed', style: { 'border-color': C.bad, 'border-width': 2.5, 'border-style': 'dashed', 'background-color': C.surface, color: C.bad } },
+  { selector: 'node.removed', style: { opacity: 0.7, 'border-color': C.bad, 'border-width': 2.5, 'border-style': 'dashed', 'background-color': C.surface, color: C.bad } },
   {
     selector: 'edge',
     style: {
@@ -332,7 +335,7 @@ function layout(relayout) {
   if (!view.pull) cy.nodes().forEach((n) => positions.set(n.id(), { ...n.position() }));
 }
 
-function paint({ fit = true } = {}) {
+function paint({ fit = true, glide = true } = {}) {
   const showProv = $('show-prov').checked;
   const focus = new Set(problem ? problem.nodes : []);
   const focusRels = new Set(problem ? problem.rels.map((r) => r.join('|')) : []);
@@ -349,16 +352,53 @@ function paint({ fit = true } = {}) {
     });
   });
   if (!fit) return;
+  const from = { zoom: cy.zoom(), pan: { ...cy.pan() } };
+  cy.stop();
+  frame();
+  if (calm.matches || !glide || !framed) return void (framed = true);
+  // Travel from the last framing to the new one, so a switch reads as one graph changing.
+  const to = { zoom: cy.zoom(), pan: { ...cy.pan() } };
+  cy.viewport(from);
+  cy.animate({ zoom: to.zoom, pan: to.pan }, { duration: 520, easing: 'ease-in-out-cubic' });
+}
+
+let framed = false;
+function frame() {
   const target = problem ? cy.elements('.hl') : cy.elements(':visible');
   const eles = target.length ? target : cy.elements();
   // Show the whole graph when its labels stay readable; otherwise frame the problem.
   cy.fit(cy.elements(':visible'), 28);
   if (cy.zoom() >= 0.72 || !target.length) return;
-  cy.fit(eles, problem ? 70 : 24);
+  cy.fit(eles, Math.min(problem ? 70 : 24, Math.round(cy.width() * 0.045))); // a narrow screen gives the path the room
   if (cy.zoom() > 1.15) {
     cy.zoom(1.15);
     cy.center(eles);
   }
+}
+
+/** What changed arrives: added notes pop in, lost ones fade back, the problem path pulses once. */
+function enliven({ changes = true } = {}) {
+  if (calm.matches) return;
+  const settle = (ele) => () => ele.removeStyle();
+  const rest = (n) => (n.hasClass('dim') ? 0.3 : n.hasClass('removed') && !n.hasClass('hl') ? 0.7 : 1);
+  if (changes) {
+    cy.nodes('.added').forEach((n, i) => {
+      n.style({ opacity: 0, 'border-width': 14 });
+      n.delay(260 + i * 70).animate({ style: { opacity: rest(n), 'border-width': 3.5 } }, { duration: 420, easing: 'ease-out-cubic', complete: settle(n) });
+    });
+    cy.nodes('.removed').forEach((n) => {
+      n.style({ opacity: 1 });
+      n.delay(260).animate({ style: { opacity: rest(n) } }, { duration: 700, complete: settle(n) });
+    });
+  }
+  cy.edges('.hl').forEach((e) => {
+    e.delay(changes ? 720 : 120).animate({ style: { width: 9 } }, { duration: 200 }).animate({ style: { width: 3.5 } }, { duration: 420, complete: settle(e) });
+  });
+  cy.nodes('.hl').forEach((n) => {
+    if (n.hasClass('added') && changes) return;
+    n.delay(changes ? 720 : 120).animate({ style: { 'underlay-opacity': 0.6, 'underlay-padding': 16 } }, { duration: 200 })
+      .animate({ style: { 'underlay-opacity': 0.22, 'underlay-padding': 8 } }, { duration: 420, complete: settle(n) });
+  });
 }
 
 // ---------------------------------------------------------------- panels
@@ -416,7 +456,19 @@ function renderViews() {
       return `<button type="button" data-view="${i}" class="${v === view ? 'on' : ''} ${state}">${chip}<strong>${name}</strong><small>${sub}</small></button>`;
     })
     .join('');
+  // The cobalt marker slides from the last selected card to this one.
+  const nav = $('views');
+  const on = nav.querySelector('.on');
+  const mark = nav.appendChild(document.createElement('i'));
+  mark.className = 'marker';
+  const to = on ? `translate(${on.offsetLeft}px, ${on.offsetTop}px) scaleX(${on.offsetWidth / 100})` : '';
+  mark.style.transform = markAt || to;
+  requestAnimationFrame(() => (mark.style.transform = markAt = to));
+  if (on && nav.scrollWidth > nav.clientWidth + 4) {
+    nav.scrollTo({ left: on.offsetLeft - (nav.clientWidth - on.offsetWidth) / 2, behavior: calm.matches ? 'auto' : 'smooth' });
+  }
 }
+let markAt = '';
 
 /** The first screen's proof: the same contradiction the review finds, read from the data. */
 function renderProof(v) {
@@ -637,7 +689,9 @@ function renderTarget() {
   const what = view.pull ? `the graph after merging “${view.short}”` : 'the shared memory on main';
   $('target').textContent = relate
     ? `Runs in Relate, in this page, on ${what}${view.edited ? ' (with your changes)' : ''}.`
-    : 'Relate could not start in this browser, so the console is off.';
+    : engine === 'starting'
+      ? 'Relate is loading. The console turns on when it is ready.'
+      : 'Relate could not start in this browser, so the console is off.';
   $('run').disabled = $('reset').disabled = !relate;
 }
 
@@ -661,10 +715,24 @@ function nodesIn(value, into) {
   else if (typeof value === 'string') idsIn([value], view.graph).forEach((id) => into.add(id));
 }
 
+let pending = 0;
+/** Show that the query is running, then its result. The query itself takes about a millisecond. */
 function runQuery() {
-  if (!relate) return;
+  if (!relate || !$('query').value.trim()) return;
+  const box = $('console');
+  clearTimeout(pending);
+  box.classList.remove('done');
+  if (calm.matches) return execQuery();
+  box.classList.add('running');
+  pending = setTimeout(() => {
+    execQuery();
+    box.classList.remove('running');
+    box.classList.add('done');
+  }, 180);
+}
+
+function execQuery() {
   const query = $('query').value.trim();
-  if (!query) return;
   const result = $('result');
   let out;
   try {
@@ -690,6 +758,13 @@ function runQuery() {
   out.rows.forEach((row) => Object.values(row).forEach((v) => nodesIn(v, hits)));
   cy.nodes().removeClass('hit');
   hits.forEach((id) => cy.getElementById(id).addClass('hit').removeClass('hidden'));
+  if (!calm.matches) {
+    // The returned rows and the nodes they name light up together.
+    cy.nodes('.hit').forEach((n) => {
+      n.animate({ style: { 'underlay-opacity': 0.5, 'underlay-padding': 15 } }, { duration: 200 })
+        .animate({ style: { 'underlay-opacity': 0.14, 'underlay-padding': 7 } }, { duration: 500, complete: () => n.removeStyle() });
+    });
+  }
   const notes = [];
   if (wrote.length) notes.push(`Changed the graph: ${wrote.map(([k, n]) => `${n} ${k.replace(/_/g, ' ')}`).join(', ')}.`);
   if (hits.size) notes.push(`${plural(hits.size, 'node is', 'nodes are')} marked on the graph.`);
@@ -710,10 +785,27 @@ function runQuery() {
     '</tbody></table></div>';
 }
 
+let typing = 0;
+/** Load a query into the box as if typed, then run it. */
 function setQuery(text, go = true) {
-  $('query').value = text;
-  if (go) runQuery();
-  if (window.matchMedia('(max-width: 900px)').matches) $('query').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  const box = $('query');
+  cancelAnimationFrame(typing);
+  clearTimeout(pending);
+  if (window.matchMedia('(max-width: 900px)').matches) box.scrollIntoView({ behavior: calm.matches ? 'auto' : 'smooth', block: 'center' });
+  const done = () => {
+    box.value = text;
+    if (go) runQuery();
+  };
+  if (calm.matches) return done();
+  const start = performance.now();
+  const span = Math.min(480, 140 + text.length * 2);
+  const step = (now) => {
+    const k = Math.min(1, (now - start) / span);
+    box.value = text.slice(0, Math.ceil(text.length * k));
+    if (k < 1) typing = requestAnimationFrame(step);
+    else done();
+  };
+  typing = requestAnimationFrame(step);
 }
 
 // ---------------------------------------------------------------- wiring
@@ -727,8 +819,12 @@ function show(v, { keepHash = false } = {}) {
   nodeId = null;
   cy.nodes().removeClass('hit');
   draw();
+  enliven();
   renderViews();
   renderReview();
+  $('review').classList.remove('swap');
+  void $('review').offsetWidth; // restart the verdict's transition
+  $('review').classList.add('swap');
   renderDetail();
   renderTarget();
   renderConsole(); // the rules on offer are the ones this view is reviewed with
@@ -744,6 +840,7 @@ function selectProblem(i) {
   const p = verdict(view).list[i];
   problem = p === problem ? null : p;
   paint();
+  enliven({ changes: false });
   renderReview();
 }
 
@@ -811,8 +908,77 @@ function wire() {
     view.edited = false;
     show(view);
   });
+  $('views').addEventListener('pointermove', (event) => {
+    const card = event.target.closest('button');
+    if (!card) return;
+    const box = card.getBoundingClientRect();
+    card.style.setProperty('--px', `${event.clientX - box.left}px`);
+    card.style.setProperty('--py', `${event.clientY - box.top}px`);
+  }, { passive: true });
+  const touch = () => ($('touch').hidden = !coarse.matches);
+  coarse.addEventListener('change', touch);
+  touch();
+  touchGraph($('touch'));
   cy.on('tap', 'node', (event) => selectNode(event.target.id()));
   cy.on('tap', (event) => event.target === cy && selectNode(null));
+}
+
+/**
+ * Touch handling for the graph. The layer over the canvas lets a vertical swipe scroll the
+ * page (`touch-action: pan-y`), so the graph never traps the scroll. A sideways drag moves
+ * the graph, two fingers zoom and move it, and a tap picks the nearest node.
+ */
+function touchGraph(el) {
+  const points = new Map();
+  let start = null, moved = false, pinch = null;
+  const at = (e) => {
+    const box = el.getBoundingClientRect();
+    return { x: e.clientX - box.left, y: e.clientY - box.top };
+  };
+  el.addEventListener('pointerdown', (e) => {
+    points.set(e.pointerId, at(e));
+    pinch = null;
+    if (points.size === 1) [start, moved] = [at(e), false];
+    cy.stop();
+  });
+  el.addEventListener('pointermove', (e) => {
+    if (!points.has(e.pointerId)) return;
+    const prev = points.get(e.pointerId), now = at(e);
+    points.set(e.pointerId, now);
+    if (points.size === 1) {
+      if (Math.hypot(now.x - start.x, now.y - start.y) > 8) moved = true;
+      if (moved) cy.panBy({ x: now.x - prev.x, y: now.y - prev.y });
+    } else if (points.size === 2) {
+      const [a, b] = [...points.values()];
+      const next = { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, mid: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 } };
+      if (pinch) {
+        cy.zoom({ level: (cy.zoom() * next.d) / pinch.d, renderedPosition: next.mid });
+        cy.panBy({ x: next.mid.x - pinch.mid.x, y: next.mid.y - pinch.mid.y });
+      }
+      pinch = next;
+      moved = true;
+    }
+  });
+  const end = (e) => {
+    const had = points.delete(e.pointerId);
+    pinch = null;
+    if (had && e.type === 'pointerup' && !moved && !points.size) tapAt(start);
+  };
+  el.addEventListener('pointerup', end);
+  el.addEventListener('pointercancel', end);
+}
+
+/** Select the node nearest to a tap. Every node counts as at least 44 px wide and tall. */
+function tapAt(p) {
+  let best = null, gap = Infinity;
+  cy.nodes(':visible').forEach((n) => {
+    const b = n.renderedBoundingBox({ includeLabels: false });
+    const x = (b.x1 + b.x2) / 2, y = (b.y1 + b.y2) / 2;
+    if (Math.abs(p.x - x) > Math.max(b.w, 44) / 2 || Math.abs(p.y - y) > Math.max(b.h, 44) / 2) return;
+    const d = Math.hypot(p.x - x, p.y - y);
+    if (d < gap) [best, gap] = [n, d];
+  });
+  selectNode(best ? best.id() : null);
 }
 
 function renderLegend() {
@@ -831,10 +997,12 @@ async function startRelate() {
     run(db, 'RETURN 1 AS ok');
     db.free();
     relate = mod;
+    engine = 'ready';
     $('engine').textContent = 'Relate is running in this page';
     $('engine').classList.add('ok');
   } catch (err) {
     console.error(err);
+    engine = 'off';
     $('engine').textContent = 'Relate could not start: showing the exported review';
     $('engine').classList.add('off');
   }
@@ -842,8 +1010,10 @@ async function startRelate() {
 
 async function main() {
   renderLegend();
-  const [response] = await Promise.all([fetch('data/demo.json'), startRelate()]);
-  data = await response.json();
+  // The graph is drawn from the committed data straight away. Relate is a large download,
+  // so it attaches when it arrives and then runs the review and the console.
+  const starting = startRelate();
+  data = await (await fetch('data/demo.json')).json();
   views = [
     { pull: null, short: 'main', title: 'Shared memory', before: data.memory, after: data.memory },
     ...data.pulls.map((pull) => ({
@@ -872,8 +1042,21 @@ async function main() {
   renderProof(first);
   new ResizeObserver(() => {
     cy.resize();
-    paint();
+    paint({ glide: false });
   }).observe($('cy'));
+  await starting;
+  if (!relate) return renderTarget();
+  views.forEach((v) => openView(v));
+  // The review now comes from Relate: point the graph at its finding, not the exported copy.
+  const now = problem && problemsOf(view).find((p) => p.rule === problem.rule && p.severity === problem.severity);
+  if (now) {
+    problem = now;
+    paint({ fit: false });
+  }
+  renderViews();
+  renderReview();
+  renderDetail();
+  renderTarget();
 }
 
 main().catch((err) => {
