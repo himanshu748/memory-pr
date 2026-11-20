@@ -22,7 +22,8 @@
     WHERE a.name < b.name
       AND a.status = 'active' AND b.status = 'active'
       AND a.predicate = b.predicate AND a.value <> b.value
-      AND NOT (a)-[:SUPERSEDES]->(b) AND NOT (b)-[:SUPERSEDES]->(a)
+      AND NOT EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(a) WHERE n.status = 'active' }
+      AND NOT EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(b) WHERE n.status = 'active' }
       AND NOT EXISTS { MATCH (p:Predicate {name: a.predicate}) WHERE p.cardinality = 'many' }
     RETURN a.name AS fact, b.name AS other, e.name AS entity,
            a.predicate AS predicate, a.value AS value, b.value AS other_value
