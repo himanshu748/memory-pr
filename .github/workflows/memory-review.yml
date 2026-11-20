@@ -37,7 +37,11 @@ jobs:
           echo "HEAD=$head" >> "$GITHUB_ENV"
           git fetch -q origin "$base" "$head"
           git worktree add -q "$RUNNER_TEMP/tool" "origin/$base"
-          pip install -q "$RUNNER_TEMP/tool"
+          if [ -f "$RUNNER_TEMP/tool/pyproject.toml" ]; then
+            pip install -q "$RUNNER_TEMP/tool"
+          else
+            pip install -q .  # the base branch has no mempr yet
+          fi
       - name: Review the memory change
         id: review
         run: |
