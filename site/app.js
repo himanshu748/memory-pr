@@ -168,7 +168,7 @@ const STYLE = [
   {
     selector: 'node',
     style: {
-      label: 'data(label)', color: '#e8edf7', 'font-size': 10, 'font-family': 'Inter, system-ui, sans-serif',
+      label: 'data(label)', color: '#f2f5fb', 'font-size': 11, 'font-family': 'Inter, system-ui, sans-serif',
       'text-wrap': 'wrap', 'text-valign': 'center', 'text-halign': 'center', 'line-height': 1.25,
       'background-color': '#2c3b5e', 'border-width': 1.5, 'border-color': '#56689a',
       width: 'data(w)', height: 'data(h)', shape: 'round-rectangle',
@@ -203,7 +203,7 @@ const STYLE = [
   { selector: 'edge.added', style: { 'line-color': '#3ddc84', 'target-arrow-color': '#3ddc84', width: 2.6 } },
   { selector: 'edge.removed', style: { 'line-color': '#ff6b6b', 'target-arrow-color': '#ff6b6b', 'line-style': 'dashed', width: 2, label: 'data(lost)' } },
   { selector: '.hidden', style: { display: 'none' } },
-  { selector: '.dim', style: { opacity: 0.25 } },
+  { selector: '.dim', style: { opacity: 0.42 } },
   { selector: 'node.hit', style: { 'underlay-color': '#5b9dff', 'underlay-opacity': 0.45, 'underlay-padding': 7 } },
   { selector: 'node.hl', style: { 'underlay-color': '#ff4d6d', 'underlay-opacity': 0.5, 'underlay-padding': 8, opacity: 1 } },
   { selector: 'edge.hl', style: { width: 4, opacity: 1, label: 'data(name)', 'font-size': 9, color: '#fff', 'z-index': 9 } },
@@ -346,9 +346,12 @@ function paint({ fit = true } = {}) {
   if (!fit) return;
   const target = problem ? cy.elements('.hl') : cy.elements(':visible');
   const eles = target.length ? target : cy.elements();
+  // Show the whole graph when its labels stay readable; otherwise frame the problem.
+  cy.fit(cy.elements(':visible'), 28);
+  if (cy.zoom() >= 0.72 || !target.length) return;
   cy.fit(eles, problem ? 70 : 24);
-  if (cy.zoom() > 1.3) {
-    cy.zoom(1.3);
+  if (cy.zoom() > 1.15) {
+    cy.zoom(1.15);
     cy.center(eles);
   }
 }
@@ -402,11 +405,27 @@ function renderViews() {
   $('views').innerHTML = views
     .map((v, i) => {
       const state = !v.pull ? '' : verdict(v).blocked ? 'blocked' : 'passed';
-      const name = v.pull ? `<span class="dot ${state}"></span>${esc(v.short)}` : 'Shared memory';
-      const sub = v.pull ? (state === 'blocked' ? 'blocked' : 'passes') : 'main';
-      return `<button type="button" data-view="${i}" class="${v === view ? 'on' : ''}">${name}<small>${sub}</small></button>`;
+      const chip = v.pull ? `<span class="chip-state ${state}">${state === 'blocked' ? 'Blocked' : 'Passes'}</span>` : '<span class="chip-state base">main</span>';
+      const name = v.pull ? `${esc(v.pull.author)}` : 'Shared memory';
+      const sub = v.pull ? esc(v.pull.description) : 'What every agent reads today';
+      return `<button type="button" data-view="${i}" class="${v === view ? 'on' : ''} ${state}">${chip}<strong>${name}</strong><small>${sub}</small></button>`;
     })
     .join('');
+}
+
+/** The first screen's proof: the same contradiction the review finds, read from the data. */
+function renderProof(v) {
+  const p = v.pull && problemsOf(v).find((x) => x.rule === 'contradiction' && x.row);
+  if (!p) return;
+  const { entity, predicate, fact, other, value, other_value: otherValue } = p.row;
+  if (![entity, predicate, value, otherValue].every((x) => typeof x === 'string')) return;
+  const inMemory = (name) => data.memory.nodes.some((n) => n.id === `Fact/${name}`);
+  const [fresh, old] = inMemory(fact) && !inMemory(other) ? [otherValue, value] : [value, otherValue];
+  $('proof-old').textContent = old;
+  $('proof-new').textContent = fresh;
+  $('proof-entity').textContent = entity;
+  document.querySelectorAll('.proof-pred').forEach((el) => (el.textContent = predicate));
+  $('proof-who').textContent = v.pull.id;
 }
 
 function verdict(v) {
@@ -603,7 +622,7 @@ const EXAMPLES = [
 function renderConsole() {
   $('examples').innerHTML =
     EXAMPLES.map(([label], i) => `<button type="button" data-example="${i}">${esc(label)}</button>`).join('') +
-    '<select id="rules" aria-label="Review rules"><option value="">Review rules (Cypher)…</option>' +
+    '<select id="rules" aria-label="Review rules"><option value="">Review rules (Cypher)</option>' +
     rulesOf(view).map((r) => `<option value="${esc(r.id)}">${esc(r.id)}: ${esc(r.title)}</option>`).join('') +
     '</select>';
   if (!$('query').value) $('query').value = EXAMPLES[0][1];
@@ -713,7 +732,7 @@ function show(v, { keepHash = false } = {}) {
   $('graph-note').textContent = v.pull
     ? 'Green: added by the pull request. Red dashed: gone after the merge. Glowing: the problem selected on the right.'
     : 'Drag to move, scroll or pinch to zoom, click a node for its source and author.';
-  if (!keepHash) history.replaceState(null, '', v.pull ? `#pr=${encodeURIComponent(v.short)}` : location.pathname + location.search);
+  if (!keepHash) history.replaceState(null, '', `#pr=${encodeURIComponent(v.pull ? v.short : 'main')}`);
 }
 
 function selectProblem(i) {
@@ -755,6 +774,11 @@ function wire() {
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Enter' && event.target.matches?.('[data-problem]')) selectProblem(Number(event.target.dataset.problem));
     if (event.key === 'Enter' && (event.ctrlKey || event.metaKey) && event.target === $('query')) runQuery();
+  });
+  document.addEventListener('click', (event) => {
+    const open = event.target.closest?.('[data-open]');
+    const v = open && views.find((x) => x.pull && x.short === open.dataset.open);
+    if (v && v !== view) show(v);
   });
   document.addEventListener('change', (event) => {
     if (event.target.id === 'rules' && event.target.value) {
@@ -830,7 +854,10 @@ async function main() {
   view = views[0];
   draw(); // lay out the memory first, so its notes keep their place in every view
   const wanted = decodeURIComponent((location.hash.match(/pr=([^&]+)/) || [])[1] || '');
-  show(views.find((v) => v.pull && v.short === wanted) || views[0], { keepHash: true });
+  // Open on the proof: a blocked pull request with the contradiction drawn as a path.
+  const first = views.find((v) => v.pull && verdict(v).blocked) || views[0];
+  show(views.find((v) => (v.pull ? v.short : 'main') === wanted) || first, { keepHash: true });
+  renderProof(first);
   new ResizeObserver(() => {
     cy.resize();
     paint();
