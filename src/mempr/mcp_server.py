@@ -99,12 +99,23 @@ def _branch_names(repo: Path, rev: str) -> set[str]:
     return names - {""}
 
 
-def _github_repo(repo: Path, remote: str) -> str | None:
-    """`host/owner/name` of the remote for `gh --repo`, or None when it is not such a URL."""
-    # The configured URL, not `remote get-url`: that one applies `insteadOf` rewrites.
-    url = gitutil.git(repo, "config", "--get", f"remote.{remote}.url", check=False).stdout.strip()
-    found = REMOTE_URL.match(url)
-    return "/".join(found.groups()) if found else None
+def _pull_request_target(repo: Path, remote: str, branch: str) -> tuple[str | None, str]:
+    """(`host/owner/name` for `gh --repo`, head) for a branch pushed to `remote`.
+
+    The pull request goes to the repository the remote fetches from. When pushes go to
+    another repository (a fork, set as the push URL), the head names its owner.
+    The repository is None when the remote's URL is not a `host/owner/name` URL.
+    """
+
+    def configured(key: str) -> tuple[str, ...] | None:
+        # The configured URL, not `remote get-url`: that one applies `insteadOf` rewrites.
+        url = gitutil.git(repo, "config", "--get", f"remote.{remote}.{key}", check=False)
+        found = REMOTE_URL.match(url.stdout.strip())
+        return found.groups() if found else None
+
+    target, pushed = configured("url"), configured("pushurl")
+    head = f"{pushed[1]}:{branch}" if target and pushed and pushed != target else branch
+    return ("/".join(target) if target else None), head
 
 
 def _review(cfg: Settings, head: str, base: str) -> dict[str, Any]:
@@ -194,11 +205,11 @@ def _open_pull_request(cfg: Settings, branch: str, base: str, title: str, body: 
     if push.returncode != 0:
         return {"pushed": False, "error": f"git push failed: {push.stderr.strip()}"}
     # Name the repository of the remote that was pushed to; gh's own default can differ.
-    target = _github_repo(cfg.repo, cfg.remote)
+    target, head = _pull_request_target(cfg.repo, cfg.remote, branch)
     try:
         proc = subprocess.run(
             ["gh", "pr", "create", "--base", min(_branch_names(cfg.repo, base), key=len)]
-            + ["--head", branch, "--title", title, "--body", body]
+            + ["--head", head, "--title", title, "--body", body]
             + (["--repo", target] if target else []),
             cwd=cfg.repo,
             capture_output=True,

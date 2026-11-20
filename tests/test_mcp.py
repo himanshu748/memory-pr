@@ -13,7 +13,7 @@ import pytest
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
-from mempr.mcp_server import is_read_only
+from mempr.mcp_server import _pull_request_target, is_read_only
 
 DB = "payments-api--database--postgres-15"
 TOOL = "payments-api--migration-tool--pg-migrate"
@@ -362,3 +362,18 @@ def test_proposals_in_the_same_second_get_separate_branches(agent, repo):
     for out in (first, second):  # each is its own one-commit proposal, so neither is blocked
         assert repo.git("rev-list", "--count", f"main..{out['branch']}") == "1"
         assert out["blocked"] is False
+
+
+def test_pull_request_goes_to_the_fetch_repository_with_a_fork_as_head(repo):
+    repo.git("remote", "add", "origin", "git@github.com:acme/project.git")
+    assert _pull_request_target(repo.path, "origin", "agent/x") == (
+        "github.com/acme/project",
+        "agent/x",
+    )
+    repo.git("remote", "set-url", "--push", "origin", "https://github.com/builder-bot/project")
+    assert _pull_request_target(repo.path, "origin", "agent/x") == (
+        "github.com/acme/project",
+        "builder-bot:agent/x",
+    )
+    repo.git("remote", "add", "local", "../somewhere.git")
+    assert _pull_request_target(repo.path, "local", "agent/x") == (None, "agent/x")
