@@ -37,6 +37,28 @@ test.
 3. The **memory-review** check comments on the pull request and, unless the scenario is
    `clean`, blocks the merge.
 
+## See it in the browser
+
+**<https://himanshu748.github.io/memory-pr/>** — nothing to install.
+
+![The browser view: a pull request that contradicts memory, drawn on the graph](docs/browser-view.png)
+
+- **The shared memory as a graph.** Click any fact for the file it came from, the agent that wrote
+  it, what it replaces and what it rests on, and the Markdown note behind it.
+- **What a pull request does to it.** Five scripted pull requests, one per tab: the facts each adds
+  (green) and loses (red, dashed), and every problem the review found drawn on the graph, such as
+  the two contradicting facts and the path between them, or the chain of derived facts resting on a
+  replaced one.
+- **Relate runs in the page.** The graph is loaded into Relate's WebAssembly build
+  ([`@relate/relate-wasm`](https://www.npmjs.com/package/@relate/relate-wasm)), so the Cypher box
+  queries it live, the review rules run in your browser, and you can write to the graph (retract a
+  fact, add a contradicting one) and watch the review change. Nothing leaves the page.
+
+The site is static with no build step and works offline: `python -m http.server -d site`, then open
+<http://localhost:8000>. Its data, [`site/data/demo.json`](site/data/demo.json), comes from
+`mempr export` (the graph and each review as JSON, from `mempr.vault` and `mempr.check`) and is
+regenerated with `python demo/build_site.py`.
+
 An example that is already open: [pull request 2](https://github.com/himanshu748/memory-pr/pull/2),
 where the agent read an outdated design note.
 

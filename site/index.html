@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>memory-pr: pull requests for agent memory, in your browser</title>
+<meta name="description" content="Explore a shared agent memory as a graph, see what one pull request does to it, and run Cypher on it with Relate in your browser.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <h1>memory-pr</h1>
+    <p>Pull requests for agent memory, reviewed as a graph.</p>
+  </div>
+  <div class="top-right">
+    <span id="engine" class="engine" title="The graph database runs inside this page">Starting Relate…</span>
+    <a href="https://github.com/himanshu748/memory-pr">GitHub</a>
+  </div>
+</header>
+
+<nav id="views" class="views" aria-label="What to show"></nav>
+
+<main class="layout">
+  <section class="pane graph-pane" aria-label="Graph">
+    <div class="graph-bar">
+      <div id="legend" class="legend"></div>
+      <div class="graph-tools">
+        <label><input type="checkbox" id="show-prov" checked> Sources and authors</label>
+        <button id="fit" type="button">Fit</button>
+      </div>
+    </div>
+    <div id="cy" class="cy"></div>
+    <p id="graph-note" class="graph-note"></p>
+  </section>
+
+  <aside class="side">
+    <section id="detail" class="pane card" hidden></section>
+    <section id="review" class="pane card"></section>
+  </aside>
+
+  <section class="pane console" aria-label="Cypher console">
+    <div class="console-head">
+      <h2>Ask the graph in Cypher</h2>
+      <span id="target" class="target"></span>
+    </div>
+    <div id="examples" class="examples"></div>
+    <textarea id="query" spellcheck="false" rows="5" aria-label="Cypher query"></textarea>
+    <div class="console-actions">
+      <button id="run" type="button" class="primary">Run</button>
+      <button id="reset" type="button" title="Throw away your changes to this graph">Reset this graph</button>
+      <span id="timing" class="timing"></span>
+    </div>
+    <div id="result" class="result"></div>
+  </section>
+</main>
+
+<footer class="foot">
+  All data is generated: a fictional project and scripted agents. Nothing was recorded.
+  The graph runs in <a href="https://relatedb.ai">Relate</a> compiled to WebAssembly; nothing leaves this page.
+</footer>
+
+<script src="vendor/cytoscape/cytoscape.min.js"></script>
+<script type="module" src="app.js"></script>
+</body>
+</html>
