@@ -10,6 +10,7 @@ with `mempr export`. Nothing here touches the checkout except the output file.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -58,6 +59,15 @@ def commit(repo: Path, author: str, subject: str, body: str = "") -> None:
     git(repo, "commit", "-q", "-m", subject, *(["-m", body] if body else []), author=author)
 
 
+def memory_digest(source: Path = ROOT) -> str:
+    """Identifies the memory the page data was built from."""
+    digest = hashlib.sha256()
+    for note in sorted(note_files(source / "memory")):
+        digest.update(note.relative_to(source / "memory").as_posix().encode())
+        digest.update(note.read_bytes())
+    return digest.hexdigest()[:16]
+
+
 def build(source: Path = ROOT) -> dict:
     with tempfile.TemporaryDirectory(prefix="mempr-site-") as tmp:
         repo = Path(tmp) / "repo"
@@ -89,7 +99,8 @@ def build(source: Path = ROOT) -> dict:
             commit(repo, name, f"memory: {summary}", agent.SCENARIOS[scenario])
             specs.append(branch)
 
-        return export(repo, "main", specs, "memory", "memory-rules.yaml")
+        data = export(repo, "main", specs, "memory", "memory-rules.yaml")
+        return {**data, "memory_digest": memory_digest(source)}
 
 
 def main() -> None:
