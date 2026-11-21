@@ -1017,6 +1017,12 @@ const API = /\.github\.io$/.test(location.hostname)
     ? ''
     : null;
 
+if (API !== null) {
+  // Say so before anything is sent: here a draft also goes to the server.
+  const where = document.getElementById('where-it-runs');
+  if (where) where.textContent = 'The review runs in this page. Your draft is also sent to this site\u2019s server for a second check. It is not stored.';
+}
+
 function serverCheck(v) {
   if (API === null) return;
   const mine = verdict(v);
