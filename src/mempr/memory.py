@@ -71,6 +71,11 @@ MERGE (f)-[:SOURCE]->(s)
 RETURN f.name AS fact
 """
 
+# A fact written with no source, as a hand-written note can be. The review blocks it.
+ADD_UNSOURCED_FACT = ADD_FACT.replace(
+    "MERGE (s:Source {name: $source})\nSET s.uri = $uri\n", ""
+).replace("MERGE (f)-[:SOURCE]->(s)\n", "")
+
 LINK = {
     "SUPERSEDES": (
         "MATCH (f:Fact {name: $name}), (o:Fact {name: $other}) "
@@ -83,12 +88,14 @@ LINK = {
 }
 
 
-def _check_before_write(conn, source: str, uri: str, linked: list[str]) -> None:
+def _check_before_write(conn, uri: str | None, linked: list[str]) -> None:
     """Refuse a write that would overwrite another source or link to a fact that is not there."""
     for other in linked:
         if not rows(conn, "MATCH (f:Fact {name: $name}) RETURN f.name AS name", {"name": other}):
             raise KeyError(f"no fact named {other!r} to link to")
-    taken = rows(conn, "MATCH (s:Source {name: $name}) RETURN s.uri AS uri", {"name": source})
+    if not uri:
+        return
+    taken = rows(conn, "MATCH (s:Source {name: $name}) RETURN s.uri AS uri", {"name": slug(uri)})
     if taken and taken[0]["uri"] not in (None, uri):
         raise ValueError(f"source {uri!r} has the same note name as {taken[0]['uri']!r}")
 
@@ -100,19 +107,23 @@ def add_fact(
     predicate: str,
     value: str,
     agent: str,
-    source: str,
+    source: str | None,
     statement: str = "",
     supersedes: list[str] | None = None,
     derived_from: list[str] | None = None,
 ) -> str:
-    """Write one fact into the working-tree vault. Returns the fact's name."""
+    """Write one fact into the working-tree vault. Returns the fact's name.
+
+    `source` is the file, commit or document the agent read it from. Without one the fact
+    is still written, and the review blocks it.
+    """
     for label, text in (("entity", entity), ("predicate", predicate), ("agent", agent)):
         if slug(text) != text:
             raise ValueError(f"{label} {text!r} must be lowercase letters, digits and hyphens")
     vault.mkdir(parents=True, exist_ok=True)
     supersedes, derived_from = supersedes or [], derived_from or []
     with open_vault(vault, in_place=True) as conn:
-        _check_before_write(conn, slug(source), source, supersedes + derived_from)
+        _check_before_write(conn, source, supersedes + derived_from)
         name = _free_name(conn, entity, predicate, value)
         if name in supersedes + derived_from:
             raise ValueError(f"fact {name!r} cannot replace or rest on itself")
@@ -120,12 +131,11 @@ def add_fact(
         rows(conn, "MATCH (:Fact)-[r:SUPERSEDES]->(:Fact {name: $name}) DELETE r", {"name": name})
         rows(
             conn,
-            ADD_FACT,
+            ADD_FACT if source else ADD_UNSOURCED_FACT,
             {
                 "entity": entity,
                 "agent": agent,
-                "source": slug(source),
-                "uri": source,
+                **({"source": slug(source), "uri": source} if source else {}),
                 "name": name,
                 "predicate": predicate,
                 "value": value,
