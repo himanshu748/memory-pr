@@ -1,5 +1,5 @@
 ---
 type: Predicate
-name: owner
 cardinality: many
+name: owner
 ---
