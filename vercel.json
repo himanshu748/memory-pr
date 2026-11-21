@@ -9,11 +9,27 @@
   "headers": [
     {
       "source": "/vendor/(.*)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
     },
     {
       "source": "/data/(.*)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
     }
-  ]
+  ],
+  "functions": {
+    "api/*.py": {
+      "includeFiles": "{memory,src/mempr}/**",
+      "maxDuration": 15
+    }
+  }
 }
