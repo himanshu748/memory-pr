@@ -25,7 +25,11 @@ def _vault(args: argparse.Namespace) -> Path:
 def cmd_check(args: argparse.Namespace) -> int:
     # Rules come from the base branch, so a pull request cannot switch off its own review.
     rules = load_rules(gitutil.read_file(_repo(args), args.base, args.rules))
-    result = review(_repo(args), args.base, args.head, args.vault, rules)
+    try:
+        result = review(_repo(args), args.base, args.head, args.vault, rules)
+    except gitutil.GitError as err:
+        sys.stderr.write(f"mempr check: {err}\n")
+        return 2
     if args.json:
         Path(args.json).write_text(json.dumps(result.to_dict(), indent=2) + "\n", "utf-8")
     text = render(result)
