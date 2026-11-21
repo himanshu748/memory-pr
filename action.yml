@@ -35,9 +35,14 @@ runs:
       run: pip install -q "${{ github.action_path }}"
     - name: Review the memory change
       shell: bash
+      env:
+        MEMPR_BASE: ${{ inputs.base }}
+        MEMPR_HEAD: ${{ inputs.head }}
+        MEMPR_VAULT: ${{ inputs.vault }}
+        MEMPR_RULES: ${{ inputs.rules }}
       run: >-
         mempr check
-        --base "${{ inputs.base }}"
-        --head "${{ inputs.head }}"
-        --vault "${{ inputs.vault }}"
-        --rules "${{ inputs.rules }}"
+        --base "$MEMPR_BASE"
+        --head "$MEMPR_HEAD"
+        --vault "$MEMPR_VAULT"
+        --rules "$MEMPR_RULES"
