@@ -14,18 +14,18 @@
       "pull_requests_fixed_after_review": 0,
       "correct_pull_requests_blocked": 0,
       "git_conflicts": 1,
-      "wrong_active_facts": 20,
-      "contradictions": 24,
-      "facts_resting_on_replaced_facts": 9,
+      "wrong_active_facts": 21,
+      "contradictions": 25,
+      "facts_resting_on_replaced_facts": 8,
       "notes_emptied_by_a_clean_merge": 3,
       "unsourced_facts": 20,
-      "questions_answered_correctly": 140,
-      "questions_answered_wrongly_or_ambiguously": 18,
+      "questions_answered_correctly": 139,
+      "questions_answered_wrongly_or_ambiguously": 19,
       "questions_asked": 240
     },
     "with_check": {
-      "pull_requests_merged": 255,
-      "pull_requests_blocked": 45,
+      "pull_requests_merged": 254,
+      "pull_requests_blocked": 46,
       "pull_requests_fixed_after_review": 8,
       "correct_pull_requests_blocked": 0,
       "git_conflicts": 0,
@@ -111,18 +111,18 @@
         "pull_requests_fixed_after_review": 0,
         "correct_pull_requests_blocked": 0,
         "git_conflicts": 1,
-        "wrong_active_facts": 5,
-        "contradictions": 5,
-        "facts_resting_on_replaced_facts": 1,
+        "wrong_active_facts": 6,
+        "contradictions": 6,
+        "facts_resting_on_replaced_facts": 0,
         "notes_emptied_by_a_clean_merge": 1,
         "unsourced_facts": 4,
-        "questions_answered_correctly": 26,
-        "questions_answered_wrongly_or_ambiguously": 5,
+        "questions_answered_correctly": 25,
+        "questions_answered_wrongly_or_ambiguously": 6,
         "questions_asked": 48
       },
       "with_check": {
-        "pull_requests_merged": 48,
-        "pull_requests_blocked": 12,
+        "pull_requests_merged": 47,
+        "pull_requests_blocked": 13,
         "pull_requests_fixed_after_review": 1,
         "correct_pull_requests_blocked": 0,
         "git_conflicts": 0,
@@ -201,5 +201,5 @@
       }
     }
   },
-  "seconds": 121.8
+  "seconds": 117.1
 }

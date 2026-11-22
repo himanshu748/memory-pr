@@ -112,17 +112,17 @@ At the end a new agent asks the memory about every service.
 
 | | Without the check | With the check |
 | --- | --- | --- |
-| Pull requests merged | 299 | 255 |
-| Pull requests blocked | 0 | 45 |
+| Pull requests merged | 299 | 254 |
+| Pull requests blocked | 0 | 46 |
 | Pull requests fixed after the review, then merged | 0 | 8 |
 | Correct pull requests blocked by mistake | 0 | 0 |
-| Wrong facts in memory at the end | 20 | 1 |
-| Contradictions in memory | 24 | 0 |
-| Facts resting on a replaced fact | 9 | 0 |
+| Wrong facts in memory at the end | 21 | 1 |
+| Contradictions in memory | 25 | 0 |
+| Facts resting on a replaced fact | 8 | 0 |
 | Notes emptied by a merge git called clean | 3 | 0 |
 | Facts with no source | 20 | 0 |
-| Questions answered correctly (of 240) | 140 | 160 |
-| Questions answered wrongly or with two values | 18 | 1 |
+| Questions answered correctly (of 240) | 139 | 160 |
+| Questions answered wrongly or with two values | 19 | 1 |
 
 Reproduce: `python bench/run.py --seed 1 --seeds 5 --rounds 10 --agents 6 --out docs/benchmark.json`
 (about 2 minutes). The agents, the project and its ground truth are generated in
