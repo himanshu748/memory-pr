@@ -37,5 +37,10 @@
       "source": "/api/pull-requests/:id",
       "destination": "/api/pull-requests?id=:id"
     }
-  ]
+  ],
+  "git": {
+    "deploymentEnabled": {
+      "playground/*": false
+    }
+  }
 }

@@ -84,6 +84,11 @@ class Endpoint(BaseHTTPRequestHandler):
     def do_POST(self) -> None:  # noqa: N802
         self._run("post", lambda: read_json(self.headers, self.rfile))
 
+    def _refuse(self) -> None:
+        self._send(405, {"error": "method not allowed"})
+
+    do_PUT = do_PATCH = do_DELETE = _refuse  # noqa: N815
+
     def do_OPTIONS(self) -> None:  # noqa: N802
         self.send_response(204)
         for key, value in cors(self.headers.get("Origin")).items():

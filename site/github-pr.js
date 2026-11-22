@@ -40,7 +40,7 @@ export function prLine(state) {
   if (state.state === 'refused') return { tone: 'differs', text: state.note || 'The server could not ask GitHub. Try again in a minute.' };
   if (state.state === 'queued') return { tone: '', text: 'GitHub is opening the pull request. This takes about half a minute.' };
   if (state.state === 'failed')
-    return { tone: 'differs', text: 'GitHub did not open the pull request. It refuses when three are already open.', link: safeUrl(state.run_url), label: 'See the run' };
+    return { tone: 'differs', text: 'GitHub did not open the pull request. It refuses when three are open or twenty were opened in the last 24 hours.', link: safeUrl(state.run_url), label: 'See the run' };
   if (state.state === 'closed')
     return { tone: '', text: `Pull request #${Number(state.number)} is closed. Playground pull requests are closed after 30 minutes.`, link, label: 'See it on GitHub' };
   if (state.state === 'open') {

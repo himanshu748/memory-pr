@@ -13,6 +13,7 @@ import re
 import secrets
 import urllib.error
 import urllib.request
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -23,6 +24,7 @@ REPO = "himanshu748/memory-pr"
 WORKFLOW = "playground-agent.yml"
 BRANCH_PREFIX = "playground/"
 MAX_OPEN = 3
+MAX_DAY = 20  # opened in any 24 hours
 TOKEN_ENV = "GITHUB_DISPATCH_TOKEN"
 API = "https://api.github.com"
 ID = re.compile(r"[a-f0-9]{10}")
@@ -124,16 +126,50 @@ def _github(method: str, path: str, token: str | None = None, body: Any = None) 
         return status, None
 
 
-def open_count(github=_github) -> int | None:
-    """How many playground pull requests are open, or None when GitHub would not say."""
-    status, pulls = github("GET", f"/repos/{REPO}/pulls?state=open&per_page=100")
+def count(pulls: list[tuple[str, bool, str]], now: datetime) -> tuple[int, int]:
+    """(open now, opened in the last 24 hours) among playground pull requests.
+
+    Each is (head branch, is open, created at in ISO 8601). The server and the workflow
+    both count with this.
+    """
+    mine = [p for p in pulls if p[0].startswith(BRANCH_PREFIX)]
+    day = now - timedelta(hours=24)
+    recent = sum(
+        1 for _, _, made in mine if datetime.fromisoformat(made.replace("Z", "+00:00")) > day
+    )
+    return sum(1 for _, is_open, _ in mine if is_open), recent
+
+
+def full(open_now: int, today: int) -> str | None:
+    """Why no more playground pull requests may be opened, or None when one may."""
+    if open_now >= MAX_OPEN:
+        return (
+            f"{MAX_OPEN} playground pull requests are already open. "
+            "They close after 30 minutes; try again then."
+        )
+    if today >= MAX_DAY:
+        return (
+            f"{MAX_DAY} playground pull requests were opened in the last 24 hours. Try again later."
+        )
+    return None
+
+
+def counts(github=_github) -> tuple[int, int] | None:
+    """count() from GitHub's public API, or None when GitHub would not say."""
+    status, pulls = github(
+        "GET", f"/repos/{REPO}/pulls?state=all&sort=created&direction=desc&per_page=100"
+    )
     if status != 200 or not isinstance(pulls, list):
         return None
-    return sum(1 for p in pulls if str(p.get("head", {}).get("ref", "")).startswith(BRANCH_PREFIX))
+    try:
+        rows = [(str(p["head"]["ref"]), p["state"] == "open", str(p["created_at"])) for p in pulls]
+        return count(rows, datetime.now(timezone.utc))
+    except (KeyError, TypeError, ValueError):
+        return None
 
 
 def enabled(env: dict[str, str]) -> dict[str, Any]:
-    return {"enabled": bool(env.get(TOKEN_ENV)), "limit": MAX_OPEN, "minutes": 30}
+    return {"enabled": bool(env.get(TOKEN_ENV)), "limit": MAX_OPEN, "daily": MAX_DAY, "minutes": 30}
 
 
 def open_request(
@@ -152,13 +188,10 @@ def open_request(
     review = review_request({"draft": body.get("draft")}, vault, rules)  # it must apply to main
     if not review["review"].get("added"):
         raise BadDraft("this draft changes nothing in the committed memory")
-    count = open_count(github)
-    if count is not None and count >= MAX_OPEN:
-        raise Refused(
-            429,
-            f"{MAX_OPEN} playground pull requests are already open. "
-            "They close after 30 minutes; try again then.",
-        )
+    counted = counts(github)
+    reason = full(*counted) if counted else None
+    if reason:
+        raise Refused(429, reason)
     if _waiting(token, github):
         # GitHub keeps one waiting run per concurrency group and cancels the one before it.
         raise Refused(429, "Another pull request is being opened right now. Try again in a minute.")
@@ -228,8 +261,8 @@ def state(ident: Any, env: dict[str, str], github=_github) -> dict[str, Any]:
             return answer | {
                 "state": "failed",
                 "run_url": run.get("html_url"),
-                "note": "The workflow did not open a pull request. "
-                f"It refuses when {MAX_OPEN} are already open.",
+                "note": "The workflow did not open a pull request. It refuses when "
+                f"{MAX_OPEN} are open or {MAX_DAY} were opened in the last 24 hours.",
             }
         return answer | {"state": "queued", "run_url": run.get("html_url") if run else None}
     pull = pulls[0]

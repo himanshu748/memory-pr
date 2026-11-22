@@ -38,10 +38,10 @@ def sh(*args: str) -> str:
 
 
 def playground_pulls() -> list[dict]:
-    """Open pull requests from this repository's playground branches."""
+    """This repository's playground pull requests, open or not, newest first."""
     found = json.loads(
-        sh("gh", "pr", "list", "--state", "open", "--limit", "100", "--json",
-           "number,headRefName,createdAt,isCrossRepository")
+        sh("gh", "pr", "list", "--state", "all", "--limit", "200", "--json",
+           "number,headRefName,createdAt,isCrossRepository,state")
     )  # fmt: skip
     return [
         p
@@ -51,11 +51,19 @@ def playground_pulls() -> list[dict]:
 
 
 def expired(pulls: list[dict], now: datetime) -> list[dict]:
+    """The open ones that are older than half an hour."""
     return [
         p
         for p in pulls
-        if now - datetime.fromisoformat(p["createdAt"].replace("Z", "+00:00")) > KEEP
+        if p.get("state", "OPEN") == "OPEN"
+        and now - datetime.fromisoformat(p["createdAt"].replace("Z", "+00:00")) > KEEP
     ]
+
+
+def refusal(pulls: list[dict], now: datetime) -> str | None:
+    """Why no pull request may be opened now, or None. The server asks the same first."""
+    rows = [(p["headRefName"], p["state"] == "OPEN", p["createdAt"]) for p in pulls]
+    return playground_pr.full(*playground_pr.count(rows, now))
 
 
 def open_pull(env: dict[str, str]) -> None:
@@ -67,8 +75,11 @@ def open_pull(env: dict[str, str]) -> None:
         draft = playground_pr.from_inputs(inputs)
     except BadDraft as error:
         sys.exit(f"refused: {error}")
-    if len(playground_pulls()) >= playground_pr.MAX_OPEN:
-        sys.exit(f"refused: {playground_pr.MAX_OPEN} playground pull requests are already open")
+    # The scheduled cleanup can be late, so expired pull requests give up their places first.
+    cleanup()
+    reason = refusal(playground_pulls(), datetime.now(timezone.utc))
+    if reason:
+        sys.exit(f"refused: {reason}")
     branch = playground_pr.BRANCH_PREFIX + ident
     sh("git", "checkout", "-q", "-b", branch, "origin/main")
     try:

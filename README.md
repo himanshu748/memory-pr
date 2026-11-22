@@ -377,7 +377,7 @@ can only start and read workflow runs in this one repository. The workflow, as
 
 ```bash
 curl -s https://memory-pr.vercel.app/api/pull-requests
-# {"enabled": true, "limit": 3, "minutes": 30}
+# {"enabled": true, "limit": 3, "daily": 20, "minutes": 30}
 
 curl -s https://memory-pr.vercel.app/api/pull-requests \
   -H 'Content-Type: application/json' \
@@ -398,12 +398,15 @@ The guards:
   lowercase path. The server refuses anything else, and the workflow refuses it again.
 - The workflow receives the values as environment variables. None is ever part of a
   command.
-- At most three playground pull requests are open at once. The workflow decides; the
-  server checks first to give a clear answer (429).
+- At most three playground pull requests are open at once, and at most 20 are opened in
+  any 24 hours. The workflow decides; the server checks first to give a clear answer (429).
 - Runs of the workflow go one at a time, so two requests cannot both take the last place,
   and the server sends nothing while a run is unfinished (429).
 - [`playground-cleanup`](.github/workflows/playground-cleanup.yml) runs every ten minutes
   and closes playground pull requests older than 30 minutes and deletes their branches.
+  The `playground-agent` workflow does the same before it counts, because scheduled runs
+  can be late.
+- Vercel builds no deployment for `playground/*` branches (`vercel.json`).
 - Where the token is not set (preview deployments, a local copy) the endpoint answers
   503 "not enabled" and the page does not show the button.
 

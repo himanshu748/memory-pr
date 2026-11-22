@@ -51,8 +51,14 @@ class GitHub:
         return 404, None
 
 
-def pull(n: int, ref: str) -> dict:
-    return {"number": n, "state": "open", "html_url": PULL_URL, "head": {"ref": ref, "sha": "abc"}}
+def pull(n: int, ref: str, state: str = "open") -> dict:
+    return {
+        "number": n,
+        "state": state,
+        "created_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "html_url": PULL_URL,
+        "head": {"ref": ref, "sha": "abc"},
+    }
 
 
 def test_inputs_are_short_lowercase_words_and_survive_the_round_trip():
@@ -144,6 +150,33 @@ def test_three_open_playground_pull_requests_is_the_limit():
     assert all(method == "GET" for method, *_ in github.calls)
     two = GitHub(**{"/pulls": (200, three[1:]), "/dispatches": (204, None)})
     assert open_request({"draft": MYSQL}, MEMORY, RULES, ON, two)["state"] == "queued"
+
+
+def test_twenty_in_a_day_is_the_limit_whatever_their_state():
+    closed = [pull(n, f"playground/{n:010x}", "closed") for n in range(20)]
+    github = GitHub(**{"/pulls": (200, closed)})
+    with pytest.raises(Refused) as refused:
+        open_request({"draft": MYSQL}, MEMORY, RULES, ON, github)
+    assert refused.value.status == 429 and "24 hours" in refused.value.message
+    assert all(method == "GET" for method, *_ in github.calls)
+    old = closed[:19] + [closed[19] | {"created_at": "2020-01-01T00:00:00Z"}]
+    fewer = GitHub(**{"/pulls": (200, old), "/dispatches": (204, None)})
+    assert open_request({"draft": MYSQL}, MEMORY, RULES, ON, fewer)["state"] == "queued"
+
+
+def test_the_workflow_counts_the_same_way():
+    agent = load("../demo/playground_agent.py")
+    now = datetime(2026, 1, 2, 12, 0, tzinfo=timezone.utc)
+
+    def made(n: int, state: str, hours: float) -> dict:
+        at = (now - timedelta(hours=hours)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        return {"number": n, "headRefName": f"playground/{n}", "state": state, "createdAt": at}
+
+    assert agent.refusal([made(n, "CLOSED", 1) for n in range(19)], now) is None
+    assert "24 hours" in agent.refusal([made(n, "CLOSED", 23) for n in range(20)], now)
+    assert agent.refusal([made(n, "MERGED", 25) for n in range(40)], now) is None
+    assert "already open" in agent.refusal([made(n, "OPEN", 0.1) for n in range(3)], now)
+    assert agent.refusal([made(n, "OPEN", 0.1) for n in range(2)], now) is None
 
 
 def test_one_pull_request_is_opened_at_a_time():
@@ -288,7 +321,7 @@ def fetch(url: str, body=None):
 
 
 def test_a_deployment_without_the_token_says_so(url):
-    assert fetch(url) == (200, {"enabled": False, "limit": 3, "minutes": 30})
+    assert fetch(url) == (200, {"enabled": False, "limit": 3, "daily": 20, "minutes": 30})
     status, body = fetch(url, {"draft": MYSQL})
     assert status == 503 and "not enabled" in body["error"]
 
@@ -344,7 +377,11 @@ def test_cleanup_closes_only_what_is_older_than_half_an_hour():
     def at(minutes: int) -> str:
         return (now - timedelta(minutes=minutes)).strftime("%Y-%m-%dT%H:%M:%SZ")
 
-    pulls = [{"number": 1, "createdAt": at(31)}, {"number": 2, "createdAt": at(29)}]
+    pulls = [
+        {"number": 1, "createdAt": at(31), "state": "OPEN"},
+        {"number": 2, "createdAt": at(29), "state": "OPEN"},
+        {"number": 3, "createdAt": at(90), "state": "CLOSED"},
+    ]
     assert [p["number"] for p in agent.expired(pulls, now)] == [1]
 
 
@@ -363,9 +400,16 @@ def test_the_workflow_script_refuses_before_it_touches_git(monkeypatch):
             agent.open_pull(bad)
         assert str(stopped.value).startswith("refused")
     assert ran == []
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     full = json.dumps(
         [
-            {"headRefName": f"playground/{n}", "isCrossRepository": False, "createdAt": "x"}
+            {
+                "number": n,
+                "headRefName": f"playground/{n}",
+                "isCrossRepository": False,
+                "createdAt": now,
+                "state": "OPEN",
+            }
             for n in range(3)
         ]
     )
@@ -373,4 +417,50 @@ def test_the_workflow_script_refuses_before_it_touches_git(monkeypatch):
     with pytest.raises(SystemExit) as stopped:
         agent.open_pull(env | {"PLAYGROUND_ID": ID})
     assert "already open" in str(stopped.value)
-    assert [args[:3] for args in ran] == [("gh", "pr", "list")]
+    # It cleans up and counts, and nothing else: no branch, no push.
+    assert {args[:3] for args in ran} == {("gh", "pr", "list")}
+
+
+def test_expired_pull_requests_give_up_their_places_before_the_count(monkeypatch):
+    agent = load("../demo/playground_agent.py")
+    old = (datetime.now(timezone.utc) - timedelta(minutes=45)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    pulls = [
+        {
+            "number": n,
+            "headRefName": f"playground/{n}",
+            "isCrossRepository": False,
+            "createdAt": old,
+            "state": "OPEN",
+        }
+        for n in range(3)
+    ]
+    ran = []
+
+    def sh(*args):
+        ran.append(args)
+        if args[:3] == ("gh", "pr", "close"):
+            next(p for p in pulls if str(p["number"]) == args[3])["state"] = "CLOSED"
+        if args[:2] == ("git", "checkout"):
+            raise SystemExit("stop here")
+        return json.dumps(pulls)
+
+    monkeypatch.setattr(agent, "sh", sh)
+    env = {f"PLAYGROUND_{k.upper()}": v for k, v in strict(MYSQL).items()}
+    with pytest.raises(SystemExit) as stopped:
+        agent.open_pull(env | {"PLAYGROUND_ID": ID})
+    assert str(stopped.value) == "stop here"  # it got past the count
+    assert [args[3] for args in ran if args[:3] == ("gh", "pr", "close")] == ["0", "1", "2"]
+
+
+def test_other_methods_get_a_json_405(url):
+    for method in ("DELETE", "PUT", "PATCH"):
+        request = urllib.request.Request(url, method=method, data=b"{}")
+        with pytest.raises(urllib.error.HTTPError) as refused:
+            urllib.request.urlopen(request, timeout=10)
+        assert refused.value.code == 405
+        assert json.loads(refused.value.read()) == {"error": "method not allowed"}
+
+
+def test_vercel_builds_nothing_for_playground_branches():
+    config = json.loads((ROOT / "vercel.json").read_text())
+    assert config["git"]["deploymentEnabled"] == {"playground/*": False}
