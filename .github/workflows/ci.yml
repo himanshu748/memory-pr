@@ -18,3 +18,16 @@ jobs:
       - run: ruff check .
       - run: ruff format --check .
       - run: pytest -q
+  action:
+    # Runs the bundled action as another repository would, so a broken action.yml fails here.
+    # It reviews main against itself: the result does not depend on the pull request.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: ./
+        with:
+          base: origin/main
+          head: origin/main
+          comment: "false"
