@@ -306,9 +306,66 @@ function draw({ relayout = false } = {}) {
   paint();
 }
 
+/** A real repository has many services: each gets its own block (service, its facts, their files), so nothing overlaps. */
+function clusterLayout() {
+  const GAP = 14, PAD = 56;
+  const byId = (a, b) => (a.id() < b.id() ? -1 : 1);
+  const home = new Map();
+  const entities = cy.nodes('[kind = "Entity"]').sort(byId);
+  const groups = entities.map((e) => ({ entity: e, facts: [], files: [] }));
+  const of = new Map(groups.map((g) => [g.entity.id(), g]));
+  cy.nodes('[kind = "Fact"]').sort(byId).forEach((f) => {
+    const about = f.outgoers('edge[type = "ABOUT"]').targets()[0];
+    const g = about && of.get(about.id());
+    if (g) g.facts.push(f), home.set(f.id(), g);
+  });
+  groups.forEach((g) => g.facts.forEach((f) => f.outgoers('edge[type = "SOURCE"]').targets().forEach((src) => {
+    if (!home.has(src.id())) g.files.push(src), home.set(src.id(), g);
+  })));
+  const rest = cy.nodes().filter((n) => !home.has(n.id()) && !of.has(n.id())).sort(byId);
+  const rowsOf = (nodes, per) => {
+    const rows = [];
+    for (let i = 0; i < nodes.length; i += per) rows.push(nodes.slice(i, i + per));
+    return rows;
+  };
+  const size = (row) => ({
+    w: row.reduce((t, n) => t + n.data('w'), 0) + GAP * (row.length - 1),
+    h: Math.max(...row.map((n) => n.data('h'))),
+  });
+  for (const g of groups) {
+    g.rows = [[g.entity], ...rowsOf(g.facts, 2), ...rowsOf(g.files, 2)];
+    g.w = Math.max(...g.rows.map((r) => size(r).w));
+    g.h = g.rows.reduce((t, r) => t + size(r).h, 0) + GAP * (g.rows.length - 1);
+  }
+  const area = groups.reduce((t, g) => t + (g.w + PAD) * (g.h + PAD), 0);
+  const width = Math.max(Math.sqrt(area * 1.6), ...groups.map((g) => g.w));
+  const place = (row, cx, y) => {
+    const { w, h } = size(row);
+    let x = cx - w / 2;
+    for (const n of row) {
+      n.position({ x: x + n.data('w') / 2, y: y + h / 2 });
+      x += n.data('w') + GAP;
+    }
+    return h;
+  };
+  // Agents and anything not about a service go along the top.
+  let y = 0;
+  if (rest.length) y += place(rest, width / 2, 0) + PAD * 1.5;
+  let x = 0, shelf = 0;
+  for (const g of groups) {
+    if (x > 0 && x + g.w > width) (y += shelf + PAD), (x = 0), (shelf = 0);
+    let gy = y;
+    for (const r of g.rows) gy += place(r, x + g.w / 2, gy) + GAP;
+    x += g.w + PAD;
+    shelf = Math.max(shelf, g.h);
+  }
+}
+
 function layout(relayout) {
   const fresh = cy.nodes().filter((n) => !positions.has(n.id()));
-  if (relayout || view.real || fresh.length === cy.nodes().length) {
+  if (view.real) {
+    clusterLayout();
+  } else if (relayout || fresh.length === cy.nodes().length) {
     // Start from a circle in a fixed order, so the same memory always lays out the same way.
     const all = cy.nodes();
     all.forEach((n, i) => {
