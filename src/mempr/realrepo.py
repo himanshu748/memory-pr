@@ -140,7 +140,14 @@ def extract(path: str, text: str) -> list[tuple[str, str]]:
         value = text.strip().splitlines()[0].strip() if text.strip() else ""
         if value and len(value) < 40:
             out.append((name[1:].replace("nvmrc", "node-version"), value))
-    return [(p, v.strip()[:120]) for p, v in out if v.strip()]
+    return [(p, _short(v.strip())) for p, v in out if v.strip()]
+
+
+def _short(value: str) -> str:
+    """At most 120 characters; a longer value keeps a hash of the rest, so two stay distinct."""
+    if len(value) <= 120:
+        return value
+    return f"{value[:111]}~{hashlib.sha1(value.encode()).hexdigest()[:8]}"
 
 
 def entity_of(repo: str, path: str) -> str:

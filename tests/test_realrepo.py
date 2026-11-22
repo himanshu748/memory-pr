@@ -152,3 +152,10 @@ def test_a_tree_github_cut_short_is_refused():
     with pytest.raises(RepoError) as error:
         learn("acme/shop", 12, load_rules(None), fetch=fetch)
     assert error.value.status == 422
+
+
+def test_long_values_that_differ_late_stay_distinct():
+    long = "registry.example.com/" + "a" * 120
+    first = extract("Dockerfile", f"FROM {long}:1\n")[0][1]
+    second = extract("Dockerfile", f"FROM {long}:2\n")[0][1]
+    assert len(first) == len(second) == 120 and first != second
