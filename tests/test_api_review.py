@@ -144,3 +144,34 @@ def test_clean_keeps_only_the_fields_the_review_uses():
     assert draft["source"] == ""
     with pytest.raises(BadDraft):
         review_request({"draft": MYSQL, "merged": "all"}, ROOT / "memory", RULES)
+
+
+@pytest.mark.parametrize("value", ["🚀", "C++", "---", "postgres-15-"])
+def test_a_fact_the_server_wrote_can_be_replaced_and_retracted(value):
+    """`fact_name` gives names such as `checkout-web--runtime--` when the value has no letters."""
+    from mempr.memory import fact_name
+
+    first = {
+        "agent": "visitor",
+        "entity": "checkout-web",
+        "predicate": "motto",
+        "value": value,
+        "source": "docs/x.md",
+    }
+    name = fact_name("checkout-web", "motto", value)
+    assert review_request({"draft": first}, ROOT / "memory", RULES)["blocked"] is False
+    replace = {**first, "value": "plain words", "supersedes": [name]}
+    result = review_request({"merged": [first], "draft": replace}, ROOT / "memory", RULES)
+    assert result["blocked"] is False
+    assert "SUPERSEDES" in json.dumps(result["review"]["added"])
+    retract = {"kind": "retract", "target": name}
+    assert (
+        review_request({"merged": [first], "draft": retract}, ROOT / "memory", RULES)["blocked"]
+        is False
+    )
+
+
+@pytest.mark.parametrize("name", ["-x", "a/b", "../x", "a.b", "A--b--c", "", "a b", "x" * 201])
+def test_fact_names_stay_file_safe(name):
+    with pytest.raises(BadDraft):
+        clean({"kind": "retract", "target": name})

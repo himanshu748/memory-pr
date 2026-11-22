@@ -24,7 +24,7 @@ from .vault import note_files
 MAX_MERGED = 12  # drafts already merged into the page's memory
 MAX_LINKS = 12  # facts one draft may replace or retract
 SLUG = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
-FACT_NAME = re.compile(r"[a-z0-9]+(?:-+[a-z0-9]+)*")  # entity--predicate--value
+FACT_NAME = re.compile(r"[a-z0-9][a-z0-9-]*")  # every name `memory.fact_name` can give
 
 
 class BadDraft(ValueError):

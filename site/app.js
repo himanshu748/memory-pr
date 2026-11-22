@@ -1,3 +1,5 @@
+import { apiBase, compare, serverLine, serverRequest } from './server-check.js';
+
 // memory-pr browser view. No build step: plain ES module, Cytoscape for drawing, and
 // Relate (WebAssembly) holding each graph so the visitor's Cypher runs on it live.
 
@@ -1011,11 +1013,7 @@ function openPull(entry) {
 
 // The same draft is also sent to the server, where `mempr check` reviews it against the
 // committed memory. The page works without it: with no server in reach the line is not shown.
-const API = /\.github\.io$/.test(location.hostname)
-  ? 'https://memory-pr.vercel.app' // the GitHub Pages mirror has no server of its own
-  : /\.vercel\.app$/.test(location.hostname) || new URLSearchParams(location.search).has('api')
-    ? ''
-    : null;
+const API = apiBase(location.hostname, location.search);
 
 if (API !== null) {
   // Say so before anything is sent: here a draft also goes to the server.
@@ -1025,8 +1023,13 @@ if (API !== null) {
 
 function serverCheck(v) {
   if (API === null) return;
+  const request = serverRequest(play.landed, v.draft);
+  if (request.skip) {
+    v.server = { state: 'skipped' };
+    return;
+  }
   const mine = verdict(v);
-  const rules = [...new Set(mine.list.filter((p) => p.severity === 'block').map((p) => p.rule))].sort();
+  const own = { blocked: mine.blocked, rules: mine.list.filter((p) => p.severity === 'block').map((p) => p.rule) };
   v.server = { state: 'checking' };
   const settle = (result) => {
     v.server = result;
@@ -1035,26 +1038,16 @@ function serverCheck(v) {
   fetch(`${API}/api/review`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ merged: play.landed, draft: v.draft }),
+    body: JSON.stringify(request.body),
   })
     .then((response) => (response.ok ? response.json() : Promise.reject(new Error(String(response.status)))))
-    .then((body) => {
-      if (typeof body.blocked !== 'boolean' || !Array.isArray(body.rules)) throw new Error('shape');
-      const agrees = body.blocked === mine.blocked && JSON.stringify(body.rules) === JSON.stringify(rules);
-      settle({ state: agrees ? 'agrees' : 'differs', blocked: body.blocked, rules: body.rules.map(String), ms: Number(body.elapsed_ms) || 0 });
-    })
+    .then((body) => settle(compare(own, body)))
     .catch(() => settle({ state: 'off' })); // no server here, or it refused: the page's own review stands
 }
 
-function serverLine(v) {
-  const s = v.server;
-  if (!s || s.state === 'off' || v.edited) return '';
-  if (s.state === 'checking') return '<p class="server">Asking the server to check it too.</p>';
-  const theirs = s.blocked ? `blocked${s.rules.length ? ` by ${s.rules.join(', ')}` : ''}` : 'passed';
-  const took = `${Math.round(s.ms)} ms`;
-  return s.state === 'agrees'
-    ? `<p class="server agrees">Server check agrees. <code>mempr check</code> ran on the server and gave the same verdict in ${esc(took)}.</p>`
-    : `<p class="server differs">Server check differs. <code>mempr check</code> on the server says ${esc(theirs)}. It reviews against the committed memory plus what you merged here.</p>`;
+function serverLineHtml(v) {
+  const line = serverLine(v.server, v.edited);
+  return line ? `<p class="server ${line.tone}">${esc(line.text)}</p>` : '';
 }
 
 function mergePull() {
@@ -1070,7 +1063,7 @@ function mergePull() {
   play.mine.find((m) => m.view === v).merged = true;
   play.view = null;
   play.merged = v.title;
-  play.landed.push(v.draft); // the server replays these before it reviews the next draft
+  play.landed.push({ draft: v.draft, edited: Boolean(v.edited) }); // the server replays these before it reviews the next draft
   play.draft = blank(v.draft.agent);
   play.tab = 'note';
   if (view === v) show(main);
@@ -1294,7 +1287,7 @@ function outcomeHtml(c) {
     `<p class="adds">Memory review of <code>${esc(v.pull.id)}</code>. Adds ${plural(added, 'note', 'notes')} and ${plural(links, 'link', 'links')}` +
     `${changed ? `, changes ${plural(changed, 'note', 'notes')}` : ''}. Relate ran the ${rulesOf(v).length} rules that <code>mempr check</code> runs.</p>` +
     (problems ? `<ol class="problems">${problems}</ol>` : '') +
-    (stale ? '<p class="adds">You changed the draft. Review it again.</p>' : serverLine(v)) +
+    (stale ? '<p class="adds">You changed the draft. Review it again.</p>' : serverLineHtml(v)) +
     '<div class="outcome-actions">' +
     (!blocked && !stale ? '<button type="button" class="btn primary" data-merge-pull>Merge into memory</button>' : '') +
     '<a class="btn" href="#explorer" data-open="yours">See it on the full graph</a></div>'
