@@ -210,10 +210,13 @@ def test_query_refuses_procedures_that_are_not_known_to_only_read(query_url, cyp
         "CALL db.labels() YIELD label RETURN label",
         "CALL { MATCH (f:Fact) RETURN count(f) AS n } RETURN n",
         "MATCH (f:`Fact`) RETURN count(f) AS `set`",
+        "RETURN $call AS value, $set AS other",
+        "MATCH (f:Fact) RETURN f.call AS call_me, count(f) AS n",
     ],
 )
 def test_query_allows_reading_procedures_and_subqueries(query_url, cypher):
-    status, body = fetch(query_url, {"cypher": cypher})
+    params = {"call": 1, "set": 2} if "$" in cypher else {}
+    status, body = fetch(query_url, {"cypher": cypher, "params": params})
     assert status == 200 and body["row_count"] >= 1
 
 

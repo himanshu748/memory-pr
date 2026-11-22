@@ -5,13 +5,13 @@ from __future__ import annotations
 import re
 
 WRITE_CLAUSE = re.compile(
-    r"(?<![.\w])(CREATE|MERGE|SET|DELETE|DETACH|REMOVE|DROP|FOREACH|INSERT|LOAD\s+CSV)(?!\w)",
+    r"(?<![.$:\w])(CREATE|MERGE|SET|DELETE|DETACH|REMOVE|DROP|FOREACH|INSERT|LOAD\s+CSV)(?!\w)",
     re.I,
 )
 QUOTED = re.compile(r"'(?:\\.|[^'\\])*'|\"(?:\\.|[^\"\\])*\"|`[^`]*`|//[^\n]*|/\*.*?\*/", re.S)
 # Relate ships procedures that write (db.createLabel, db.createProperty, ...), so a CALL
 # must be a subquery or name one of these, which only read.
-CALL = re.compile(r"(?<![.\w])CALL(?!\w)\s*([^\s({]*)", re.I)
+CALL = re.compile(r"(?<![.$:\w])CALL(?!\w)\s*([^\s({]*)", re.I)
 READ_PROCEDURES = frozenset(
     {
         "db.labels",
