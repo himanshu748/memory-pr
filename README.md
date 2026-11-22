@@ -306,6 +306,8 @@ between requests.
 | --- | --- |
 | `GET /api/health` | Opens the memory with Relate and returns the fact count and the Relate version. |
 | `POST /api/review` | Reviews one draft change against the committed memory and returns the verdict, the findings and the comment `memory-review` would post. |
+| `GET /api/recall?entity=` | The current facts about one entity, each with its sources and the agents that asserted it. Replaced and retracted facts are left out. |
+| `POST /api/query` | Runs a read-only Cypher query on the committed memory and returns the rows. |
 
 ```bash
 curl -s https://memory-pr.vercel.app/api/health
@@ -329,6 +331,30 @@ code for the trees it reads from git.
 After the page reviews a draft itself, it sends the same draft to `/api/review` and shows
 whether the server agrees. If there is no server (a local copy, or the request fails) that
 line is not shown and nothing else changes.
+
+`/api/recall` and `/api/query` are the memory over HTTP, for an agent that cannot run the
+MCP server:
+
+```bash
+curl -s 'https://memory-pr.vercel.app/api/recall?entity=payments-api'
+# {"entity": "payments-api", "known": true, "fact_count": 7, "truncated": false,
+#  "facts": [{"fact": "payments-api--database--postgres-15", "predicate": "database",
+#             "value": "postgres-15", "statement": "...", "sources": [...], "agents": [...]}, ...]}
+
+curl -s https://memory-pr.vercel.app/api/query \
+  -H 'Content-Type: application/json' \
+  -d '{"cypher": "MATCH (f:Fact)-[:ABOUT]->(e:Entity {name: $entity}) RETURN f.predicate AS predicate, f.value AS value, f.status AS status",
+       "params": {"entity": "payments-api"}}'
+# {"rows": [{"predicate": "database", "value": "postgres-15", "status": "active"}, ...],
+#  "row_count": 7, "truncated": false}
+```
+
+`/api/query` uses the same read-only check as the MCP server's `query` tool: a query with
+`CREATE`, `MERGE`, `SET`, `DELETE`, `REMOVE`, `DROP`, `FOREACH` or `LOAD CSV` gets a 403.
+It runs on a throwaway copy of the memory in a separate process, which is stopped after
+5 seconds (408). A query may be 2,000 characters, `params` values must be text, numbers,
+true, false or null, and the answer holds the first 200 rows (`truncated` says whether
+there were more) and at most 256 KB (413). `/api/recall` returns up to 100 facts.
 
 Limits: request bodies up to 16 KB, at most 12 earlier drafts, names and values checked
 before anything is written, values passed to Cypher as parameters. Errors are JSON with a
