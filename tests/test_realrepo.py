@@ -58,8 +58,13 @@ def fake(url):
 
 
 def test_extract_reads_only_what_a_file_states():
-    assert extract("Dockerfile", FILES[NEW]["Dockerfile"]) == [("base-image", "static:nonroot")]
+    assert extract("Dockerfile", FILES[NEW]["Dockerfile"]) == [
+        ("base-image", "gcr.io/distroless/static:nonroot")
+    ]
     assert extract("a/Dockerfile.dev", "FROM node\n") == [("base-image-dev", "node:latest")]
+    assert extract("Dockerfile", "FROM localhost:5000/app@sha256:0123456789abcdef\n") == [
+        ("base-image", "localhost:5000/app:latest@sha256:0123456789ab")
+    ]
     assert extract(
         "pyproject.toml",
         '[tool.x]\nrequires-python = "no"\n[project]\nrequires-python = ">=3.11"\n',
@@ -81,7 +86,7 @@ def test_learn_blocks_values_that_moved_and_passes_once_they_replace_the_old():
     out = learn("acme/shop", 12, load_rules(None), fetch=fake)
     moved = {(c["entity"], c["predicate"]): (c["old"], c["new"]) for c in out["changed"]}
     assert moved == {
-        ("shop", "base-image"): ("alpine:3.19", "static:nonroot"),
+        ("shop", "base-image"): ("alpine:3.19", "gcr.io/distroless/static:nonroot"),
         ("web", "node-engine"): (">=18", ">=20"),
     }
     assert out["learned"] == 3 and out["proposed"] == 3  # the go version did not move; pnpm is new

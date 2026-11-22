@@ -78,13 +78,16 @@ def _from_line(text: str) -> str | None:
         if not m:
             continue
         image = m.group(1)
-        last = None if image.lower() in stages or "$" in image else image.split("@")[0]
+        last = None if image.lower() in stages or "$" in image else image
         if m.group(2):
             stages.add(m.group(2).lower())
     if not last or last == "scratch":
         return last
-    image = last.rsplit("/", 1)[-1] if "/" in last else last
-    return image if ":" in image else f"{image}:latest"
+    # The whole reference: a move to another registry or digest is a different base image.
+    ref, _, digest = last.partition("@")
+    if ":" not in ref.rsplit("/", 1)[-1]:
+        ref += ":latest"
+    return f"{ref}@{digest[:19]}" if digest else ref
 
 
 def _toml(text: str, table: tuple[str, ...], key: str) -> str | None:
