@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { prLine, safeUrl, settled, whyNot } from '../../site/github-pr.js';
+import { again, prLine, safeUrl, settled, whyNot } from '../../site/github-pr.js';
 
 const draft = (more = {}) => ({ kind: 'fact', agent: 'visitor', entity: 'payments-api', predicate: 'database', value: 'mysql-8.4', source: 'docs/design.md', ...more });
 
@@ -52,4 +52,13 @@ test('each state has its own words', () => {
   assert.match(prLine({ state: 'refused', note: '3 playground pull requests are already open.' }).text, /already open/);
   assert.match(prLine({ state: 'unknown', find_url: 'https://github.com/himanshu748/memory-pr/pulls?q=x' }).link, /pulls\?q=x/);
   assert.match(prLine({ state: 'closed', number: 41, url }).text, /30 minutes/);
+});
+
+test('a request that came to nothing can be sent again', () => {
+  assert.equal(again({ state: 'refused' }), true);
+  assert.equal(again({ state: 'failed' }), true);
+  assert.equal(again({ state: 'queued' }), false);
+  assert.equal(again({ state: 'open', check: 'failure' }), false);
+  assert.equal(again(undefined), false);
+  assert.match(prLine({ state: 'failed' }).text, /try again/);
 });
