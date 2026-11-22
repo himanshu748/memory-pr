@@ -152,6 +152,21 @@ def test_three_open_playground_pull_requests_is_the_limit():
     assert open_request({"draft": MYSQL}, MEMORY, RULES, ON, two)["state"] == "queued"
 
 
+def test_open_pull_requests_past_their_30_minutes_take_no_place():
+    # The cleanup schedule can be late. The workflow closes these before it opens the next,
+    # so the server must let the request through to it.
+    late = (datetime.now(timezone.utc) - timedelta(minutes=31)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    stale = [pull(n, f"playground/{n:010x}") | {"created_at": late} for n in range(3)]
+    github = GitHub(**{"/pulls": (200, stale), "/dispatches": (204, None)})
+    assert open_request({"draft": MYSQL}, MEMORY, RULES, ON, github)["state"] == "queued"
+    fresh = GitHub(
+        **{"/pulls": (200, stale[:1] + [pull(n, f"playground/{n:010x}") for n in (5, 6, 7)])}
+    )
+    with pytest.raises(Refused) as refused:
+        open_request({"draft": MYSQL}, MEMORY, RULES, ON, fresh)
+    assert refused.value.status == 429
+
+
 def test_twenty_in_a_day_is_the_limit_whatever_their_state():
     closed = [pull(n, f"playground/{n:010x}", "closed") for n in range(20)]
     github = GitHub(**{"/pulls": (200, closed)})

@@ -13,7 +13,7 @@ import os
 import re
 import subprocess
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from pathlib import Path
 
 from mempr import playground_pr
@@ -22,7 +22,7 @@ from mempr.playground import BadDraft
 ROOT = Path(__file__).resolve().parent.parent
 LABEL = "playground"
 LABEL_TEXT = "Opened from the page's Write a memory form; closed after 30 minutes"
-KEEP = timedelta(minutes=30)
+KEEP = playground_pr.KEEP
 INPUTS = ("agent", "entity", "predicate", "value", "source", "supersedes", "retract")
 BOT = (
     "user.name=github-actions[bot]",
