@@ -1,0 +1,48 @@
+name: memory-review
+description: >-
+  Review a pull request as a change to a shared memory graph: install mempr from
+  this repository and run `mempr check`, which exits 1 when the merge would
+  damage the graph.
+inputs:
+  base:
+    description: Base ref the change merges into (use an unqualified branch name or origin/<branch>).
+    required: false
+    default: "origin/main"
+  head:
+    description: Revision carrying the change to review.
+    required: false
+    default: "HEAD"
+  vault:
+    description: Memory vault folder inside the repository.
+    required: false
+    default: "memory"
+  rules:
+    description: Extra rules file, read from the base ref.
+    required: false
+    default: "memory-rules.yaml"
+  python-version:
+    description: Python version for mempr.
+    required: false
+    default: "3.12"
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+    - name: Install mempr from this action's ref
+      shell: bash
+      run: pip install -q "${{ github.action_path }}"
+    - name: Review the memory change
+      shell: bash
+      env:
+        MEMPR_BASE: ${{ inputs.base }}
+        MEMPR_HEAD: ${{ inputs.head }}
+        MEMPR_VAULT: ${{ inputs.vault }}
+        MEMPR_RULES: ${{ inputs.rules }}
+      run: >-
+        mempr check
+        --base "$MEMPR_BASE"
+        --head "$MEMPR_HEAD"
+        --vault "$MEMPR_VAULT"
+        --rules "$MEMPR_RULES"

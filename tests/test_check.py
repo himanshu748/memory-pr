@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import pytest
+
+from mempr import gitutil
 from mempr.check import review, three_way
 from mempr.memory import add_fact, retract
 from mempr.report import MARKER, render
@@ -172,3 +175,13 @@ def test_facts_that_replace_each_other_in_a_circle_are_blocked(repo):
     retract(repo.vault, "payments-api--migration-tool--pg-migrate")
     repo.commit("circle")
     assert "supersedes-cycle" in rule_ids(run(repo, head="agent/circle"))
+
+
+def test_no_common_ancestor_is_a_clear_error(repo):
+    repo.git("checkout", "-q", "--orphan", "agent/unrelated")
+    repo.git("rm", "-q", "-rf", ".")
+    (repo.path / "note.txt").write_text("x")
+    repo.commit("orphan")
+    repo.git("checkout", "-q", "main")
+    with pytest.raises(gitutil.GitError, match="no common ancestor"):
+        run(repo, head="agent/unrelated")

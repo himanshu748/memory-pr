@@ -205,7 +205,9 @@ payments-api database: postgres-15
    both sides set to different values is reported as a conflict.
 4. Runs the review rules, which are Cypher queries, on the merged graph and reports only
    the findings the pull request introduces.
-5. Exits 1 when anything blocks, so a required status check stops the merge.
+5. Exits 1 when anything blocks, so a required status check stops the merge; exits 2
+   when the review itself cannot run (for example, no common ancestor between the
+   branches).
 
 Rules live in [`src/mempr/default_rules.yaml`](src/mempr/default_rules.yaml). Add your
 own in `memory-rules.yaml` at the repository root; a rule is an id, a severity (`block`
@@ -263,8 +265,19 @@ When the review blocks a proposal, the agent reads why and sends the fix with th
 
 ## Use it in your own repository
 
-1. Copy `.github/workflows/memory-review.yml` and install `mempr` in it from this
-   repository (`pip install git+https://github.com/himanshu748/memory-pr`).
+1. Either copy `.github/workflows/memory-review.yml` and install `mempr` in it from this
+   repository (`pip install git+https://github.com/himanshu748/memory-pr`), or use the
+   bundled action once a release tag exists:
+
+   ```yaml
+   - uses: actions/checkout@v4
+     with:
+       fetch-depth: 0
+   - uses: himanshu748/memory-pr@v1
+     with:
+       base: origin/main
+       head: ${{ github.event.pull_request.head.sha }}
+   ```
 2. Keep your memory under `memory/` (or pass `--vault`).
 3. In the branch protection for your main branch, require the `memory-review` check.
 
