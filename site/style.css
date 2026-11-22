@@ -368,6 +368,10 @@ td { font-family: var(--mono); font-size: 13px; }
 .stampbox.blocked { color: var(--bad); background: var(--bad-wash); }
 .stampbox.passed { color: var(--good); background: var(--good-wash); }
 .adds { color: var(--muted); font-size: 14.5px; }
+.server { font-size: 14px; color: var(--muted); padding-top: var(--s2); border-top: 1px solid var(--rule); }
+.server.agrees { color: var(--good); }
+.server.agrees::before { content: "✓ "; }
+.server.differs { color: var(--bad); }
 .outcome .problems { margin: 0; }
 .outcome .problem { cursor: default; background: var(--surface); }
 .outcome-actions { display: flex; flex-wrap: wrap; gap: var(--s2); margin-top: auto; }

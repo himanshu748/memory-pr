@@ -141,6 +141,42 @@ def three_way(
     return conflicts, dropped
 
 
+def _judge(
+    result: Review,
+    rules: list[Rule],
+    ancestor: Graph,
+    target: Graph,
+    tip: Graph,
+    merged: Graph | None,
+) -> Review:
+    """Fill in a review from the four graphs. `merged` is None when git refuses the merge."""
+    result.added = sorted(tip.triples - ancestor.triples)
+    result.removed = sorted(ancestor.triples - tip.triples)
+    if merged is None:  # still review the branch on its own
+        result.file_issues = _new_issues(target, tip)
+        result.findings = _new_findings(rules, target, tip)
+        return result
+    result.property_conflicts, result.dropped = three_way(
+        ancestor.triples, target.triples, tip.triples, merged.triples
+    )
+    result.file_issues = _new_issues(target, merged)
+    result.findings = _new_findings(rules, target, merged)
+    return result
+
+
+def review_vaults(
+    before: Path, after: Path, rules: list[Rule], *, base: str = "before", head: str = "after"
+) -> Review:
+    """Review a change given as two vault folders, without git.
+
+    `after` is `before` with the change applied, so the base is also the common ancestor
+    and the merge is `after` itself.
+    """
+    target = load(before, rules)
+    tip = load(after, rules)
+    return _judge(Review(base=base, head=head, merge_base=base), rules, target, target, tip, tip)
+
+
 def review(repo: Path, base: str, head: str, vault: str, rules: list[Rule]) -> Review:
     """Review merging `head` into `base` for the vault at `vault` inside `repo`."""
     base_sha = gitutil.rev_parse(repo, base)
@@ -158,23 +194,11 @@ def review(repo: Path, base: str, head: str, vault: str, rules: list[Rule]) -> R
         ancestor = graph_at(ancestor_sha, "ancestor", False)
         target = graph_at(base_sha, "base", True)
         tip = graph_at(head_sha, "head", True)
-        result.added = sorted(tip.triples - ancestor.triples)
-        result.removed = sorted(ancestor.triples - tip.triples)
-
         merge = gitutil.merge_tree(repo, base_sha, head_sha)
         if merge.tree is None:
-            # Git already refuses this merge; still review the branch on its own.
+            # Git already refuses this merge.
             result.git_conflicts = [
                 c for c in merge.conflicts if c.startswith(vault + "/")
             ] or list(merge.conflicts)
-            result.file_issues = _new_issues(target, tip)
-            result.findings = _new_findings(rules, target, tip)
-            return result
-
-        merged = graph_at(merge.tree, "merged", True)
-        result.property_conflicts, result.dropped = three_way(
-            ancestor.triples, target.triples, tip.triples, merged.triples
-        )
-        result.file_issues = _new_issues(target, merged)
-        result.findings = _new_findings(rules, target, merged)
-    return result
+            return _judge(result, rules, ancestor, target, tip, None)
+        return _judge(result, rules, ancestor, target, tip, graph_at(merge.tree, "merged", True))

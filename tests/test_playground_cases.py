@@ -9,20 +9,21 @@ from __future__ import annotations
 
 import importlib.util
 import json
-import re
 import shutil
 import subprocess
 from pathlib import Path
 
 import pytest
 
-from mempr import memory
-from mempr.check import review
+from mempr.check import review, review_vaults
+from mempr.playground import apply, clean, review_request
 from mempr.rules import load_rules
 from mempr.vault import note_files
 
 ROOT = Path(__file__).resolve().parent.parent
 CASES = json.loads((ROOT / "site" / "data" / "playground-cases.json").read_text())["cases"]
+_RULES_FILE = ROOT / "memory-rules.yaml"
+RULES = load_rules(_RULES_FILE.read_text() if _RULES_FILE.exists() else None)
 
 
 def _memory_digest() -> str:
@@ -56,30 +57,6 @@ def page_memory(tmp_path_factory) -> Path:
     return repo
 
 
-def write(vault: Path, draft: dict) -> None:
-    """Make the change the page's form describes."""
-    if draft.get("kind") == "retract":
-        for fact in [draft["target"], *draft.get("retract", [])]:
-            memory.retract(vault, fact)
-        return
-    source = draft.get("source") or "a-source-that-is-removed-again"
-    name = memory.add_fact(
-        vault,
-        entity=draft["entity"],
-        predicate=draft["predicate"],
-        value=draft["value"],
-        agent=draft["agent"],
-        source=source,
-        supersedes=draft.get("supersedes"),
-    )
-    if not draft.get("source"):  # "No source" on the form: the note has no SOURCE link
-        note = vault / "Fact" / f"{name}.md"
-        note.write_text(re.sub(r"^SOURCE:\n(  - .*\n)+", "", note.read_text(), flags=re.M))
-        (vault / "Source" / f"{memory.slug(source)}.md").unlink()
-    for fact in draft.get("retract", []):
-        memory.retract(vault, fact)
-
-
 def test_the_starters_are_among_the_cases():
     starters = [case for case in CASES if case.get("starter")]
     assert len(starters) == 3
@@ -90,12 +67,28 @@ def test_the_starters_are_among_the_cases():
 def test_mempr_check_reaches_the_verdict_the_page_shows(page_memory, case):
     repo = page_memory
     git(repo, "checkout", "-q", "-B", f"you/{case['id']}", "main")
-    write(repo / "memory", case["draft"])
+    apply(repo / "memory", clean(case["draft"]))
     git(repo, "add", "-A")
     git(repo, "commit", "-q", "-m", f"memory: {case['id']}")
-    rules_file = ROOT / "memory-rules.yaml"
-    rules = load_rules(rules_file.read_text() if rules_file.exists() else None)
-    result = review(repo, "main", f"you/{case['id']}", "memory", rules)
+    result = review(repo, "main", f"you/{case['id']}", "memory", RULES)
     assert sorted({finding.rule.id for finding in result.blocking}) == sorted(case["rules"])
     assert result.blocked == case["blocked"]
     assert result.problem_count == len(result.blocking)  # nothing but rule findings
+
+
+@pytest.mark.parametrize("case", CASES, ids=[case["id"] for case in CASES])
+def test_the_review_without_git_reaches_the_same_verdict(page_memory, case, tmp_path):
+    """The server's path: two vault folders, no repository."""
+    git(page_memory, "checkout", "-q", "main")
+    after = tmp_path / "after"
+    shutil.copytree(page_memory / "memory", after)
+    apply(after, clean(case["draft"]))
+    result = review_vaults(page_memory / "memory", after, RULES)
+    assert sorted({finding.rule.id for finding in result.blocking}) == sorted(case["rules"])
+    assert result.blocked == case["blocked"]
+
+
+@pytest.mark.parametrize("case", CASES, ids=[case["id"] for case in CASES])
+def test_the_review_endpoint_reaches_the_same_verdict(case):
+    body = review_request({"draft": case["draft"]}, ROOT / "memory", RULES)
+    assert (body["blocked"], body["rules"]) == (case["blocked"], sorted(case["rules"]))

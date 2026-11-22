@@ -291,6 +291,49 @@ When the review blocks a proposal, the agent reads why and sends the fix with th
   Action.
 - **WebAssembly build** (`@relate/relate-wasm`) in the browser view, running the same review
   rules on the same graph in the page.
+- **The same library in a serverless function**: the backend opens a copy of the committed
+  vault per request and runs the review on it.
+
+## Backend
+
+The page works with no server. On <https://memory-pr.vercel.app/> it also has one: Python
+functions under [`api/`](api/) that run the same `mempr` code as the command line, with
+Relate embedded. Each request copies the committed `memory/` folder to a temporary
+directory and works there, so the server never writes to the repository and keeps nothing
+between requests.
+
+| Endpoint | What it does |
+| --- | --- |
+| `GET /api/health` | Opens the memory with Relate and returns the fact count and the Relate version. |
+| `POST /api/review` | Reviews one draft change against the committed memory and returns the verdict, the findings and the comment `memory-review` would post. |
+
+```bash
+curl -s https://memory-pr.vercel.app/api/health
+
+curl -s https://memory-pr.vercel.app/api/review \
+  -H 'Content-Type: application/json' \
+  -d '{"draft": {"agent": "visitor", "entity": "payments-api", "predicate": "database",
+       "value": "mysql-8", "source": "docs/design.md"}}'
+# {"blocked": true, "problems": 1, "rules": ["contradiction"], "review": {...}, "comment": "## Memory review: blocked ..."}
+```
+
+A draft has the shape of the ones in
+[`site/data/playground-cases.json`](site/data/playground-cases.json): `agent`, `entity`,
+`predicate`, `value`, optional `source`, `supersedes` and `retract`, or
+`{"kind": "retract", "target": "<fact name>"}`. `merged` is an optional list of earlier
+drafts to apply first, which is how the page has the server review a draft against what
+the visitor already merged in the tab. The review does not need git:
+`mempr.check.review_vaults` compares two vault folders, and `mempr check` uses the same
+code for the trees it reads from git.
+
+After the page reviews a draft itself, it sends the same draft to `/api/review` and shows
+whether the server agrees. If there is no server (a local copy, or the request fails) that
+line is not shown and nothing else changes.
+
+Limits: request bodies up to 16 KB, at most 12 earlier drafts, names and values checked
+before anything is written, values passed to Cypher as parameters. Errors are JSON with a
+status code (400 malformed, 413 too large, 422 not a valid draft). Other sites cannot call
+it from a browser, apart from this project's GitHub Pages mirror.
 
 ## Data and disclosures
 
@@ -301,6 +344,9 @@ When the review blocks a proposal, the agent reads why and sends the fix with th
   PyYAML, the MCP Python SDK, Cytoscape.js (graph drawing in the browser view), the Geist and
   Geist Mono fonts (self-hosted, SIL Open Font License), pytest, ruff. The browser view is a
   static page hosted on Vercel and GitHub Pages.
+- The backend sets no cookies, has no analytics and no accounts, and its code does not log
+  request bodies or addresses. A draft sent for review is used for that one response and
+  then discarded.
 
 ## License
 
