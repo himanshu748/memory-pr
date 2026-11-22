@@ -1,0 +1,29 @@
+name: playground-cleanup
+# Closes pull requests opened from the page's form 30 minutes after they were opened, and
+# deletes their branches.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+  pull-requests: write
+concurrency:
+  group: playground-cleanup
+  cancel-in-progress: false
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -q -e .
+      - name: Close playground pull requests older than 30 minutes
+        shell: bash
+        run: python demo/playground_agent.py cleanup | tee -a "$GITHUB_STEP_SUMMARY"

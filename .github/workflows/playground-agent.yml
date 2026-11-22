@@ -1,0 +1,52 @@
+name: playground-agent
+# Opens a visitor's draft from the page as a real pull request. The site's server starts
+# this workflow and can do nothing else in the repository; this workflow checks the inputs
+# again, refuses when three playground pull requests are already open, and writes the note.
+run-name: playground ${{ inputs.id }}
+on:
+  workflow_dispatch:
+    inputs:
+      id: { description: Id the server gave this request, required: true }
+      agent: { description: Agent name, required: true }
+      entity: { description: Entity, required: true }
+      predicate: { description: Predicate, required: true }
+      value: { description: Value, required: true }
+      source: { description: Source path, required: true }
+      supersedes: { description: "Fact names this replaces, comma separated", default: "" }
+      retract: { description: "Fact names to retract, comma separated", default: "" }
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+  issues: write
+concurrency:
+  group: playground-agent
+  cancel-in-progress: false
+jobs:
+  open:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+      # Inputs reach the script as environment variables only, never as part of a command.
+      PLAYGROUND_ID: ${{ inputs.id }}
+      PLAYGROUND_AGENT: ${{ inputs.agent }}
+      PLAYGROUND_ENTITY: ${{ inputs.entity }}
+      PLAYGROUND_PREDICATE: ${{ inputs.predicate }}
+      PLAYGROUND_VALUE: ${{ inputs.value }}
+      PLAYGROUND_SOURCE: ${{ inputs.source }}
+      PLAYGROUND_SUPERSEDES: ${{ inputs.supersedes }}
+      PLAYGROUND_RETRACT: ${{ inputs.retract }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -q -e .
+      - name: Check the draft again and open the pull request
+        shell: bash
+        run: python demo/playground_agent.py open | tee -a "$GITHUB_STEP_SUMMARY"

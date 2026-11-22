@@ -1,0 +1,116 @@
+"""Run by GitHub Actions: open a visitor's draft from the page as a real pull request,
+and close the ones that are older than half an hour.
+
+The inputs arrive as environment variables and are checked again here, with the same code
+the server used, before anything is written.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import subprocess
+import sys
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+
+from mempr import playground_pr
+from mempr.playground import BadDraft
+
+ROOT = Path(__file__).resolve().parent.parent
+LABEL = "playground"
+LABEL_TEXT = "Opened from the page's Write a memory form; closed after 30 minutes"
+KEEP = timedelta(minutes=30)
+INPUTS = ("agent", "entity", "predicate", "value", "source", "supersedes", "retract")
+BOT = (
+    "user.name=github-actions[bot]",
+    "user.email=41898282+github-actions[bot]@users.noreply.github.com",
+)
+
+
+def sh(*args: str) -> str:
+    done = subprocess.run(args, cwd=ROOT, capture_output=True, text=True)
+    if done.returncode != 0:
+        sys.exit(f"$ {' '.join(args)}\n{done.stdout}{done.stderr}")
+    return done.stdout.strip()
+
+
+def playground_pulls() -> list[dict]:
+    """Open pull requests from this repository's playground branches."""
+    found = json.loads(
+        sh("gh", "pr", "list", "--state", "open", "--limit", "100", "--json",
+           "number,headRefName,createdAt,isCrossRepository")
+    )  # fmt: skip
+    return [
+        p
+        for p in found
+        if p["headRefName"].startswith(playground_pr.BRANCH_PREFIX) and not p["isCrossRepository"]
+    ]
+
+
+def expired(pulls: list[dict], now: datetime) -> list[dict]:
+    return [
+        p
+        for p in pulls
+        if now - datetime.fromisoformat(p["createdAt"].replace("Z", "+00:00")) > KEEP
+    ]
+
+
+def open_pull(env: dict[str, str]) -> None:
+    ident = env.get("PLAYGROUND_ID", "")
+    if not re.fullmatch(playground_pr.ID.pattern, ident):
+        sys.exit("refused: the id is not one the server gives")
+    try:
+        draft = playground_pr.from_inputs(
+            {k: env.get(f"PLAYGROUND_{k.upper()}", "") for k in INPUTS}
+        )
+    except BadDraft as error:
+        sys.exit(f"refused: {error}")
+    if len(playground_pulls()) >= playground_pr.MAX_OPEN:
+        sys.exit(f"refused: {playground_pr.MAX_OPEN} playground pull requests are already open")
+    branch = playground_pr.BRANCH_PREFIX + ident
+    sh("git", "checkout", "-q", "-b", branch, "origin/main")
+    try:
+        playground_pr.write(ROOT / "memory", draft)
+    except (KeyError, ValueError) as error:
+        sys.exit(f"refused: {error.args[0] if error.args else 'the draft cannot be applied'}")
+    sh("git", "add", "memory")
+    title = playground_pr.title(draft)
+    sh("git", "-c", BOT[0], "-c", BOT[1], "commit", "-q", "-m", title)
+    sh("git", "push", "-q", "origin", branch)
+    sh("gh", "label", "create", LABEL, "--force", "--color", "C5DEF5", "--description", LABEL_TEXT)
+    body = (
+        "Opened from the **Write a memory** form on https://memory-pr.vercel.app/ by a visitor, "
+        f"as agent `{draft['agent']}`. The memory review comments below and sets the "
+        "`memory-review` check.\n\nThis pull request is a demonstration. It is closed and its "
+        "branch deleted about 30 minutes after it was opened."
+    )
+    url = sh("gh", "pr", "create", "--base", "main", "--head", branch, "--title", title,
+             "--body", body, "--label", LABEL)  # fmt: skip
+    print(url)
+    # GitHub holds workflows for approval on pull requests the Actions token opens, so
+    # start the review from the base branch; it reports `memory-review` as a status.
+    number = url.rstrip("/").rsplit("/", 1)[-1]
+    sh("gh", "workflow", "run", "memory-review.yml", "--ref", "main", "-f", f"pr={number}")
+
+
+def cleanup() -> None:
+    for pull in expired(playground_pulls(), datetime.now(timezone.utc)):
+        sh("gh", "pr", "close", str(pull["number"]), "--delete-branch", "--comment",
+           "Closed automatically: playground pull requests are kept for 30 minutes.")  # fmt: skip
+        print(f"closed #{pull['number']} ({pull['headRefName']})")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    parser.add_argument("command", choices=["open", "cleanup"])
+    if parser.parse_args().command == "open":
+        open_pull(dict(os.environ))
+    else:
+        cleanup()
+
+
+if __name__ == "__main__":
+    main()

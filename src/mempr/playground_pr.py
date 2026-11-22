@@ -16,7 +16,6 @@ import urllib.request
 from pathlib import Path
 from typing import Any
 
-from . import memory
 from .playground import BadDraft, clean, review_request
 from .rules import Rule
 
@@ -244,6 +243,3 @@ def write(vault: Path, inputs: dict[str, str]) -> dict[str, Any]:
     draft = from_inputs(inputs)
     apply(vault, draft)
     return draft
-
-
-__all__ = ["BadDraft", "Refused", "enabled", "open_request", "state", "strict", "write", "memory"]

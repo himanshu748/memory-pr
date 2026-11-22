@@ -31,5 +31,11 @@
       "includeFiles": "{memory,src/mempr}/**",
       "maxDuration": 15
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/api/pull-requests/:id",
+      "destination": "/api/pull-requests?id=:id"
+    }
+  ]
 }
