@@ -266,6 +266,15 @@ When the review blocks a proposal, the agent reads why and sends the fix with th
 `--base` sets the branch proposals start from and are reviewed against (default
 `origin/main`).
 
+### A skill for coding agents
+
+[`.claude/skills/memory-pr/SKILL.md`](.claude/skills/memory-pr/SKILL.md) is an
+[Agent Skill](https://agentskills.io) that teaches a coding agent the habit: recall before
+assuming, never edit `memory/` on the main branch, propose every fact with its source on
+a branch, and fix what the review blocks. It works with the MCP server or with the plain
+`mempr` commands. Copy the folder into your repository's `.claude/skills/` (Claude Code)
+or wherever your agent reads skills from.
+
 ## Use it in your own repository
 
 1. Keep your memory as Markdown notes under `memory/` (or pass `vault:`), one note per
