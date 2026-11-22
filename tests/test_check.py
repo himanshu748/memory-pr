@@ -76,6 +76,42 @@ def test_superseding_and_retracting_the_derived_fact_passes(repo):
     assert not run(repo, "agent/clean").blocked
 
 
+def test_superseding_and_replacing_the_derived_fact_passes(repo):
+    repo.branch("agent/replace")
+    new = repo.add("payments-api", "database", "mysql-8", supersedes=[DB]).removeprefix("Fact/")
+    repo.add(
+        "payments-api",
+        "migration-tool",
+        "flyway",
+        supersedes=["payments-api--migration-tool--pg-migrate"],
+        derived_from=[new],
+    )
+    repo.commit("database moved, migration tool replaced")
+    assert not run(repo, "agent/replace").blocked
+
+
+def test_a_fact_resting_on_a_replaced_derived_fact_is_still_flagged(repo):
+    repo.branch("agent/chain")
+    repo.add(
+        "payments-api",
+        "backup-job",
+        "pg-dump",
+        derived_from=["payments-api--migration-tool--pg-migrate"],
+    )
+    repo.commit("backup job rests on the migration tool")
+    repo.branch("agent/replace-middle", "agent/chain")
+    repo.add(
+        "payments-api",
+        "migration-tool",
+        "flyway",
+        supersedes=["payments-api--migration-tool--pg-migrate"],
+    )
+    repo.commit("migration tool replaced")
+    result = run(repo, "agent/replace-middle", base="agent/chain")
+    assert rule_ids(result) == ["stale-derivation"]
+    assert result.findings[0].row["fact"] == "payments-api--backup-job--pg-dump"
+
+
 def test_existing_problems_on_base_are_not_blamed_on_the_pull_request(repo):
     repo.add("payments-api", "database", "mysql-8")
     repo.commit("contradiction already on main")

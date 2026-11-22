@@ -1843,12 +1843,12 @@
    },
    "author": "planner-agent",
    "blocked": true,
-   "comment": "<!-- mempr-review -->\n## Memory review: blocked (3 problems)\n\nThis pull request adds **3 notes, 4 links, 5 properties** and removes **nothing** in the memory graph.\n\n### 1. Rests on a fact that was retracted or replaced\nFact/payments-api--backup-job--nightly-pg-dump is active but is derived, 1 step(s) away, from Fact/payments-api--database--postgres-15, which is superseded. Path: Fact/payments-api--backup-job--nightly-pg-dump -[:DERIVED_FROM]-> Fact/payments-api--database--postgres-15\n\nFix: Re-check the derived fact against the current value, then either retract it or point `DERIVED_FROM` at the fact that replaced the old one.\n\n### 2. Rests on a fact that was retracted or replaced\nFact/payments-api--migration-tool--pg-migrate is active but is derived, 1 step(s) away, from Fact/payments-api--database--postgres-15, which is superseded. Path: Fact/payments-api--migration-tool--pg-migrate -[:DERIVED_FROM]-> Fact/payments-api--database--postgres-15\n\nFix: Re-check the derived fact against the current value, then either retract it or point `DERIVED_FROM` at the fact that replaced the old one.\n\n### 3. Rests on a fact that was retracted or replaced\nFact/payments-api--restore-drill--quarterly-pg-restore is active but is derived, 2 step(s) away, from Fact/payments-api--database--postgres-15, which is superseded. Path: Fact/payments-api--restore-drill--quarterly-pg-restore -[:DERIVED_FROM]-> Fact/payments-api--backup-job--nightly-pg-dump -[:DERIVED_FROM]-> Fact/payments-api--database--postgres-15\n\nFix: Re-check the derived fact against the current value, then either retract it or point `DERIVED_FROM` at the fact that replaced the old one.\n\n<details><summary>Graph changes in this pull request</summary>\n\n- added note `Agent/planner`\n- added note `Fact/payments-api--database--cockroachdb-24`\n- added note `Source/demo-project-docs-migration-2026-md`\n- added `Fact/payments-api--database--cockroachdb-24` -[:ABOUT]-> `Entity/payments-api`\n- added `Fact/payments-api--database--cockroachdb-24` -[:ASSERTED_BY]-> `Agent/planner`\n- added `Fact/payments-api--database--cockroachdb-24` -[:SOURCE]-> `Source/demo-project-docs-migration-2026-md`\n- added `Fact/payments-api--database--cockroachdb-24` -[:SUPERSEDES]-> `Fact/payments-api--database--postgres-15`\n- added `Fact/payments-api--database--cockroachdb-24`.body = `payments-api moves to CockroachDB 24.`\n- added `Fact/payments-api--database--cockroachdb-24`.predicate = `database`\n- added `Fact/payments-api--database--cockroachdb-24`.status = `active`\n- added `Fact/payments-api--database--cockroachdb-24`.value = `cockroachdb-24`\n- added `Source/demo-project-docs-migration-2026-md`.uri = `demo/project/docs/migration-2026.md`\n\n</details>\n\n<sub>Checked by mempr with Relate: base `563a959`, head `02c9c44`, common ancestor `563a959`. Each rule is a Cypher query over the merged graph.</sub>\n",
+   "comment": "<!-- mempr-review -->\n## Memory review: blocked (3 problems)\n\nThis pull request adds **3 notes, 4 links, 5 properties** and removes **nothing** in the memory graph.\n\n### 1. Rests on a fact that was retracted or replaced\nFact/payments-api--backup-job--nightly-pg-dump is current but is derived, 1 step(s) away, from Fact/payments-api--database--postgres-15, which is superseded. Path: Fact/payments-api--backup-job--nightly-pg-dump -[:DERIVED_FROM]-> Fact/payments-api--database--postgres-15\n\nFix: Re-check the derived fact against the current value, then retract it, replace it with a new fact that supersedes it, or point `DERIVED_FROM` at the fact that replaced the old one.\n\n### 2. Rests on a fact that was retracted or replaced\nFact/payments-api--migration-tool--pg-migrate is current but is derived, 1 step(s) away, from Fact/payments-api--database--postgres-15, which is superseded. Path: Fact/payments-api--migration-tool--pg-migrate -[:DERIVED_FROM]-> Fact/payments-api--database--postgres-15\n\nFix: Re-check the derived fact against the current value, then retract it, replace it with a new fact that supersedes it, or point `DERIVED_FROM` at the fact that replaced the old one.\n\n### 3. Rests on a fact that was retracted or replaced\nFact/payments-api--restore-drill--quarterly-pg-restore is current but is derived, 2 step(s) away, from Fact/payments-api--database--postgres-15, which is superseded. Path: Fact/payments-api--restore-drill--quarterly-pg-restore -[:DERIVED_FROM]-> Fact/payments-api--backup-job--nightly-pg-dump -[:DERIVED_FROM]-> Fact/payments-api--database--postgres-15\n\nFix: Re-check the derived fact against the current value, then retract it, replace it with a new fact that supersedes it, or point `DERIVED_FROM` at the fact that replaced the old one.\n\n<details><summary>Graph changes in this pull request</summary>\n\n- added note `Agent/planner`\n- added note `Fact/payments-api--database--cockroachdb-24`\n- added note `Source/demo-project-docs-migration-2026-md`\n- added `Fact/payments-api--database--cockroachdb-24` -[:ABOUT]-> `Entity/payments-api`\n- added `Fact/payments-api--database--cockroachdb-24` -[:ASSERTED_BY]-> `Agent/planner`\n- added `Fact/payments-api--database--cockroachdb-24` -[:SOURCE]-> `Source/demo-project-docs-migration-2026-md`\n- added `Fact/payments-api--database--cockroachdb-24` -[:SUPERSEDES]-> `Fact/payments-api--database--postgres-15`\n- added `Fact/payments-api--database--cockroachdb-24`.body = `payments-api moves to CockroachDB 24.`\n- added `Fact/payments-api--database--cockroachdb-24`.predicate = `database`\n- added `Fact/payments-api--database--cockroachdb-24`.status = `active`\n- added `Fact/payments-api--database--cockroachdb-24`.value = `cockroachdb-24`\n- added `Source/demo-project-docs-migration-2026-md`.uri = `demo/project/docs/migration-2026.md`\n\n</details>\n\n<sub>Checked by mempr with Relate: base `563a959`, head `02c9c44`, common ancestor `563a959`. Each rule is a Cypher query over the merged graph.</sub>\n",
    "description": "records a database move but forgets the facts derived from the old one",
    "id": "agent/planner-supersede",
    "problems": [
     {
-     "fix": "Re-check the derived fact against the current value, then either retract it or point `DERIVED_FROM` at the fact that replaced the old one.",
+     "fix": "Re-check the derived fact against the current value, then retract it, replace it with a new fact that supersedes it, or point `DERIVED_FROM` at the fact that replaced the old one.",
      "kind": "finding",
      "nodes": [
       "Fact/payments-api--backup-job--nightly-pg-dump",
@@ -1869,11 +1869,11 @@
      ],
      "rule": "stale-derivation",
      "severity": "block",
-     "text": "Fact/payments-api--backup-job--nightly-pg-dump is active but is derived, 1 step(s) away, from Fact/payments-api--database--postgres-15, which is superseded. Path: Fact/payments-api--backup-job--nightly-pg-dump -[:DERIVED_FROM]-> Fact/payments-api--database--postgres-15",
+     "text": "Fact/payments-api--backup-job--nightly-pg-dump is current but is derived, 1 step(s) away, from Fact/payments-api--database--postgres-15, which is superseded. Path: Fact/payments-api--backup-job--nightly-pg-dump -[:DERIVED_FROM]-> Fact/payments-api--database--postgres-15",
      "title": "Rests on a fact that was retracted or replaced"
     },
     {
-     "fix": "Re-check the derived fact against the current value, then either retract it or point `DERIVED_FROM` at the fact that replaced the old one.",
+     "fix": "Re-check the derived fact against the current value, then retract it, replace it with a new fact that supersedes it, or point `DERIVED_FROM` at the fact that replaced the old one.",
      "kind": "finding",
      "nodes": [
       "Fact/payments-api--database--cockroachdb-24",
@@ -1894,11 +1894,11 @@
      ],
      "rule": "stale-derivation",
      "severity": "block",
-     "text": "Fact/payments-api--migration-tool--pg-migrate is active but is derived, 1 step(s) away, from Fact/payments-api--database--postgres-15, which is superseded. Path: Fact/payments-api--migration-tool--pg-migrate -[:DERIVED_FROM]-> Fact/payments-api--database--postgres-15",
+     "text": "Fact/payments-api--migration-tool--pg-migrate is current but is derived, 1 step(s) away, from Fact/payments-api--database--postgres-15, which is superseded. Path: Fact/payments-api--migration-tool--pg-migrate -[:DERIVED_FROM]-> Fact/payments-api--database--postgres-15",
      "title": "Rests on a fact that was retracted or replaced"
     },
     {
-     "fix": "Re-check the derived fact against the current value, then either retract it or point `DERIVED_FROM` at the fact that replaced the old one.",
+     "fix": "Re-check the derived fact against the current value, then retract it, replace it with a new fact that supersedes it, or point `DERIVED_FROM` at the fact that replaced the old one.",
      "kind": "finding",
      "nodes": [
       "Fact/payments-api--backup-job--nightly-pg-dump",
@@ -1925,7 +1925,7 @@
      ],
      "rule": "stale-derivation",
      "severity": "block",
-     "text": "Fact/payments-api--restore-drill--quarterly-pg-restore is active but is derived, 2 step(s) away, from Fact/payments-api--database--postgres-15, which is superseded. Path: Fact/payments-api--restore-drill--quarterly-pg-restore -[:DERIVED_FROM]-> Fact/payments-api--backup-job--nightly-pg-dump -[:DERIVED_FROM]-> Fact/payments-api--database--postgres-15",
+     "text": "Fact/payments-api--restore-drill--quarterly-pg-restore is current but is derived, 2 step(s) away, from Fact/payments-api--database--postgres-15, which is superseded. Path: Fact/payments-api--restore-drill--quarterly-pg-restore -[:DERIVED_FROM]-> Fact/payments-api--backup-job--nightly-pg-dump -[:DERIVED_FROM]-> Fact/payments-api--database--postgres-15",
      "title": "Rests on a fact that was retracted or replaced"
     }
    ],
@@ -2017,7 +2017,7 @@
       },
       "rule": "stale-derivation",
       "severity": "block",
-      "text": "Fact/payments-api--backup-job--nightly-pg-dump is active but is derived, 1 step(s) away, from Fact/payments-api--database--postgres-15, which is superseded. Path: Fact/payments-api--backup-job--nightly-pg-dump -[:DERIVED_FROM]-> Fact/payments-api--database--postgres-15"
+      "text": "Fact/payments-api--backup-job--nightly-pg-dump is current but is derived, 1 step(s) away, from Fact/payments-api--database--postgres-15, which is superseded. Path: Fact/payments-api--backup-job--nightly-pg-dump -[:DERIVED_FROM]-> Fact/payments-api--database--postgres-15"
      },
      {
       "row": {
@@ -2029,7 +2029,7 @@
       },
       "rule": "stale-derivation",
       "severity": "block",
-      "text": "Fact/payments-api--migration-tool--pg-migrate is active but is derived, 1 step(s) away, from Fact/payments-api--database--postgres-15, which is superseded. Path: Fact/payments-api--migration-tool--pg-migrate -[:DERIVED_FROM]-> Fact/payments-api--database--postgres-15"
+      "text": "Fact/payments-api--migration-tool--pg-migrate is current but is derived, 1 step(s) away, from Fact/payments-api--database--postgres-15, which is superseded. Path: Fact/payments-api--migration-tool--pg-migrate -[:DERIVED_FROM]-> Fact/payments-api--database--postgres-15"
      },
      {
       "row": {
@@ -2041,7 +2041,7 @@
       },
       "rule": "stale-derivation",
       "severity": "block",
-      "text": "Fact/payments-api--restore-drill--quarterly-pg-restore is active but is derived, 2 step(s) away, from Fact/payments-api--database--postgres-15, which is superseded. Path: Fact/payments-api--restore-drill--quarterly-pg-restore -[:DERIVED_FROM]-> Fact/payments-api--backup-job--nightly-pg-dump -[:DERIVED_FROM]-> Fact/payments-api--database--postgres-15"
+      "text": "Fact/payments-api--restore-drill--quarterly-pg-restore is current but is derived, 2 step(s) away, from Fact/payments-api--database--postgres-15, which is superseded. Path: Fact/payments-api--restore-drill--quarterly-pg-restore -[:DERIVED_FROM]-> Fact/payments-api--backup-job--nightly-pg-dump -[:DERIVED_FROM]-> Fact/payments-api--database--postgres-15"
      }
     ],
     "git_conflicts": [],
@@ -4099,10 +4099,10 @@
    "title": "Facts replace each other in a circle"
   },
   {
-   "cypher": "MATCH p = (f:Fact)-[:DERIVED_FROM*1..6]->(root:Fact)\nWHERE f.status = 'active'\n  AND (root.status = 'retracted'\n       OR EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(root) WHERE n.status = 'active' })\nRETURN f.name AS fact, root.name AS root, length(p) AS hops,\n       CASE WHEN root.status = 'retracted' THEN 'retracted' ELSE 'superseded' END AS reason,\n       reduce(s = '', n IN nodes(p) |\n              s + CASE WHEN s = '' THEN '' ELSE ' -[:DERIVED_FROM]-> ' END + 'Fact/' + n.name)\n         AS path\nORDER BY fact, hops\n",
-   "fix": "Re-check the derived fact against the current value, then either retract it or point `DERIVED_FROM` at the fact that replaced the old one.",
+   "cypher": "MATCH p = (f:Fact)-[:DERIVED_FROM*1..6]->(root:Fact)\nWHERE f.status = 'active'\n  AND NOT EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(f) WHERE n.status = 'active' }\n  AND (root.status = 'retracted'\n       OR EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(root) WHERE n.status = 'active' })\nRETURN f.name AS fact, root.name AS root, length(p) AS hops,\n       CASE WHEN root.status = 'retracted' THEN 'retracted' ELSE 'superseded' END AS reason,\n       reduce(s = '', n IN nodes(p) |\n              s + CASE WHEN s = '' THEN '' ELSE ' -[:DERIVED_FROM]-> ' END + 'Fact/' + n.name)\n         AS path\nORDER BY fact, hops\n",
+   "fix": "Re-check the derived fact against the current value, then retract it, replace it with a new fact that supersedes it, or point `DERIVED_FROM` at the fact that replaced the old one.",
    "id": "stale-derivation",
-   "message": "Fact/{fact} is active but is derived, {hops} step(s) away, from Fact/{root}, which is {reason}. Path: {path}",
+   "message": "Fact/{fact} is current but is derived, {hops} step(s) away, from Fact/{root}, which is {reason}. Path: {path}",
    "severity": "block",
    "title": "Rests on a fact that was retracted or replaced"
   },

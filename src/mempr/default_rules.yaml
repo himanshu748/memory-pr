@@ -47,14 +47,16 @@
   severity: block
   title: Rests on a fact that was retracted or replaced
   message: >-
-    Fact/{fact} is active but is derived, {hops} step(s) away, from Fact/{root}, which is
+    Fact/{fact} is current but is derived, {hops} step(s) away, from Fact/{root}, which is
     {reason}. Path: {path}
   fix: >-
-    Re-check the derived fact against the current value, then either retract it or point
-    `DERIVED_FROM` at the fact that replaced the old one.
+    Re-check the derived fact against the current value, then retract it, replace it with
+    a new fact that supersedes it, or point `DERIVED_FROM` at the fact that replaced the
+    old one.
   cypher: |
     MATCH p = (f:Fact)-[:DERIVED_FROM*1..6]->(root:Fact)
     WHERE f.status = 'active'
+      AND NOT EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(f) WHERE n.status = 'active' }
       AND (root.status = 'retracted'
            OR EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(root) WHERE n.status = 'active' })
     RETURN f.name AS fact, root.name AS root, length(p) AS hops,
