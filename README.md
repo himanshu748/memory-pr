@@ -428,10 +428,11 @@ The guards:
   any 24 hours. The workflow decides; the server checks first to give a clear answer (429).
 - Runs of the workflow go one at a time, so two requests cannot both take the last place,
   and the server sends nothing while a run is unfinished (429).
-- [`playground-cleanup`](.github/workflows/playground-cleanup.yml) runs every ten minutes
-  and closes playground pull requests older than 30 minutes and deletes their branches.
-  The `playground-agent` workflow does the same before it counts, because scheduled runs
-  can be late.
+- [`playground-cleanup`](.github/workflows/playground-cleanup.yml) closes playground pull
+  requests older than 30 minutes and deletes their branches. It is scheduled every ten
+  minutes, but GitHub can start a schedule hours late, so each pull request also books its
+  own cleanup run for 31 minutes after it opens, and the `playground-agent` workflow
+  closes expired ones before it counts.
 - Vercel builds no deployment for `playground/*` branches (`vercel.json`).
 - Where the token is not set (preview deployments, a local copy) the endpoint answers
   503 "not enabled" and the page does not show the button.
