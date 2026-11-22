@@ -62,10 +62,9 @@ def open_pull(env: dict[str, str]) -> None:
     ident = env.get("PLAYGROUND_ID", "")
     if not re.fullmatch(playground_pr.ID.pattern, ident):
         sys.exit("refused: the id is not one the server gives")
+    inputs = {k: env.get(f"PLAYGROUND_{k.upper()}", "") for k in INPUTS}
     try:
-        draft = playground_pr.from_inputs(
-            {k: env.get(f"PLAYGROUND_{k.upper()}", "") for k in INPUTS}
-        )
+        draft = playground_pr.from_inputs(inputs)
     except BadDraft as error:
         sys.exit(f"refused: {error}")
     if len(playground_pulls()) >= playground_pr.MAX_OPEN:
@@ -73,9 +72,9 @@ def open_pull(env: dict[str, str]) -> None:
     branch = playground_pr.BRANCH_PREFIX + ident
     sh("git", "checkout", "-q", "-b", branch, "origin/main")
     try:
-        playground_pr.write(ROOT / "memory", draft)
-    except (KeyError, ValueError) as error:
-        sys.exit(f"refused: {error.args[0] if error.args else 'the draft cannot be applied'}")
+        playground_pr.write(ROOT / "memory", inputs)
+    except BadDraft as error:
+        sys.exit(f"refused: {error}")
     sh("git", "add", "memory")
     title = playground_pr.title(draft)
     sh("git", "-c", BOT[0], "-c", BOT[1], "commit", "-q", "-m", title)

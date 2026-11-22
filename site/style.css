@@ -482,3 +482,4 @@ body { padding-inline: clamp(16px, 3.2vw, 56px); max-width: 1760px; }
 html, body { overflow-x: clip; }
 .flow { overflow-x: clip; }
 [hidden] { display: none !important; }
+.server.github a { margin-left: var(--s1); }

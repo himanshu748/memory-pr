@@ -1,4 +1,5 @@
 import { apiBase, compare, serverLine, serverRequest } from './server-check.js';
+import { prLine, settled, whyNot } from './github-pr.js';
 
 // memory-pr browser view. No build step: plain ES module, Cytoscape for drawing, and
 // Relate (WebAssembly) holding each graph so the visitor's Cypher runs on it live.
@@ -1045,6 +1046,64 @@ function serverCheck(v) {
     .catch(() => settle({ state: 'off' })); // no server here, or it refused: the page's own review stands
 }
 
+// A real pull request on GitHub, where this deployment's server can ask for one.
+const github = { enabled: false };
+if (API !== null) {
+  fetch(`${API}/api/pull-requests`)
+    .then((response) => (response.ok ? response.json() : null))
+    .then((body) => {
+      github.enabled = Boolean(body && body.enabled === true);
+      if (github.enabled && play.view) renderPlay();
+    })
+    .catch(() => {}); // no server: the button stays hidden
+}
+
+const POLL_MS = 5000;
+const POLL_LIMIT = 60; // five minutes
+
+function openOnGithub(v) {
+  if (!github.enabled || v.github || whyNot(v.draft, play.landed, v.edited)) return;
+  const show = (state) => {
+    v.github = state;
+    if (play.view === v) renderPlay();
+  };
+  const poll = (id, left) => {
+    if (left <= 0) return;
+    fetch(`${API}/api/pull-requests/${encodeURIComponent(id)}`)
+      .then((response) => (response.ok ? response.json() : Promise.reject(new Error(String(response.status)))))
+      .then((state) => {
+        show(state);
+        if (!settled(state)) setTimeout(() => poll(id, left - 1), POLL_MS);
+      })
+      .catch(() => setTimeout(() => poll(id, left - 1), POLL_MS));
+  };
+  show({ state: 'sending' });
+  fetch(`${API}/api/pull-requests`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ draft: v.draft }),
+  })
+    .then((response) => response.json().then((body) => ({ ok: response.ok, body })))
+    .then(({ ok, body }) => {
+      if (!ok || typeof body.id !== 'string') return show({ state: 'refused', note: typeof body.error === 'string' ? body.error : '' });
+      show({ state: 'queued' });
+      setTimeout(() => poll(body.id, POLL_LIMIT), POLL_MS);
+    })
+    .catch(() => show({ state: 'refused', note: '' }));
+}
+
+function githubHtml(v) {
+  if (!github.enabled) return '';
+  const line = prLine(v.github);
+  if (line) {
+    const link = line.link ? ` <a href="${esc(line.link)}" target="_blank" rel="noopener">${esc(line.label)}</a>` : '';
+    return `<p class="server github ${line.tone}" role="status">${esc(line.text)}${link}</p>`;
+  }
+  const why = whyNot(v.draft, play.landed, v.edited);
+  if (why) return `<p class="server github">${esc(why)}</p>`;
+  return '<p class="server github">Open this draft as a real pull request on GitHub. The draft is sent to this site\u2019s server and becomes public there, and it is closed after 30 minutes.</p>';
+}
+
 function serverLineHtml(v) {
   const line = serverLine(v.server, v.edited);
   return line ? `<p class="server ${line.tone}">${esc(line.text)}</p>` : '';
@@ -1287,8 +1346,9 @@ function outcomeHtml(c) {
     `<p class="adds">Memory review of <code>${esc(v.pull.id)}</code>. Adds ${plural(added, 'note', 'notes')} and ${plural(links, 'link', 'links')}` +
     `${changed ? `, changes ${plural(changed, 'note', 'notes')}` : ''}. Relate ran the ${rulesOf(v).length} rules that <code>mempr check</code> runs.</p>` +
     (problems ? `<ol class="problems">${problems}</ol>` : '') +
-    (stale ? '<p class="adds">You changed the draft. Review it again.</p>' : serverLineHtml(v)) +
+    (stale ? '<p class="adds">You changed the draft. Review it again.</p>' : serverLineHtml(v) + githubHtml(v)) +
     '<div class="outcome-actions">' +
+    (!stale && github.enabled && !v.github && !whyNot(v.draft, play.landed, v.edited) ? '<button type="button" class="btn" data-open-github>Open it on GitHub</button>' : '') +
     (!blocked && !stale ? '<button type="button" class="btn primary" data-merge-pull>Merge into memory</button>' : '') +
     '<a class="btn" href="#explorer" data-open="yours">See it on the full graph</a></div>'
   );
@@ -1335,6 +1395,7 @@ function playClick(t) {
     draftFixes(verdict(play.view).list[i], next)[f][1](next);
     go(next, { open: true });
   } else if (d.mergePull !== undefined) mergePull();
+  else if (d.openGithub !== undefined) openOnGithub(play.view);
   else if (d.resetMemory !== undefined) resetMemory();
   else if (d.mine !== undefined) {
     const entry = play.mine.find((m) => m.id === Number(d.mine));
