@@ -12,6 +12,7 @@ Cargo's `rust-version` and `edition`, and .nvmrc / .python-version.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import tempfile
@@ -189,7 +190,7 @@ def _write(
     _note(vault, "Agent", agent, {}, {})
     for f in facts:
         source = slug(f"{f['path']}@{sha[:7]}")
-        name = fact_name(f["entity"], f["predicate"], f["value"])
+        name = f["name"]
         _note(vault, "Entity", slug(f["entity"]), {}, {})
         _note(vault, "Source", source, {"uri": f["url"]}, {})
         _note(
@@ -293,9 +294,16 @@ def learn(
 
     then = _snapshot(repo, old, texts[old["sha"]])
     now = _snapshot(repo, head, texts[head["sha"]])
+    held = {fact_name(f["entity"], f["predicate"], f["value"]): f["value"] for f in then}
+    for f in then:
+        f["name"] = fact_name(f["entity"], f["predicate"], f["value"])
+    for f in now:
+        # `>=3.10` and `~=3.10` share a slug: the newer value gets a name of its own.
+        base = fact_name(f["entity"], f["predicate"], f["value"])
+        taken = base in held and held[base] != f["value"]
+        f["name"] = f"{base}-{hashlib.sha1(f['value'].encode()).hexdigest()[:6]}" if taken else base
     known = {(f["entity"], f["predicate"]): f for f in then}
-    held = {fact_name(f["entity"], f["predicate"], f["value"]) for f in then}
-    proposed = [f for f in now if fact_name(f["entity"], f["predicate"], f["value"]) not in held]
+    proposed = [f for f in now if held.get(f["name"]) != f["value"]]
     changed = [
         {
             "entity": f["entity"],
@@ -304,16 +312,12 @@ def learn(
             "new": f["value"],
             "old_url": known[k]["url"],
             "new_url": f["url"],
+            "replaces": (f["name"], known[k]["name"]),
         }
         for f in proposed
         if (k := (f["entity"], f["predicate"])) in known
     ]
-    replaces = {
-        fact_name(c["entity"], c["predicate"], c["new"]): fact_name(
-            c["entity"], c["predicate"], c["old"]
-        )
-        for c in changed
-    }
+    replaces = dict(c.pop("replaces") for c in changed)
 
     with tempfile.TemporaryDirectory(prefix="mempr-learn-") as tmp:
         root = Path(tmp)

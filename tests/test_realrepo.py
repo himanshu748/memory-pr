@@ -101,3 +101,26 @@ def test_learn_refuses_what_it_cannot_read(repo, months, status):
     with pytest.raises(RepoError) as error:
         learn(repo, months, load_rules(None), fetch=fake)
     assert error.value.status == status
+
+
+def test_a_value_whose_slug_matches_the_old_one_is_still_a_change():
+    files = {
+        OLD: {"pyproject.toml": '[project]\nrequires-python = ">=3.10"\n'},
+        NEW: {"pyproject.toml": '[project]\nrequires-python = "~=3.10"\n'},
+    }
+
+    def fetch(url):
+        prefix = "https://raw.githubusercontent.com/acme/shop/"
+        if url.startswith(prefix):
+            sha, path = url[len(prefix) :].split("/", 1)
+            return 200, files[sha][path].encode()
+        if "/git/trees/" in url:
+            sha = url.split("/trees/")[1].split("?")[0]
+            return 200, json.dumps(
+                {"tree": [{"path": p, "type": "blob"} for p in files[sha]]}
+            ).encode()
+        return fake(url)
+
+    out = learn("acme/shop", 12, load_rules(None), fetch=fetch)
+    assert [(c["old"], c["new"]) for c in out["changed"]] == [(">=3.10", "~=3.10")]
+    assert out["blocked"] and not out["fixed"]["blocked"]
