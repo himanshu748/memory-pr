@@ -333,7 +333,7 @@ every pull request. Every value that moved is a `contradiction`, with both files
 until the new fact says it `SUPERSEDES` the old one; the page shows both reviews and opens
 either in the graph explorer, where Relate in the page reruns the rules.
 
-On `GoogleCloudPlatform/microservices-demo` a year back it finds 12 moved values, such as
+On `GoogleCloudPlatform/microservices-demo` a year back it finds about a dozen moved values, such as
 the checkout service going from Go 1.23.0 to 1.25.0. The same works from Python:
 
 ```python

@@ -501,6 +501,7 @@ html, body { overflow-x: clip; }
 .moved th { text-align: left; font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 500; color: var(--muted); padding: 0 var(--s2) var(--s1) 0; border-bottom: 1px solid var(--ink); }
 .moved td { padding: 10px var(--s2) 10px 0; border-bottom: 1px solid var(--rule); vertical-align: top; overflow-wrap: anywhere; }
 .moved td code { background: none; padding: 0; }
+.moved .what { display: none; }
 .moved .was a { color: var(--bad); text-decoration: line-through; text-decoration-thickness: 1px; }
 .moved .now a { color: var(--good); font-weight: 500; }
 .moved .fixed .was a { text-decoration: line-through; }
@@ -513,4 +514,5 @@ html, body { overflow-x: clip; }
   .real-form { grid-template-columns: minmax(0, 1fr); }
   .real-out { grid-template-columns: minmax(0, 1fr); }
   .moved th:nth-child(2), .moved td:nth-child(2) { display: none; }
+  .moved .what { display: block; margin-top: 2px; font-family: var(--mono); font-size: 11px; color: var(--muted); }
 }

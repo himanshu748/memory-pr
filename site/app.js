@@ -1630,14 +1630,14 @@ function realView(b, fixed) {
     pull: {
       id: 'agent/builder',
       author: 'builder',
-      description: `read ${b.repo} at ${String(b.head.sha).slice(0, 7)}`,
-      title: `memory: ${b.repo} today`,
+      description: `read ${b.repo.split('/')[1]} at ${String(b.head.sha).slice(0, 7)}`,
+      title: `memory: ${b.repo} at its latest commit`,
       problems: side.problems,
       review: side.review,
       comment: side.comment,
     },
     short: b.repo.split('/')[1],
-    title: `${b.repo}, learned ${b.old.date.slice(0, 10)}, read today`,
+    title: `${b.repo}, learned ${b.old.date.slice(0, 10)}, read ${b.head.date.slice(0, 10)}`,
     before: b.before,
     after: fixed ? b.fixed_after : b.after,
     real: true,
@@ -1680,7 +1680,7 @@ function renderReal() {
   const n = b.changed.length;
   const rows = b.changed.map(
     (c, i) =>
-      `<tr style="--i:${i}" class="${real.fixed ? 'fixed' : ''}"><td><code>${esc(c.entity)}</code></td><td><code>${esc(c.predicate)}</code></td>` +
+      `<tr style="--i:${i}" class="${real.fixed ? 'fixed' : ''}"><td><code>${esc(c.entity)}</code><small class="what">${esc(c.predicate)}</small></td><td><code>${esc(c.predicate)}</code></td>` +
       `<td class="was"><a href="${esc(c.old_url)}" target="_blank" rel="noopener"><code>${esc(c.old)}</code></a></td>` +
       `<td class="now"><a href="${esc(c.new_url)}" target="_blank" rel="noopener"><code>${esc(c.new)}</code></a></td></tr>`,
   );
@@ -1690,7 +1690,7 @@ function renderReal() {
     `<span>${side.blocked ? `${plural(side.review.problems, 'problem', 'problems')}: ${esc(side.rules.join(', '))}` : 'every change says what it replaces'}</span></div>` +
     `<p><strong>scout</strong> read <a href="${esc(b.url)}" target="_blank" rel="noopener">${esc(b.repo)}</a> at ` +
     `<a href="${esc(b.old.url)}" target="_blank" rel="noopener"><code>${short7(b.old.sha)}</code></a> on ${day(b.old.date)} and wrote ${plural(b.learned, 'fact', 'facts')}. ` +
-    `<strong>builder</strong> read <a href="${esc(b.head.url)}" target="_blank" rel="noopener"><code>${short7(b.head.sha)}</code></a> today and proposed ${plural(b.proposed, 'fact', 'facts')}. ` +
+    `<strong>builder</strong> read <a href="${esc(b.head.url)}" target="_blank" rel="noopener"><code>${short7(b.head.sha)}</code></a>, its latest commit (${day(b.head.date)}), and proposed ${plural(b.proposed, 'fact', 'facts')}. ` +
     `${n ? `${n === b.proposed ? (n === 1 ? 'It changes' : 'Each changes') : `${n} of them change`} a value scout wrote.` : 'None of them changes a value scout wrote.'}</p>` +
     (n
       ? real.fixed
@@ -1701,7 +1701,7 @@ function renderReal() {
     (n ? `<button type="button" class="btn" id="real-fix">${real.fixed ? 'Undo' : 'Mark them as replacing the old facts'}</button>` : '') +
     '<button type="button" class="btn primary" id="real-explore">Explore the graph</button></div></div>' +
     (n
-      ? `<table class="moved"><thead><tr><th>About</th><th>What</th><th>${day(b.old.date)}</th><th>Today</th></tr></thead><tbody>${rows.join('')}</tbody></table>`
+      ? `<table class="moved"><thead><tr><th>About</th><th>What</th><th>${day(b.old.date)}</th><th>${day(b.head.date)}</th></tr></thead><tbody>${rows.join('')}</tbody></table>`
       : `<p class="outcome-empty">Read ${plural(b.files.head, 'file', 'files')} (Dockerfiles, package.json, go.mod, pyproject.toml, Cargo.toml, .nvmrc). Try more months or another repository.</p>`);
   out.classList.remove('play');
   void out.offsetWidth;
@@ -1715,21 +1715,22 @@ function renderReal() {
 }
 
 async function learnReal(repo, months) {
-  if (real.busy) return;
   if (API === null) {
     real.error = 'This copy of the page has no server. Open https://memory-pr.vercel.app/ to read a repository.';
     return renderReal();
   }
+  const ask = (real.ask = (real.ask || 0) + 1);
   Object.assign(real, { busy: true, error: '', fixed: false });
   renderReal();
   try {
     const response = await fetch(`${API}/api/learn?repo=${encodeURIComponent(repo)}&months=${months}`);
     const body = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(body.error || `the server answered ${response.status}`);
-    real.body = body;
+    if (ask === real.ask) real.body = body;
   } catch (err) {
-    real.error = `Could not read ${repo}: ${err.message}`;
+    if (ask === real.ask) real.error = `Could not read ${repo}: ${err.message}`;
   }
+  if (ask !== real.ask) return;
   real.busy = false;
   renderReal();
 }
