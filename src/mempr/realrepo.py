@@ -282,18 +282,21 @@ def learn(
         for sha, t in trees.items()
     }
 
-    def raw(item: tuple[str, str]) -> tuple[str, str, str | None]:
+    def raw(item: tuple[str, str]) -> tuple[str, str, str]:
         sha, path = item
-        status, body = get(
-            f"https://raw.githubusercontent.com/{repo}/{sha}/{urllib.parse.quote(path)}"
-        )
-        return sha, path, body.decode("utf-8", "replace") if status == 200 else None
+        url = f"https://raw.githubusercontent.com/{repo}/{sha}/{urllib.parse.quote(path)}"
+        status, body = get(url)
+        if status != 200:
+            status, body = get(url)
+        if status != 200:
+            # A file left out would hide what it states, and the review could pass on a gap.
+            raise RepoError(502, f"GitHub did not send {path}; try again")
+        return sha, path, body.decode("utf-8", "replace")
 
     texts: dict[str, dict[str, str]] = {old["sha"]: {}, head["sha"]: {}}
     with ThreadPoolExecutor(max_workers=16) as pool:
         for sha, path, text in pool.map(raw, [(s, p) for s, ps in paths.items() for p in ps]):
-            if text is not None:
-                texts[sha][path] = text
+            texts[sha][path] = text
 
     then = _snapshot(repo, old, texts[old["sha"]])
     now = _snapshot(repo, head, texts[head["sha"]])

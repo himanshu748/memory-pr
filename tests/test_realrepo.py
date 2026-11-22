@@ -129,3 +129,14 @@ def test_a_value_whose_slug_matches_the_old_one_is_still_a_change():
     out = learn("acme/shop", 12, load_rules(None), fetch=fetch)
     assert [(c["old"], c["new"]) for c in out["changed"]] == [(">=3.10", "~=3.10")]
     assert out["blocked"] and not out["fixed"]["blocked"]
+
+
+def test_a_file_github_does_not_send_fails_the_reading_instead_of_passing():
+    def fetch(url):
+        if url.endswith("/Dockerfile"):
+            return 500, b""
+        return fake(url)
+
+    with pytest.raises(RepoError) as error:
+        learn("acme/shop", 12, load_rules(None), fetch=fetch)
+    assert error.value.status == 502 and "Dockerfile" in str(error.value)
