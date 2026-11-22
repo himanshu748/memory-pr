@@ -186,7 +186,8 @@ def _run(ident: str, token: str | None, github) -> dict[str, Any] | None:
     if status != 200 or not isinstance(found, dict):
         return None
     for run in found.get("workflow_runs", []):
-        if run.get("name") == f"playground {ident}":
+        # GitHub gives the workflow's `run-name` as the run's `display_title`.
+        if run.get("display_title") == f"playground {ident}":
             return run
     return None
 

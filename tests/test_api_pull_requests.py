@@ -175,7 +175,15 @@ def test_an_id_the_server_never_gave_is_a_404_and_calls_nothing(ident):
 
 
 def test_state_before_the_pull_request_exists():
-    runs = {"workflow_runs": [{"name": f"playground {ID}", "status": "in_progress"}]}
+    runs = {
+        "workflow_runs": [
+            {
+                "name": "playground-agent",
+                "display_title": f"playground {ID}",
+                "status": "in_progress",
+            }
+        ]
+    }
     github = GitHub(**{"/pulls": (200, []), "/runs": (200, runs)})
     assert state(ID, ON, github)["state"] == "queued"
     assert state(ID, {}, GitHub(**{"/pulls": (200, [])}))["state"] == "queued"  # a preview
@@ -183,7 +191,8 @@ def test_state_before_the_pull_request_exists():
 
 def test_state_when_the_workflow_refused():
     run = {
-        "name": f"playground {ID}",
+        "name": "playground-agent",
+        "display_title": f"playground {ID}",
         "status": "completed",
         "conclusion": "failure",
         "html_url": "https://github.com/himanshu748/memory-pr/actions/runs/1",
