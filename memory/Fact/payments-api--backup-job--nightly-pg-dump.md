@@ -2,7 +2,7 @@
 type: Fact
 name: payments-api--backup-job--nightly-pg-dump
 predicate: backup-job
-status: active
+status: retracted
 value: nightly-pg-dump
 ABOUT:
   - "[[Entity/payments-api]]"
