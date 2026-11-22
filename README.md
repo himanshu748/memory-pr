@@ -49,7 +49,10 @@ test.
 
 1. **Nothing to install:** open <https://memory-pr.vercel.app/>, press a starter under
    "Write a memory", then "Open pull request". The review blocks it, the fixes are one
-   click each, and a passing pull request merges into the page's memory.
+   click each, and a passing pull request merges into the page's memory. Then press
+   **Open it on GitHub**: in about half a minute your draft is a real pull request in
+   this repository, with the `memory-review` comment and the required check red or
+   green. It is closed again after 30 minutes ([how that is kept safe](#a-real-pull-request-from-the-page)).
 2. **On GitHub:** two pull requests a scripted agent opened in this repository.
    [#15](https://github.com/himanshu748/memory-pr/pull/15) contradicts the memory, so
    `memory-review` commented and blocks the merge.
@@ -265,21 +268,35 @@ When the review blocks a proposal, the agent reads why and sends the fix with th
 
 ## Use it in your own repository
 
-1. Either copy `.github/workflows/memory-review.yml` and install `mempr` in it from this
-   repository (`pip install git+https://github.com/himanshu748/memory-pr`), or use the
-   bundled action once a release tag exists:
+1. Keep your memory as Markdown notes under `memory/` (or pass `vault:`), one note per
+   fact, in the [shape above](#the-graph). `mempr add-fact` writes them.
+2. Add this workflow as `.github/workflows/memory-review.yml`:
 
    ```yaml
-   - uses: actions/checkout@v4
-     with:
-       fetch-depth: 0
-   - uses: himanshu748/memory-pr@v1
-     with:
-       base: origin/main
-       head: ${{ github.event.pull_request.head.sha }}
+   name: memory-review
+   on: pull_request
+   permissions:
+     contents: read
+     pull-requests: write
+   jobs:
+     memory-review:
+       runs-on: ubuntu-latest
+       steps:
+         - uses: actions/checkout@v4
+           with:
+             fetch-depth: 0
+         - uses: himanshu748/memory-pr@v1
    ```
-2. Keep your memory under `memory/` (or pass `--vault`).
+
+   The action installs `mempr`, reviews the pull request against its base branch, posts
+   the review as one comment that it keeps up to date, and fails when the merge would
+   damage the graph. Inputs: `base`, `head`, `vault`, `rules` (an extra rules file, read
+   from the base branch), `comment` and `python-version`.
 3. In the branch protection for your main branch, require the `memory-review` check.
+
+This repository's own [`memory-review.yml`](.github/workflows/memory-review.yml) does the
+same steps by hand, because it also installs `mempr` from the base branch and reviews
+pull requests that the Actions token opened.
 
 ## How Relate is used
 
