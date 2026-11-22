@@ -94,6 +94,24 @@
   <div id="mine" class="mine"></div>
 </section>
 
+<section class="real" id="real" data-reveal aria-label="Try it on a real repository">
+  <div class="write-head">
+    <p class="eyebrow">Real data</p>
+    <h2>Point it at a real repository.</h2>
+    <p>One agent learned the repository months ago. Another reads it today. Relate reviews what moved in between,
+      <strong>read from the real files on GitHub.</strong></p>
+    <div id="real-picks" class="starters" aria-label="Try one of these"></div>
+  </div>
+  <form id="real-form" class="real-form" autocomplete="off">
+    <div class="fld"><label for="real-repo">Public GitHub repository</label>
+      <input id="real-repo" name="repo" maxlength="140" placeholder="owner/name" spellcheck="false" required></div>
+    <div class="fld"><label for="real-months">The first agent learned it</label>
+      <select id="real-months" name="months"><option value="6">6 months ago</option><option value="12" selected>a year ago</option><option value="24">2 years ago</option></select></div>
+    <button type="submit" id="real-go" class="btn primary">Learn and review</button>
+  </form>
+  <div id="real-out" class="real-out" aria-live="polite"></div>
+</section>
+
 <section class="measured" id="measured" data-reveal aria-label="Measured result">
   <p class="eyebrow">Measured on 300 simulated pull requests, with the check on</p>
   <ul class="figures">
@@ -115,7 +133,7 @@
 </section>
 
 <section class="explorer-head" id="explorer" data-reveal>
-  <h2>Five pull requests from five agents</h2>
+  <h2 id="explorer-title">Five pull requests from five agents</h2>
   <p>Pick one. Green is what it adds, dashed red is what the merge would lose, and solid red marks the problem the review found.</p>
 </section>
 
@@ -161,8 +179,9 @@
 <footer class="foot" data-reveal>
   <div class="foot-about">
     <a class="brand" href="#top"><span class="mark" aria-hidden="true"></span>memory-pr</a>
-    <p>All data is generated: a fictional project and scripted agents. Nothing was recorded.
-    The graph runs in <a href="https://relatedb.ai">Relate</a> compiled to WebAssembly. Nothing leaves this page.</p>
+    <p>The sample is generated: a fictional project and scripted agents. Nothing was recorded.
+    A real repository is read from public GitHub only when you ask for one.
+    The graph runs in <a href="https://relatedb.ai">Relate</a> compiled to WebAssembly.</p>
   </div>
   <nav class="foot-links" aria-label="Project links">
     <a href="https://github.com/himanshu748/memory-pr">Source on GitHub</a>

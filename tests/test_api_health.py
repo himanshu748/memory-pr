@@ -20,3 +20,15 @@ def test_health_opens_the_committed_memory_and_counts_its_facts():
     assert body["facts"] == len([n for n in notes if n.name != "index.md"])
     assert body["relate"].startswith("1.")
     assert not (ROOT / "memory" / ".relate").exists()  # the checkout is left alone
+
+
+def test_learn_endpoint_answers_a_bad_repo_with_422():
+    from mempr.web import HttpError
+
+    handler = load("learn").handler
+    try:
+        handler.get(None, {"repo": "../etc", "months": "12"})
+    except HttpError as error:
+        assert error.status == 422
+    else:
+        raise AssertionError("expected a 422")

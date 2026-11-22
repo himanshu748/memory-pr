@@ -320,6 +320,30 @@ pull requests that the Actions token opened.
 - **The same library in a serverless function**: the backend opens a copy of the committed
   vault per request and runs the review on it.
 
+## Try it on a real repository
+
+The sample memory is made up; this part is not. Under "Point it at a real repository" on
+<https://memory-pr.vercel.app/>, name any public GitHub repository. Agent `scout` reads it
+at the last commit before a date months ago and agent `builder` reads today's head. Each
+writes what the files state as notes (the final `FROM` of each Dockerfile, `engines` and
+`packageManager` in package.json, the `go` line of go.mod, `requires-python`, Cargo's
+`rust-version` and `edition`, `.nvmrc`, `.python-version`), each fact linked to its
+`Source`: the file's URL at that commit. The review then runs the same Cypher rules as
+every pull request. Every value that moved is a `contradiction`, with both files linked,
+until the new fact says it `SUPERSEDES` the old one; the page shows both reviews and opens
+either in the graph explorer, where Relate in the page reruns the rules.
+
+On `GoogleCloudPlatform/microservices-demo` a year back it finds about a dozen moved values, such as
+the checkout service going from Go 1.23.0 to 1.25.0. The same works from Python:
+
+```python
+from mempr.realrepo import learn
+from mempr.rules import load_rules
+
+result = learn("tokio-rs/tokio", 12, load_rules(None))
+print(result["blocked"], [(c["entity"], c["old"], c["new"]) for c in result["changed"]])
+```
+
 ## Backend
 
 The page works with no server. On <https://memory-pr.vercel.app/> it also has one: Python
@@ -334,6 +358,7 @@ between requests.
 | `POST /api/review` | Reviews one draft change against the committed memory and returns the verdict, the findings and the comment `memory-review` would post. |
 | `GET /api/recall?entity=` | The current facts about one entity, each with its sources and the agents that asserted it. Replaced and retracted facts are left out. |
 | `POST /api/query` | Runs a read-only Cypher query on the committed memory and returns the rows. |
+| `GET /api/learn?repo=owner/name&months=12` | Reads a real public repository on GitHub at a commit from that many months ago and at today's head, writes what each reading states as two memories, and reviews the newer one against the older. Read-only, keeps nothing. |
 | `POST /api/pull-requests` | Asks GitHub to open one draft as a real pull request. `GET /api/pull-requests/<id>` says where it stands. |
 
 ```bash
@@ -449,8 +474,9 @@ it from a browser, apart from this project's GitHub Pages mirror.
 
 ## Data and disclosures
 
-- All data is generated. The sample project under `demo/project/` and the memory under
-  `memory/` are fictional. Nothing was recorded; there is no voice or video.
+- The sample project under `demo/project/` and the memory under `memory/` are generated
+  and fictional. "Point it at a real repository" reads real public files from GitHub when
+  you ask it to, and stores nothing. Nothing was recorded; there is no voice or video.
 - The demo agents are scripted and call no model.
 - Built with AI assistance (Devin). Third-party: Relate (`relate-db`, `@relate/relate-wasm`),
   PyYAML, the MCP Python SDK, Cytoscape.js (graph drawing in the browser view), the Geist and
