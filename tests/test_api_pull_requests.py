@@ -400,6 +400,61 @@ def test_cleanup_closes_only_what_is_older_than_half_an_hour():
     assert [p["number"] for p in agent.expired(pulls, now)] == [1]
 
 
+def test_cleanup_goes_on_when_one_pull_request_cannot_be_closed(monkeypatch, capsys):
+    agent = load("../demo/playground_agent.py")
+    old = "2026-01-01T00:00:00Z"
+    pulls = [
+        {"number": n, "headRefName": f"playground/{n}", "isCrossRepository": False,
+         "createdAt": old, "state": "OPEN"}
+        for n in (1, 2)
+    ]  # fmt: skip
+
+    def sh(*args):
+        if args[:3] == ("gh", "pr", "list"):
+            return json.dumps(pulls)
+        if args[:4] == ("gh", "pr", "close", "1"):
+            raise SystemExit("already closed")
+        return ""
+
+    monkeypatch.setattr(agent, "sh", sh)
+    assert agent.cleanup() == [1]
+    assert capsys.readouterr().out.splitlines() == [
+        "could not close #1: already closed",
+        "closed #2 (playground/2)",
+    ]
+    # Opening is refused while #1 is still open: it takes no place in the count, so a
+    # fourth could be opened beside it. Once it shows as closed, opening goes ahead.
+    ran = []
+    env = {f"PLAYGROUND_{k.upper()}": v for k, v in strict(MYSQL).items()} | {"PLAYGROUND_ID": ID}
+
+    def stuck(*args):
+        ran.append(args[:3])
+        return sh(*args)
+
+    monkeypatch.setattr(agent, "sh", stuck)
+    with pytest.raises(SystemExit) as stopped:
+        agent.open_pull(env)
+    assert str(stopped.value) == "refused: an expired playground pull request could not be closed"
+    assert set(ran) == {("gh", "pr", "list"), ("gh", "pr", "close")}
+    pulls[0]["state"] = "CLOSED"
+    pulls[1]["state"] = "CLOSED"
+    monkeypatch.setattr(agent, "sh", lambda *args: ran.append(args[:3]) or sh(*args))
+    monkeypatch.setattr(agent.playground_pr, "write", lambda *args: None)
+    agent.open_pull(env)
+    assert ("gh", "pr", "create") in ran
+
+
+def test_a_cleanup_run_waits_only_for_a_small_whole_number_of_minutes():
+    agent = load("../demo/playground_agent.py")
+    assert agent.WAIT == 31
+    waits = {"31": 31, "0": 0, "35": 35, "36": 0, "": 0, "-1": 0, "1e3": 0, "5; id": 0}
+    assert {text: agent.wait_minutes({"PLAYGROUND_WAIT": text}) for text in waits} == waits
+    assert agent.wait_minutes({}) == 0
+    text, parsed = workflow("playground-cleanup.yml")
+    assert parsed["jobs"]["cleanup"]["env"]["PLAYGROUND_WAIT"] == "${{ inputs.wait }}"
+    assert parsed["jobs"]["cleanup"]["timeout-minutes"] > 35
+
+
 def test_the_workflow_script_refuses_before_it_touches_git(monkeypatch):
     agent = load("../demo/playground_agent.py")
     ran = []

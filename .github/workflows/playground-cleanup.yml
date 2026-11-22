@@ -1,22 +1,27 @@
 name: playground-cleanup
 # Closes pull requests opened from the page's form 30 minutes after they were opened, and
-# deletes their branches.
+# deletes their branches. GitHub can start a schedule hours late, so playground-agent also
+# starts this for each pull request it opens, with a wait.
 on:
   schedule:
     - cron: "*/10 * * * *"
   workflow_dispatch:
+    inputs:
+      wait: { description: "Minutes to wait first, 0 to 35", default: "0" }
 permissions:
   contents: write
   pull-requests: write
+# A run that waits has a group of its own, so it never holds back the next one.
 concurrency:
-  group: playground-cleanup
+  group: playground-cleanup-${{ inputs.wait != '' && inputs.wait != '0' && github.run_id || 'now' }}
   cancel-in-progress: false
 jobs:
   cleanup:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 45
     env:
       GH_TOKEN: ${{ github.token }}
+      PLAYGROUND_WAIT: ${{ inputs.wait }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

@@ -13,6 +13,7 @@ import os
 import re
 import subprocess
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -22,7 +23,9 @@ from mempr.playground import BadDraft
 ROOT = Path(__file__).resolve().parent.parent
 LABEL = "playground"
 LABEL_TEXT = "Opened from the page's Write a memory form; closed after 30 minutes"
+CLOSED = "Closed automatically: playground pull requests are kept for 30 minutes."
 KEEP = playground_pr.KEEP
+WAIT = int(KEEP.total_seconds() // 60) + 1  # minutes until the cleanup a new one books
 INPUTS = ("agent", "entity", "predicate", "value", "source", "supersedes", "retract")
 BOT = (
     "user.name=github-actions[bot]",
@@ -76,8 +79,12 @@ def open_pull(env: dict[str, str]) -> None:
     except BadDraft as error:
         sys.exit(f"refused: {error}")
     # The scheduled cleanup can be late, so expired pull requests give up their places first.
-    cleanup()
-    reason = refusal(playground_pulls(), datetime.now(timezone.utc))
+    stuck = cleanup()
+    pulls = playground_pulls()
+    if any(p["number"] in stuck and p["state"] == "OPEN" for p in pulls):
+        # It takes no place in the count, so opening now could leave more than three open.
+        sys.exit("refused: an expired playground pull request could not be closed")
+    reason = refusal(pulls, datetime.now(timezone.utc))
     if reason:
         sys.exit(f"refused: {reason}")
     branch = playground_pr.BRANCH_PREFIX + ident
@@ -104,13 +111,29 @@ def open_pull(env: dict[str, str]) -> None:
     # start the review from the base branch; it reports `memory-review` as a status.
     number = url.rstrip("/").rsplit("/", 1)[-1]
     sh("gh", "workflow", "run", "memory-review.yml", "--ref", "main", "-f", f"pr={number}")
+    # GitHub can start the cleanup schedule hours late, so each pull request books its own.
+    sh("gh", "workflow", "run", "playground-cleanup.yml", "--ref", "main", "-f", f"wait={WAIT}")
 
 
-def cleanup() -> None:
+def cleanup() -> list[int]:
+    """Close the expired ones. Returns the numbers of those it could not close."""
+    stuck = []
     for pull in expired(playground_pulls(), datetime.now(timezone.utc)):
-        sh("gh", "pr", "close", str(pull["number"]), "--delete-branch", "--comment",
-           "Closed automatically: playground pull requests are kept for 30 minutes.")  # fmt: skip
+        try:
+            sh("gh", "pr", "close", str(pull["number"]), "--delete-branch", "--comment", CLOSED)
+        except SystemExit as failed:
+            # Another cleanup run may have closed it a moment ago. Go on to the rest.
+            print(f"could not close #{pull['number']}: {failed}")
+            stuck.append(pull["number"])
+            continue
         print(f"closed #{pull['number']} ({pull['headRefName']})")
+    return stuck
+
+
+def wait_minutes(env: dict[str, str]) -> int:
+    """How long a cleanup run waits first: whole minutes up to 35, anything else is 0."""
+    text = env.get("PLAYGROUND_WAIT", "")
+    return int(text) if re.fullmatch(r"[0-9]{1,2}", text) and int(text) <= 35 else 0
 
 
 def main() -> None:
@@ -119,6 +142,7 @@ def main() -> None:
     if parser.parse_args().command == "open":
         open_pull(dict(os.environ))
     else:
+        time.sleep(60 * wait_minutes(dict(os.environ)))
         cleanup()
 
 
