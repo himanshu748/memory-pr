@@ -274,6 +274,9 @@ def learn(
     )
 
     trees = {c["sha"]: api(f"/repos/{repo}/git/trees/{c['sha']}?recursive=1") for c in (old, head)}
+    if any(t.get("truncated") for t in trees.values()):
+        # GitHub listed only part of the files, so some would be missing from both readings.
+        raise RepoError(422, f"{repo} is too large to read here; try a smaller repository")
     paths = {
         sha: sorted(
             (i["path"] for i in t.get("tree", []) if i.get("type") == "blob" and wanted(i["path"])),

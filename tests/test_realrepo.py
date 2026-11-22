@@ -140,3 +140,15 @@ def test_a_file_github_does_not_send_fails_the_reading_instead_of_passing():
     with pytest.raises(RepoError) as error:
         learn("acme/shop", 12, load_rules(None), fetch=fetch)
     assert error.value.status == 502 and "Dockerfile" in str(error.value)
+
+
+def test_a_tree_github_cut_short_is_refused():
+    def fetch(url):
+        status, body = fake(url)
+        if "/git/trees/" in url:
+            return status, json.dumps({**json.loads(body), "truncated": True}).encode()
+        return status, body
+
+    with pytest.raises(RepoError) as error:
+        learn("acme/shop", 12, load_rules(None), fetch=fetch)
+    assert error.value.status == 422
