@@ -412,16 +412,36 @@ def test_cleanup_goes_on_when_one_pull_request_cannot_be_closed(monkeypatch, cap
     def sh(*args):
         if args[:3] == ("gh", "pr", "list"):
             return json.dumps(pulls)
-        if args[3] == "1":
+        if args[:4] == ("gh", "pr", "close", "1"):
             raise SystemExit("already closed")
         return ""
 
     monkeypatch.setattr(agent, "sh", sh)
-    agent.cleanup()
+    assert agent.cleanup() == [1]
     assert capsys.readouterr().out.splitlines() == [
         "could not close #1: already closed",
         "closed #2 (playground/2)",
     ]
+    # Opening is refused while #1 is still open: it takes no place in the count, so a
+    # fourth could be opened beside it. Once it shows as closed, opening goes ahead.
+    ran = []
+    env = {f"PLAYGROUND_{k.upper()}": v for k, v in strict(MYSQL).items()} | {"PLAYGROUND_ID": ID}
+
+    def stuck(*args):
+        ran.append(args[:3])
+        return sh(*args)
+
+    monkeypatch.setattr(agent, "sh", stuck)
+    with pytest.raises(SystemExit) as stopped:
+        agent.open_pull(env)
+    assert str(stopped.value) == "refused: an expired playground pull request could not be closed"
+    assert set(ran) == {("gh", "pr", "list"), ("gh", "pr", "close")}
+    pulls[0]["state"] = "CLOSED"
+    pulls[1]["state"] = "CLOSED"
+    monkeypatch.setattr(agent, "sh", lambda *args: ran.append(args[:3]) or sh(*args))
+    monkeypatch.setattr(agent.playground_pr, "write", lambda *args: None)
+    agent.open_pull(env)
+    assert ("gh", "pr", "create") in ran
 
 
 def test_a_cleanup_run_waits_only_for_a_small_whole_number_of_minutes():

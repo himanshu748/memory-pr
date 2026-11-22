@@ -79,8 +79,12 @@ def open_pull(env: dict[str, str]) -> None:
     except BadDraft as error:
         sys.exit(f"refused: {error}")
     # The scheduled cleanup can be late, so expired pull requests give up their places first.
-    cleanup()
-    reason = refusal(playground_pulls(), datetime.now(timezone.utc))
+    stuck = cleanup()
+    pulls = playground_pulls()
+    if any(p["number"] in stuck and p["state"] == "OPEN" for p in pulls):
+        # It takes no place in the count, so opening now could leave more than three open.
+        sys.exit("refused: an expired playground pull request could not be closed")
+    reason = refusal(pulls, datetime.now(timezone.utc))
     if reason:
         sys.exit(f"refused: {reason}")
     branch = playground_pr.BRANCH_PREFIX + ident
@@ -111,15 +115,19 @@ def open_pull(env: dict[str, str]) -> None:
     sh("gh", "workflow", "run", "playground-cleanup.yml", "--ref", "main", "-f", f"wait={WAIT}")
 
 
-def cleanup() -> None:
+def cleanup() -> list[int]:
+    """Close the expired ones. Returns the numbers of those it could not close."""
+    stuck = []
     for pull in expired(playground_pulls(), datetime.now(timezone.utc)):
         try:
             sh("gh", "pr", "close", str(pull["number"]), "--delete-branch", "--comment", CLOSED)
         except SystemExit as failed:
             # Another cleanup run may have closed it a moment ago. Go on to the rest.
             print(f"could not close #{pull['number']}: {failed}")
+            stuck.append(pull["number"])
             continue
         print(f"closed #{pull['number']} ({pull['headRefName']})")
+    return stuck
 
 
 def wait_minutes(env: dict[str, str]) -> int:
