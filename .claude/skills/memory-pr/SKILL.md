@@ -33,8 +33,10 @@ mempr query "MATCH (f:Fact {status:'active'})-[:ABOUT]->(e:Entity) RETURN e.name
 
 ## Propose a fact
 
-With the MCP server, call `propose_fact` (or `retract_fact`). It commits on a new
-`agent/*` branch and returns the review. Pass `open_pull_request: true` once it passes.
+With the MCP server, call `propose_fact` (or `retract_fact`) with
+`open_pull_request: true`. It commits on a new `agent/*` branch, opens the pull request
+and returns the review. Calling it again with the same fact fails with "nothing to
+change", so set the flag on the call that makes the change.
 
 Without it:
 
