@@ -25,7 +25,10 @@ def rev_parse(repo: Path, rev: str) -> str:
 
 
 def merge_base(repo: Path, a: str, b: str) -> str:
-    return git(repo, "merge-base", a, b).stdout.strip()
+    proc = git(repo, "merge-base", a, b, check=False)
+    if proc.returncode != 0:
+        raise GitError(f"no common ancestor between {a!r} and {b!r}")
+    return proc.stdout.strip()
 
 
 @dataclass(frozen=True)
@@ -47,7 +50,9 @@ def merge_tree(repo: Path, base: str, head: str) -> MergeResult:
                 break
             conflicts.append(line)
         return MergeResult(tree=None, conflicts=tuple(conflicts))
-    raise GitError(f"git merge-tree failed: {proc.stderr.strip()}")
+    raise GitError(
+        f"git merge-tree --write-tree failed (it needs git 2.38+): {proc.stderr.strip()}"
+    )
 
 
 def export_tree(repo: Path, treeish: str, subdir: str, dest: Path) -> Path:
