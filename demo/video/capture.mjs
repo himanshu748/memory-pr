@@ -14,7 +14,6 @@ import { chromium } from 'playwright-core';
 const here = dirname(fileURLToPath(import.meta.url));
 const SITE = process.env.SITE || 'https://memory-pr.vercel.app/';
 const BLOCKED = process.env.BLOCKED || '15'; // a pull request the memory review blocks
-const PASSING = process.env.PASSING || '6'; // one it passes
 const REPO = 'https://github.com/himanshu748/memory-pr';
 const OUT = resolve(process.env.OUT || join(here, 'out')); // absolute: ffmpeg reads the frame list from inside it
 const CARDS = pathToFileURL(join(here, 'cards.html')).href;
@@ -169,7 +168,7 @@ async function card(id, ms) {
 await cdp.send('Page.startScreencast', { format: 'png', everyNthFrame: 1 });
 
 await card('title', 3000);
-await card('problem', 5000);
+await card('problem', 4200);
 
 // A blocked pull request on GitHub, logged out and in the light theme. Profile pictures,
 // the site header with its sign-in buttons and anything asking to sign in are hidden:
@@ -191,9 +190,9 @@ await ring(null);
 await page.locator(review).last().evaluate((node) => scrollTo({ top: node.getBoundingClientRect().top + scrollY - 40, behavior: 'smooth' }));
 await sleep(1100);
 await caption('pr_comment');
-await sleep(2600);
+await sleep(2300);
 await page.locator(review).last().evaluate((node) => scrollBy({ top: Math.max(0, Math.min(node.offsetHeight - 430, 230)), behavior: 'smooth' }));
-await sleep(3000);
+await sleep(2500);
 // The checks box on the conversation tab does not load for logged-out visitors; the Checks tab does.
 await open(`${REPO}/pull/${BLOCKED}/checks`, async () => {
   await github();
@@ -202,14 +201,7 @@ await open(`${REPO}/pull/${BLOCKED}/checks`, async () => {
   await github();
 });
 await caption('pr_check');
-await sleep(3800);
-
-// A correct pull request passes.
-await open(`${REPO}/pull/${PASSING}`, github);
-await page.locator(review).last().evaluate((node) => scrollTo({ top: node.getBoundingClientRect().top + scrollY - 40, behavior: 'instant' }));
-await ring(`${review} >> nth=-1`, 4);
-await caption('pr_pass');
-await sleep(3600);
+await sleep(3300);
 
 // The live page. It loads behind the veil, so the first screen's story is played again.
 await open(SITE, () => page.waitForSelector('#engine.ok'));
@@ -220,7 +212,38 @@ await page.evaluate(() => {
   card.classList.remove('still');
 });
 await caption('live_hero');
-await sleep(4400);
+await sleep(3800);
+
+// A real repository, read from GitHub at two commits. The wait for the server is cut.
+await caption(null);
+await scrollTo('#real', 62);
+await caption('real_open');
+await click('#real-picks button >> nth=0');
+await sleep(700);
+pause();
+await page.waitForSelector('#real-out .stampbox', { timeout: 120000 });
+await sleep(1200);
+roll();
+await scrollTo('#real-out', 70);
+await caption('real_blocked');
+await ring('#real-out .stampbox', 4);
+await sleep(3000);
+await caption('real_links');
+await ring('#real-out table.moved', 4);
+await sleep(2900);
+await ring(null);
+await caption('real_fix');
+await click('#real-fix');
+await sleep(400);
+await scrollTo('#real-out', 70);
+await ring('#real-out .stampbox', 4);
+await sleep(2300);
+await ring(null);
+await caption('real_graph');
+await click('#real-explore');
+await sleep(1200);
+await scrollTo('.layout', 66);
+await sleep(2600);
 
 // Write a memory: blocked, fixed in two clicks, then opened on GitHub as a real pull request.
 await caption(null);
@@ -229,7 +252,7 @@ await caption('play_open');
 await click('#starters button >> nth=0');
 await sleep(900);
 await scrollTo('.write-grid', 64); // the verdict and its fix buttons at the top of the frame
-await sleep(2400);
+await sleep(2000);
 const verdict = async (hold) => {
   // After each click the verdict is brought back to the top of the frame and held.
   await sleep(350);
@@ -238,10 +261,10 @@ const verdict = async (hold) => {
 };
 await caption('play_fix1');
 await click('#outcome [data-draft-fix] >> nth=0');
-await verdict(2100);
+await verdict(1800);
 await caption('play_fix2');
 await click('#outcome [data-draft-fix] >> nth=0');
-await verdict(1900);
+await verdict(1600);
 await caption('play_github');
 await ring('#outcome [data-open-github]', 6);
 await sleep(1500);
@@ -252,17 +275,11 @@ await sleep(2400);
 pause();
 const opened = '#outcome p.github';
 await page.waitForFunction((sel) => /memory-review passed/.test(document.querySelector(sel)?.innerText ?? ''), opened, { timeout: 240000 });
-const real = await page.locator(`${opened} a`).first().getAttribute('href');
 roll();
 await caption('play_real');
 await ring(opened, 6);
-await sleep(3400);
+await sleep(3000);
 await ring(null);
-await open(real, github);
-await page.locator(review).last().evaluate((node) => scrollTo({ top: node.getBoundingClientRect().top + scrollY - 40, behavior: 'instant' }));
-await ring(`${review} >> nth=-1`, 4);
-await caption('pr_real');
-await sleep(3800);
 
 // The scripted pull requests: a stale clone that git merges cleanly.
 await open(SITE, () => page.waitForSelector('#engine.ok'));
@@ -272,23 +289,12 @@ await scrollTo('.layout', 66);
 await caption('live_stale');
 await sleep(500);
 await ring('#review .problems', 4);
-await sleep(3900);
+await sleep(3300);
 await ring(null);
 
-// Cypher in the page.
-await click('#views button >> nth=0');
-await caption(null);
-await scrollTo('#console .hint', 74); // the query box and its result both fit above the caption
-await caption('live_cypher');
-await click('#examples button:has-text("What rests on the Postgres fact")');
-await sleep(1300);
-await ring('#result', 4);
-await sleep(2400);
-await ring(null);
-
-await card('relate', 5000);
-await card('bench', 6200);
-await card('end', 4500);
+await card('relate', 4300);
+await card('bench', 5200);
+await card('end', 4000);
 pause();
 await cdp.send('Page.stopScreencast');
 

@@ -2,7 +2,7 @@
 
 `capture.mjs` films the two-minute demo in one scripted pass and writes a silent 1920x1080 MP4.
 Nothing is recorded from a person: it is a screen capture of the title cards in `cards.html`,
-pull requests on GitHub seen logged out, and the live page. The page fills the top
+pull requests on GitHub seen logged out, and the live page, including a review of a real public repository. The page fills the top
 1920x960 of the frame and the captions in `captions.json` sit in their own band below it, so a
 caption never covers what is being shown. No sound, no outside images, fonts or footage. The type is the
 page's own Geist, from `site/vendor/fonts/`.
@@ -26,7 +26,6 @@ GitHub is always logged out and in the light theme.
 | --- | --- | --- |
 | `SITE` | `https://memory-pr.vercel.app/` | the page to film; `http://localhost:8000/` works with `python -m http.server -d site` |
 | `BLOCKED` | `15` | a pull request the memory review blocks |
-| `PASSING` | `6` | one it passes |
 | `OUT` | `out` | where the frames and the MP4 go |
 
 How it works: Chrome's screencast sends a frame each time the page changes, with its time.

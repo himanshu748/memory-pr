@@ -2,14 +2,16 @@
   "pr_open": "A real pull request, opened by an agent. Git finds no conflict.",
   "pr_comment": "The memory review reads it as graph facts. It names the contradiction and the path that proves it.",
   "pr_check": "The required memory-review check fails, so main does not take this merge.",
-  "pr_pass": "A correct change from another agent. The memory review passes.",
   "live_hero": "The same review runs live in a web page. Nothing to install.",
+  "real_open": "Now on real data. Pick any public GitHub repository.",
+  "real_blocked": "One agent read it a year ago, another reads it today. Relate blocks every value that moved.",
+  "real_links": "Each fact links to the exact file and commit on GitHub it was read from.",
+  "real_fix": "Mark the new facts as replacing the old ones. The review passes.",
+  "real_graph": "The real repository as a Relate graph: each service, its facts and the files behind them.",
   "play_open": "Write a memory yourself. Say payments-api uses mysql-8. Relate blocks it in the page.",
   "play_fix1": "Replace the old fact. Three facts rest on it, so the review still blocks.",
   "play_fix2": "Retract them. The review passes.",
   "play_github": "Now make it real: Open it on GitHub. The server starts one workflow and GitHub's bot opens it.",
   "play_real": "A minute later it is a real pull request, and memory-review passed.",
-  "pr_real": "The same review, on the pull request the page just opened.",
-  "live_stale": "A stale clone. Git merges it cleanly. The graph loses a note and its links.",
-  "live_cypher": "Ask it in Cypher. Relate runs inside the page as WebAssembly."
+  "live_stale": "A stale clone. Git merges it cleanly. The graph loses a note and its links."
 }
