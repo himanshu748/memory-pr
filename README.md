@@ -350,11 +350,15 @@ curl -s https://memory-pr.vercel.app/api/query \
 ```
 
 `/api/query` uses the same read-only check as the MCP server's `query` tool: a query with
-`CREATE`, `MERGE`, `SET`, `DELETE`, `REMOVE`, `DROP`, `FOREACH` or `LOAD CSV` gets a 403.
-It runs on a throwaway copy of the memory in a separate process, which is stopped after
-5 seconds (408). A query may be 2,000 characters, `params` values must be text, numbers,
-true, false or null, and the answer holds the first 200 rows (`truncated` says whether
-there were more) and at most 256 KB (413). `/api/recall` returns up to 100 facts.
+`CREATE`, `MERGE`, `SET`, `DELETE`, `REMOVE`, `DROP`, `FOREACH`, `INSERT` or `LOAD CSV`
+gets a 403, and so does a `CALL` of any procedure outside a short list that only reads
+(`db.labels`, `db.relationshipTypes`, `db.propertyKeys`, the `db.schema` procedures and the
+index queries), because Relate also ships procedures that write. Each query runs on a
+throwaway copy of the memory, never the deployed files, in a separate process limited to
+512 MB of memory and 3 seconds. A query that needs more is stopped with a 422 or a 408 and
+the server carries on. A query may be 2,000 characters, `params` values must be text,
+numbers, true, false or null, and the answer holds the first 200 rows (`truncated` says
+whether there were more) and at most 256 KB (413). `/api/recall` returns up to 100 facts.
 
 Limits: request bodies up to 16 KB, at most 12 earlier drafts, names and values checked
 before anything is written, values passed to Cypher as parameters. Errors are JSON with a

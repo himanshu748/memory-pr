@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+import tempfile
 import threading
 import urllib.error
 import urllib.request
@@ -158,11 +159,72 @@ def test_query_does_not_accept_get(query_url):
     assert fetch(query_url)[0] == 405
 
 
-def test_a_query_that_runs_too_long_is_stopped():
-    slow = {"cypher": "MATCH (a), (b), (c), (d), (e), (f), (g) RETURN count(*) AS n"}
+RUNAWAY = "MATCH (a), (b), (c), (d), (e), (f), (g) RETURN count(*) AS n"
+
+
+def leftovers() -> set[str]:
+    return {p.name for p in Path(tempfile.gettempdir()).glob("mempr-*")}
+
+
+def test_a_query_that_needs_too_much_memory_is_stopped_and_the_server_carries_on(query_url):
+    before = leftovers()
+    status, body = fetch(query_url, {"cypher": RUNAWAY})
+    assert status == 422 and "was stopped" in body["error"]
+    assert fetch(query_url, {"cypher": "RETURN 1 AS n"}) == (
+        200,
+        {"rows": [{"n": 1}], "row_count": 1, "truncated": False},
+    )
+    assert leftovers() == before
+
+
+def test_a_query_that_runs_too_long_is_stopped_and_leaves_nothing_behind():
+    before = leftovers()
     with pytest.raises(BadRequest) as stopped:
-        run_query(MEMORY, slow, time_limit=0.5)
+        run_query(MEMORY, {"cypher": RUNAWAY}, time_limit=0.2, memory_limit=8 * 2**30)
     assert stopped.value.status == 408
+    assert leftovers() == before
+
+
+@pytest.mark.parametrize(
+    "cypher",
+    [
+        "CALL db.createLabel('Zed')",
+        "call db.createProperty('zed')",
+        "CALL `db`.createLabel('Zed')",
+        "CALL db . createRelationshipType('ZED')",
+        "CALL/**/db.createLabel('Zed')",
+        "CALL tx.setMetaData({a: 1})",
+        "MATCH (n) OPTIONAL CALL db.createLabel('Zed') RETURN n",
+        "INSERT (:Entity {name: 'x'})",
+    ],
+)
+def test_query_refuses_procedures_that_are_not_known_to_only_read(query_url, cypher):
+    status, body = fetch(query_url, {"cypher": cypher})
+    assert status == 403 and "read-only" in body["error"]
+
+
+@pytest.mark.parametrize(
+    "cypher",
+    [
+        "CALL db.labels()",
+        "CALL db.labels() YIELD label RETURN label",
+        "CALL { MATCH (f:Fact) RETURN count(f) AS n } RETURN n",
+        "MATCH (f:`Fact`) RETURN count(f) AS `set`",
+    ],
+)
+def test_query_allows_reading_procedures_and_subqueries(query_url, cypher):
+    status, body = fetch(query_url, {"cypher": cypher})
+    assert status == 200 and body["row_count"] >= 1
+
+
+def test_a_write_that_got_past_the_check_would_not_reach_the_memory(monkeypatch):
+    monkeypatch.setattr(agentapi, "is_read_only", lambda cypher: True)
+    before = files(MEMORY)
+    wrote = run_query(MEMORY, {"cypher": "CREATE (e:Entity {name: 'intruder'}) RETURN e.name AS n"})
+    assert wrote["rows"] == [{"n": "intruder"}]
+    assert files(MEMORY) == before
+    seen = run_query(MEMORY, {"cypher": "MATCH (e:Entity {name: 'intruder'}) RETURN e.name AS n"})
+    assert seen["rows"] == []
 
 
 def test_a_result_that_is_too_large_is_refused(monkeypatch):
