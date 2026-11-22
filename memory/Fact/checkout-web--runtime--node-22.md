@@ -8,8 +8,10 @@ ABOUT:
   - "[[Entity/checkout-web]]"
 ASSERTED_BY:
   - "[[Agent/scout]]"
+  - "[[Agent/visitor]]"
 SOURCE:
   - "[[Source/demo-project-services-checkout-web-service-yaml]]"
+  - "[[Source/docs-runtime-md]]"
 ---
 
 checkout-web runtime: node-22
