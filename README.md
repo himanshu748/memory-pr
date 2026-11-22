@@ -308,6 +308,7 @@ between requests.
 | `POST /api/review` | Reviews one draft change against the committed memory and returns the verdict, the findings and the comment `memory-review` would post. |
 | `GET /api/recall?entity=` | The current facts about one entity, each with its sources and the agents that asserted it. Replaced and retracted facts are left out. |
 | `POST /api/query` | Runs a read-only Cypher query on the committed memory and returns the rows. |
+| `POST /api/pull-requests` | Asks GitHub to open one draft as a real pull request. `GET /api/pull-requests/<id>` says where it stands. |
 
 ```bash
 curl -s https://memory-pr.vercel.app/api/health
@@ -360,6 +361,60 @@ the server carries on. A query may be 2,000 characters, `params` values must be 
 numbers, true, false or null, and the answer holds the first 200 rows (`truncated` says
 whether there were more) and at most 256 KB (413). `/api/recall` returns up to 100 facts.
 
+### A real pull request from the page
+
+On the Vercel page, a draft that has been reviewed gets an **Open it on GitHub** button.
+It opens the draft as a real pull request in this repository, where `memory-review`
+comments and sets its check, so a visitor can watch a contradiction get blocked on GitHub
+itself.
+
+The server never writes to the repository. It checks the draft, then starts the
+[`playground-agent`](.github/workflows/playground-agent.yml) workflow with a token that
+can only start and read workflow runs in this one repository. The workflow, as
+`github-actions[bot]`, checks the draft again with the same code, writes the note with
+`mempr`, pushes `playground/<id>`, opens a pull request labelled `playground` and starts
+`memory-review` on it.
+
+```bash
+curl -s https://memory-pr.vercel.app/api/pull-requests
+# {"enabled": true, "limit": 3, "daily": 20, "minutes": 30}
+
+curl -s https://memory-pr.vercel.app/api/pull-requests \
+  -H 'Content-Type: application/json' \
+  -d '{"draft": {"agent": "visitor", "entity": "payments-api", "predicate": "database",
+       "value": "mysql-8", "source": "docs/design.md"}}'
+# {"id": "3f9c2a71b0", "branch": "playground/3f9c2a71b0", "state": "queued",
+#  "expected": {"blocked": true, "rules": ["contradiction"]}}
+
+curl -s https://memory-pr.vercel.app/api/pull-requests/3f9c2a71b0
+# {"id": "3f9c2a71b0", "state": "open", "number": 41, "url": "https://github.com/...",
+#  "check": "failure", "check_url": "...", ...}
+```
+
+The guards:
+
+- A draft for GitHub is a new fact whose agent, entity, predicate and value are short
+  lowercase words (letters, digits, `.` and `-`, 60 characters) and whose source is a
+  lowercase path. The server refuses anything else, and the workflow refuses it again.
+- The workflow receives the values as environment variables. None is ever part of a
+  command.
+- At most three playground pull requests are open at once, and at most 20 are opened in
+  any 24 hours. The workflow decides; the server checks first to give a clear answer (429).
+- Runs of the workflow go one at a time, so two requests cannot both take the last place,
+  and the server sends nothing while a run is unfinished (429).
+- [`playground-cleanup`](.github/workflows/playground-cleanup.yml) runs every ten minutes
+  and closes playground pull requests older than 30 minutes and deletes their branches.
+  The `playground-agent` workflow does the same before it counts, because scheduled runs
+  can be late.
+- Vercel builds no deployment for `playground/*` branches (`vercel.json`).
+- Where the token is not set (preview deployments, a local copy) the endpoint answers
+  503 "not enabled" and the page does not show the button.
+
+`state` is `queued`, `open`, `closed`, `failed` (the workflow refused) or `unknown`, and
+`check` is `pending`, `success`, `failure`, `error` or `unknown`. The server reads pull
+request and check state from GitHub's public API with no token; when GitHub limits those
+calls it answers `unknown` with a link to look on GitHub instead of an error.
+
 Limits: request bodies up to 16 KB, at most 12 earlier drafts, names and values checked
 before anything is written, values passed to Cypher as parameters. Errors are JSON with a
 status code (400 malformed, 413 too large, 422 not a valid draft). Other sites cannot call
@@ -377,6 +432,9 @@ it from a browser, apart from this project's GitHub Pages mirror.
 - The backend sets no cookies, has no analytics and no accounts, and its code does not log
   request bodies or addresses. A draft sent for review is used for that one response and
   then discarded.
+- A draft opened with **Open it on GitHub** becomes a public pull request in this
+  repository, written by `github-actions[bot]`. It holds only the short lowercase words of
+  the draft, nothing about the visitor, and is closed after 30 minutes.
 
 ## License
 
