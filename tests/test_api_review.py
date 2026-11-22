@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 import json
 import threading
@@ -175,3 +176,29 @@ def test_a_fact_the_server_wrote_can_be_replaced_and_retracted(value):
 def test_fact_names_stay_file_safe(name):
     with pytest.raises(BadDraft):
         clean({"kind": "retract", "target": name})
+
+
+def test_the_longest_fact_a_draft_can_name_can_be_retracted():
+    long = {
+        "agent": "visitor",
+        "entity": "e" * 60,
+        "predicate": "p" * 40,
+        "value": "C+" + "v" * 87,
+        "source": "docs/design.md",
+    }
+    twin = long | {"value": "C#" + "v" * 87}  # the same slug, so it gets the suffixed name
+    name = f"{'e' * 60}--{'p' * 40}--c-{'v' * 87}"
+    assert len(name) == 193
+    suffixed = name + "-" + hashlib.sha1(twin["value"].encode()).hexdigest()[:6]
+    for target in (name, suffixed):
+        result = review_request(
+            {"merged": [long, twin], "draft": {"kind": "retract", "target": target}},
+            ROOT / "memory",
+            RULES,
+        )
+        assert not result["blocked"]
+
+
+def test_a_draft_whose_fact_name_would_be_too_long_is_refused_up_front():
+    with pytest.raises(BadDraft, match="too long together"):
+        clean(MYSQL | {"entity": "e" * 60, "predicate": "p" * 40, "value": "v" * 100})
