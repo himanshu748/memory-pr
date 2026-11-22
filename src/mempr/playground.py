@@ -24,6 +24,7 @@ from .vault import note_files
 MAX_MERGED = 12  # drafts already merged into the page's memory
 MAX_LINKS = 12  # facts one draft may replace or retract
 SLUG = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
+MAX_FACT_NAME = 200  # a fact's name is its note's file name
 FACT_NAME = re.compile(r"[a-z0-9][a-z0-9-]*")  # every name `memory.fact_name` can give
 
 
@@ -49,7 +50,7 @@ def _text(draft: dict, key: str, limit: int, required: bool) -> str:
 
 
 def _fact(name: Any, key: str) -> str:
-    if not isinstance(name, str) or len(name) > 200 or not FACT_NAME.fullmatch(name):
+    if not isinstance(name, str) or len(name) > MAX_FACT_NAME or not FACT_NAME.fullmatch(name):
         raise BadDraft(f"{key} must name facts: lowercase letters, digits and hyphens")
     return name
 
@@ -73,12 +74,17 @@ def clean(draft: Any) -> dict[str, Any]:
         }
     if draft.get("kind", "fact") != "fact":
         raise BadDraft("kind must be fact or retract")
+    entity, predicate = _slug(draft, "entity"), _slug(draft, "predicate")
+    value = _text(draft, "value", 120, required=True)
+    # Seven characters are kept for the suffix a name gets when another value holds it.
+    if len(memory.fact_name(entity, predicate, value)) > MAX_FACT_NAME - 7:
+        raise BadDraft("entity, predicate and value are too long together for one fact name")
     return {
         "kind": "fact",
         "agent": _slug(draft, "agent"),
-        "entity": _slug(draft, "entity"),
-        "predicate": _slug(draft, "predicate"),
-        "value": _text(draft, "value", 120, required=True),
+        "entity": entity,
+        "predicate": predicate,
+        "value": value,
         "source": _text(draft, "source", 200, required=False),
         "supersedes": _facts(draft, "supersedes"),
         "retract": _facts(draft, "retract"),

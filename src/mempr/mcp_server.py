@@ -22,21 +22,17 @@ from mcp.server.fastmcp import FastMCP
 
 from . import gitutil, memory
 from .check import review
+from .readonly import is_read_only
 from .report import render
 from .rules import load_rules
 from .vault import GENERATED, open_vault, rows
 
 ROW_LIMIT = 200
 BRANCH_PREFIX = "agent/"  # the only branches this server writes to
-WRITE_CLAUSE = re.compile(
-    r"(?<![.\w])(CREATE|MERGE|SET|DELETE|DETACH|REMOVE|DROP|FOREACH|LOAD\s+CSV)(?!\w)", re.I
-)
 REMOTE_URL = re.compile(
     r"^(?:https?://(?:[^@/]+@)?|ssh://(?:[^@/]+@)?|[^@/:]+@)"
     r"([^/:]+)(?::\d+)?[:/]([^/]+)/([^/]+?)(?:\.git)?/?$"
 )
-QUOTED = re.compile(r"'(?:\\.|[^'\\])*'|\"(?:\\.|[^\"\\])*\"|`[^`]*`|//[^\n]*|/\*.*?\*/", re.S)
-
 INSTRUCTIONS = """\
 Shared project memory, reviewed like code. It is a graph of facts kept as Markdown in git:
 (:Fact {predicate, value, status})-[:ABOUT]->(:Entity), -[:SOURCE]->(:Source {uri}),
@@ -59,10 +55,6 @@ class Settings:
     base: str = "origin/main"
     rules: str = "memory-rules.yaml"
     remote: str = "origin"
-
-
-def is_read_only(cypher: str) -> bool:
-    return not WRITE_CLAUSE.search(QUOTED.sub(" ", cypher))
 
 
 def _plain(value: Any) -> Any:
