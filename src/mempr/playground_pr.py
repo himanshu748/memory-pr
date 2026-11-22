@@ -25,6 +25,7 @@ WORKFLOW = "playground-agent.yml"
 BRANCH_PREFIX = "playground/"
 MAX_OPEN = 3
 MAX_DAY = 20  # opened in any 24 hours
+KEEP = timedelta(minutes=30)  # then the workflow closes it
 TOKEN_ENV = "GITHUB_DISPATCH_TOKEN"
 API = "https://api.github.com"
 ID = re.compile(r"[a-f0-9]{10}")
@@ -127,17 +128,19 @@ def _github(method: str, path: str, token: str | None = None, body: Any = None) 
 
 
 def count(pulls: list[tuple[str, bool, str]], now: datetime) -> tuple[int, int]:
-    """(open now, opened in the last 24 hours) among playground pull requests.
+    """(places taken now, opened in the last 24 hours) among playground pull requests.
 
     Each is (head branch, is open, created at in ISO 8601). The server and the workflow
-    both count with this.
+    both count with this. An open one older than KEEP takes no place: the workflow closes
+    those before it opens the next, so a late cleanup schedule cannot keep visitors out.
     """
-    mine = [p for p in pulls if p[0].startswith(BRANCH_PREFIX)]
-    day = now - timedelta(hours=24)
-    recent = sum(
-        1 for _, _, made in mine if datetime.fromisoformat(made.replace("Z", "+00:00")) > day
-    )
-    return sum(1 for _, is_open, _ in mine if is_open), recent
+    mine = [
+        (is_open, datetime.fromisoformat(made.replace("Z", "+00:00")))
+        for ref, is_open, made in pulls
+        if ref.startswith(BRANCH_PREFIX)
+    ]
+    taken = sum(1 for is_open, made in mine if is_open and now - made <= KEEP)
+    return taken, sum(1 for _, made in mine if made > now - timedelta(hours=24))
 
 
 def full(open_now: int, today: int) -> str | None:
@@ -169,7 +172,12 @@ def counts(github=_github) -> tuple[int, int] | None:
 
 
 def enabled(env: dict[str, str]) -> dict[str, Any]:
-    return {"enabled": bool(env.get(TOKEN_ENV)), "limit": MAX_OPEN, "daily": MAX_DAY, "minutes": 30}
+    return {
+        "enabled": bool(env.get(TOKEN_ENV)),
+        "limit": MAX_OPEN,
+        "daily": MAX_DAY,
+        "minutes": KEEP.seconds // 60,
+    }
 
 
 def open_request(
