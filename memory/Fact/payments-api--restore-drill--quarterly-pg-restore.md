@@ -2,7 +2,7 @@
 type: Fact
 name: payments-api--restore-drill--quarterly-pg-restore
 predicate: restore-drill
-status: active
+status: retracted
 value: quarterly-pg-restore
 ABOUT:
   - "[[Entity/payments-api]]"

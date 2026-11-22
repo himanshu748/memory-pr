@@ -2,7 +2,7 @@
 type: Fact
 name: payments-api--migration-tool--pg-migrate
 predicate: migration-tool
-status: active
+status: retracted
 value: pg-migrate
 ABOUT:
   - "[[Entity/payments-api]]"
