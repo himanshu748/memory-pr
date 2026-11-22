@@ -125,7 +125,7 @@ def test_a_good_draft_starts_the_workflow_with_the_token_and_only_strings():
     assert answer["branch"] == f"playground/{answer['id']}" and answer["state"] == "queued"
     assert answer["expected"] == {"blocked": True, "rules": ["contradiction"]}
     assert "not-a-real-token" not in json.dumps(answer)
-    (_, _, no_token, _), (method, path, token, body) = github.calls
+    (_, _, no_token, _), _, (method, path, token, body) = github.calls
     assert no_token is None  # pull requests are read with no token
     assert method == "POST" and path.endswith("/actions/workflows/playground-agent.yml/dispatches")
     assert token == "not-a-real-token"
@@ -144,6 +144,20 @@ def test_three_open_playground_pull_requests_is_the_limit():
     assert all(method == "GET" for method, *_ in github.calls)
     two = GitHub(**{"/pulls": (200, three[1:]), "/dispatches": (204, None)})
     assert open_request({"draft": MYSQL}, MEMORY, RULES, ON, two)["state"] == "queued"
+
+
+def test_one_pull_request_is_opened_at_a_time():
+    # GitHub cancels a waiting run when another joins the group, so a second is not sent.
+    for status in ("queued", "in_progress", "pending"):
+        runs = {"workflow_runs": [{"status": "completed"}, {"status": status}]}
+        github = GitHub(**{"/pulls": (200, []), "/runs": (200, runs)})
+        with pytest.raises(Refused) as refused:
+            open_request({"draft": MYSQL}, MEMORY, RULES, ON, github)
+        assert refused.value.status == 429 and "right now" in refused.value.message
+        assert all(method == "GET" for method, *_ in github.calls)
+    done = {"workflow_runs": [{"status": "completed"}]}
+    github = GitHub(**{"/pulls": (200, []), "/runs": (200, done), "/dispatches": (204, None)})
+    assert open_request({"draft": MYSQL}, MEMORY, RULES, ON, github)["state"] == "queued"
 
 
 def test_when_github_will_not_count_the_workflow_still_decides():

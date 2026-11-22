@@ -19,6 +19,8 @@ permissions:
   pull-requests: write
   actions: write
   issues: write
+# One at a time, so two runs cannot both take the last place. GitHub keeps only one waiting
+# run per group, which is why the server sends nothing while a run is unfinished.
 concurrency:
   group: playground-agent
   cancel-in-progress: false

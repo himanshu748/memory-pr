@@ -159,6 +159,9 @@ def open_request(
             f"{MAX_OPEN} playground pull requests are already open. "
             "They close after 30 minutes; try again then.",
         )
+    if _waiting(token, github):
+        # GitHub keeps one waiting run per concurrency group and cancels the one before it.
+        raise Refused(429, "Another pull request is being opened right now. Try again in a minute.")
     ident = secrets.token_hex(5)
     status, _ = github(
         "POST",
@@ -174,6 +177,16 @@ def open_request(
         "state": "queued",
         "expected": {"blocked": review["blocked"], "rules": review["rules"]},
     }
+
+
+def _waiting(token: str, github) -> bool:
+    """True when a run of the workflow has not finished. False when GitHub would not say."""
+    status, found = github(
+        "GET", f"/repos/{REPO}/actions/workflows/{WORKFLOW}/runs?per_page=10", token
+    )
+    if status != 200 or not isinstance(found, dict):
+        return False
+    return any(run.get("status") != "completed" for run in found.get("workflow_runs", []))
 
 
 def _run(ident: str, token: str | None, github) -> dict[str, Any] | None:

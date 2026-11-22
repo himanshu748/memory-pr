@@ -400,7 +400,8 @@ The guards:
   command.
 - At most three playground pull requests are open at once. The workflow decides; the
   server checks first to give a clear answer (429).
-- Runs of the workflow go one at a time, so two requests cannot both take the last place.
+- Runs of the workflow go one at a time, so two requests cannot both take the last place,
+  and the server sends nothing while a run is unfinished (429).
 - [`playground-cleanup`](.github/workflows/playground-cleanup.yml) runs every ten minutes
   and closes playground pull requests older than 30 minutes and deletes their branches.
 - Where the token is not set (preview deployments, a local copy) the endpoint answers

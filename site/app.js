@@ -1062,7 +1062,7 @@ const POLL_MS = 5000;
 const POLL_LIMIT = 60; // five minutes
 
 function openOnGithub(v) {
-  if (!github.enabled || v.github || whyNot(v.draft, play.landed, v.edited)) return;
+  if (!github.enabled || (v.github && v.github.state !== 'refused') || whyNot(v.draft, play.landed, v.edited)) return;
   const show = (state) => {
     v.github = state;
     if (play.view === v) renderPlay();
@@ -1348,7 +1348,7 @@ function outcomeHtml(c) {
     (problems ? `<ol class="problems">${problems}</ol>` : '') +
     (stale ? '<p class="adds">You changed the draft. Review it again.</p>' : serverLineHtml(v) + githubHtml(v)) +
     '<div class="outcome-actions">' +
-    (!stale && github.enabled && !v.github && !whyNot(v.draft, play.landed, v.edited) ? '<button type="button" class="btn" data-open-github>Open it on GitHub</button>' : '') +
+    (!stale && github.enabled && (!v.github || v.github.state === 'refused') && !whyNot(v.draft, play.landed, v.edited) ? '<button type="button" class="btn" data-open-github>Open it on GitHub</button>' : '') +
     (!blocked && !stale ? '<button type="button" class="btn primary" data-merge-pull>Merge into memory</button>' : '') +
     '<a class="btn" href="#explorer" data-open="yours">See it on the full graph</a></div>'
   );

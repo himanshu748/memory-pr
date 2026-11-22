@@ -169,11 +169,22 @@ def leftovers() -> set[str]:
 def test_a_query_that_needs_too_much_memory_is_stopped_and_the_server_carries_on(query_url):
     before = leftovers()
     status, body = fetch(query_url, {"cypher": RUNAWAY})
-    assert status == 422 and "was stopped" in body["error"]
+    # A slow machine reaches the 3 seconds before the 512 MB; both are our own JSON answer.
+    assert (status == 422 and "was stopped" in body["error"]) or (
+        status == 408 and "took longer" in body["error"]
+    )
     assert fetch(query_url, {"cypher": "RETURN 1 AS n"}) == (
         200,
         {"rows": [{"n": 1}], "row_count": 1, "truncated": False},
     )
+    assert leftovers() == before
+
+
+def test_the_memory_limit_alone_stops_a_query():
+    before = leftovers()
+    with pytest.raises(BadRequest) as stopped:
+        run_query(MEMORY, {"cypher": RUNAWAY}, time_limit=60, memory_limit=256 * 2**20)
+    assert stopped.value.status == 422 and "was stopped" in str(stopped.value)
     assert leftovers() == before
 
 
