@@ -7,8 +7,9 @@
   "play_open": "Write a memory yourself. Say payments-api uses mysql-8. Relate blocks it in the page.",
   "play_fix1": "Replace the old fact. Three facts rest on it, so the review still blocks.",
   "play_fix2": "Retract them. The review passes.",
-  "play_merge": "Merge. The page's memory now holds your fact.",
+  "play_github": "Now make it real: Open it on GitHub. The server starts one workflow and GitHub's bot opens it.",
+  "play_real": "A minute later it is a real pull request, and memory-review passed.",
+  "pr_real": "The same review, on the pull request the page just opened.",
   "live_stale": "A stale clone. Git merges it cleanly. The graph loses a note and its links.",
-  "live_cypher": "Ask it in Cypher. Relate runs inside the page as WebAssembly.",
-  "live_break": "Now write with Cypher. A second port for checkout-web. The review reruns and blocks."
+  "live_cypher": "Ask it in Cypher. Relate runs inside the page as WebAssembly."
 }
