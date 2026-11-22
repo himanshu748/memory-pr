@@ -338,7 +338,9 @@ function clusterLayout() {
     g.h = g.rows.reduce((t, r) => t + size(r).h, 0) + GAP * (g.rows.length - 1);
   }
   const area = groups.reduce((t, g) => t + (g.w + PAD) * (g.h + PAD), 0);
-  const width = Math.max(Math.sqrt(area * 1.6), ...groups.map((g) => g.w));
+  // Shaped like the canvas, so Whole graph fits a phone too.
+  const aspect = Math.min(2, Math.max(0.5, cy.width() / cy.height() || 1.6));
+  const width = Math.max(Math.sqrt(area * aspect), ...groups.map((g) => g.w));
   const place = (row, cx, y) => {
     const { w, h } = size(row);
     let x = cx - w / 2;
@@ -1824,7 +1826,7 @@ async function main() {
       after: pull.after,
     })),
   ];
-  cy = cytoscape({ container: $('cy'), style: STYLE, minZoom: 0.2, maxZoom: 3, boxSelectionEnabled: false });
+  cy = cytoscape({ container: $('cy'), style: STYLE, minZoom: 0.1, maxZoom: 3, boxSelectionEnabled: false });
   window.mempr = { cy, views, review: reviewDraft }; // for the curious, and for the check that the page agrees with mempr check
   wire();
   wireReal();
