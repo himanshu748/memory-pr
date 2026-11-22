@@ -374,7 +374,7 @@ td { font-family: var(--mono); font-size: 13px; }
 .server.differs { color: var(--bad); }
 .outcome .problems { margin: 0; }
 .outcome .problem { cursor: default; background: var(--surface); }
-.outcome-actions { display: flex; flex-wrap: wrap; gap: var(--s2); margin-top: auto; }
+.outcome-actions { display: flex; flex-wrap: wrap; gap: var(--s2); }
 .outcome-actions .btn { padding: 11px 18px; font-size: 15px; cursor: pointer; }
 .mine { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); padding-top: var(--s3); min-height: 20px; }
 .mine-item { display: inline-flex; align-items: center; gap: 10px; padding: 6px 14px; font-size: 13.5px; border-color: var(--rule); }
