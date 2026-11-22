@@ -210,10 +210,13 @@ def test_query_refuses_procedures_that_are_not_known_to_only_read(query_url, cyp
         "CALL db.labels() YIELD label RETURN label",
         "CALL { MATCH (f:Fact) RETURN count(f) AS n } RETURN n",
         "MATCH (f:`Fact`) RETURN count(f) AS `set`",
+        "RETURN $call AS value, $set AS other",
+        "MATCH (f:Fact) RETURN f.call AS call_me, count(f) AS n",
     ],
 )
 def test_query_allows_reading_procedures_and_subqueries(query_url, cypher):
-    status, body = fetch(query_url, {"cypher": cypher})
+    params = {"call": 1, "set": 2} if "$" in cypher else {}
+    status, body = fetch(query_url, {"cypher": cypher, "params": params})
     assert status == 200 and body["row_count"] >= 1
 
 
@@ -234,15 +237,33 @@ def test_a_result_that_is_too_large_is_refused(monkeypatch):
     assert refused.value.status == 413
 
 
+def test_the_server_reads_no_more_of_a_large_result_than_the_cap(query_url, monkeypatch):
+    big = "UNWIND range(1, 200) AS i RETURN reduce(s = '', j IN range(1, 5000) | s + 'xxxx') AS t"
+    kept = []
+    real = agentapi._run_child
+
+    def spy(*args):
+        code, output = real(*args)
+        kept.append(len(output))
+        return code, output
+
+    monkeypatch.setattr(agentapi, "_run_child", spy)
+    with pytest.raises(BadRequest) as refused:
+        run_query(MEMORY, {"cypher": big})
+    assert refused.value.status == 413
+    assert kept and kept[0] <= agentapi.MAX_RESULT
+    assert fetch(query_url, {"cypher": "RETURN 1 AS n"})[0] == 200
+
+
 def test_the_query_process_does_not_get_the_servers_secrets(monkeypatch):
     monkeypatch.setenv("GITHUB_DISPATCH_TOKEN", "not-a-real-token")
     seen = {}
-    real = subprocess.run
+    real = subprocess.Popen
 
     def spy(*args, **kwargs):
         seen.update(kwargs["env"])
         return real(*args, **kwargs)
 
-    monkeypatch.setattr(agentapi.subprocess, "run", spy)
+    monkeypatch.setattr(agentapi.subprocess, "Popen", spy)
     assert run_query(MEMORY, {"cypher": "RETURN 1 AS n"})["rows"] == [{"n": 1}]
-    assert "GITHUB_DISPATCH_TOKEN" not in seen
+    assert seen and "GITHUB_DISPATCH_TOKEN" not in seen

@@ -12,6 +12,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import threading
 from pathlib import Path
 from typing import Any
 
@@ -112,19 +113,12 @@ def run_query(
             "memory": memory_limit,
             "cpu": math.ceil(time_limit),
         }
-        try:
-            done = subprocess.run(
-                [sys.executable, "-m", "mempr.agentapi"],
-                input=json.dumps(request),
-                capture_output=True,
-                text=True,
-                timeout=time_limit,
-                env=_child_env(),
-                check=False,
-            )
-        except subprocess.TimeoutExpired:
-            raise BadRequest(f"the query took longer than {time_limit:g} seconds", 408) from None
-    if done.returncode != 0:
+        code, output = _run_child(json.dumps(request), time_limit)
+    if code == "slow":
+        raise BadRequest(f"the query took longer than {time_limit:g} seconds", 408)
+    if code == "large":
+        raise BadRequest(f"the result is larger than {MAX_RESULT // 1024} KB; return less", 413)
+    if code != 0:
         # Killed for its CPU time, or it ran out of the memory it is allowed.
         raise BadRequest(
             "the query was stopped: it needed more than "
@@ -132,9 +126,7 @@ def run_query(
             "Match less at once.",
             422,
         )
-    if len(done.stdout.encode("utf-8")) > MAX_RESULT:
-        raise BadRequest(f"the result is larger than {MAX_RESULT // 1024} KB; return less", 413)
-    answer = json.loads(done.stdout)
+    answer = json.loads(output.decode("utf-8"))
     if "error" in answer:
         raise BadRequest(f"Relate refused the query: {answer['error']}", 400)
     return {
@@ -142,6 +134,48 @@ def run_query(
         "row_count": len(answer["rows"]),
         "truncated": answer["truncated"],
     }
+
+
+def _run_child(request: str, time_limit: float) -> tuple[int | str, bytes]:
+    """Run the query process. Gives its exit code and output, or "slow" or "large".
+
+    At most MAX_RESULT bytes of its output are ever read: past that it is killed, so a
+    large result cannot fill this process's memory either.
+    """
+    child = subprocess.Popen(
+        [sys.executable, "-m", "mempr.agentapi"],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        env=_child_env(),
+    )
+    output = bytearray()
+    large = threading.Event()
+
+    def read() -> None:
+        while chunk := child.stdout.read1(64 * 1024):
+            if len(output) + len(chunk) > MAX_RESULT:
+                large.set()
+                child.kill()
+                return
+            output.extend(chunk)
+
+    reader = threading.Thread(target=read, daemon=True)
+    reader.start()
+    try:
+        child.stdin.write(request.encode("utf-8"))
+        child.stdin.close()
+        code: int | str = child.wait(timeout=time_limit)
+    except subprocess.TimeoutExpired:
+        code = "slow"
+    except BrokenPipeError:
+        code = 1
+    finally:
+        child.kill()
+        child.wait()
+        reader.join(timeout=5)
+        child.stdout.close()
+    return ("large" if large.is_set() else code), bytes(output)
 
 
 def _child_env() -> dict[str, str]:
