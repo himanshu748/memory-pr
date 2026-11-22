@@ -1,17 +1,21 @@
 name: memory-review
 description: >-
   Review a pull request as a change to a shared memory graph: install mempr from
-  this repository and run `mempr check`, which exits 1 when the merge would
-  damage the graph.
+  this repository, run `mempr check`, comment the review on the pull request, and
+  fail when the merge would damage the graph.
 inputs:
   base:
-    description: Base ref the change merges into (use an unqualified branch name or origin/<branch>).
+    description: >-
+      Base ref the change merges into (an unqualified branch name or origin/<branch>).
+      Defaults to the pull request's base branch, or origin/main outside a pull request.
     required: false
-    default: "origin/main"
+    default: ""
   head:
-    description: Revision carrying the change to review.
+    description: >-
+      Revision carrying the change to review. Defaults to the pull request's head commit,
+      or HEAD outside a pull request.
     required: false
-    default: "HEAD"
+    default: ""
   vault:
     description: Memory vault folder inside the repository.
     required: false
@@ -20,6 +24,16 @@ inputs:
     description: Extra rules file, read from the base ref.
     required: false
     default: "memory-rules.yaml"
+  comment:
+    description: >-
+      Post the review as a comment on the pull request and keep that one comment up to
+      date. Needs `pull-requests: write`; without it the review is still in the job summary.
+    required: false
+    default: "true"
+  github-token:
+    description: Token used to post the comment.
+    required: false
+    default: ${{ github.token }}
   python-version:
     description: Python version for mempr.
     required: false
@@ -34,15 +48,43 @@ runs:
       shell: bash
       run: pip install -q "${{ github.action_path }}"
     - name: Review the memory change
+      id: review
       shell: bash
       env:
-        MEMPR_BASE: ${{ inputs.base }}
-        MEMPR_HEAD: ${{ inputs.head }}
+        MEMPR_BASE: ${{ inputs.base || (github.base_ref && format('origin/{0}', github.base_ref)) || 'origin/main' }}
+        MEMPR_HEAD: ${{ inputs.head || github.event.pull_request.head.sha || 'HEAD' }}
         MEMPR_VAULT: ${{ inputs.vault }}
         MEMPR_RULES: ${{ inputs.rules }}
-      run: >-
-        mempr check
-        --base "$MEMPR_BASE"
-        --head "$MEMPR_HEAD"
-        --vault "$MEMPR_VAULT"
-        --rules "$MEMPR_RULES"
+      run: |
+        set +e
+        mempr --vault "$MEMPR_VAULT" check --base "$MEMPR_BASE" --head "$MEMPR_HEAD" \
+          --rules "$MEMPR_RULES" \
+          --out "$RUNNER_TEMP/mempr-comment.md"
+        echo "code=$?" >> "$GITHUB_OUTPUT"
+        if [ -f "$RUNNER_TEMP/mempr-comment.md" ]; then
+          cat "$RUNNER_TEMP/mempr-comment.md" >> "$GITHUB_STEP_SUMMARY"
+        fi
+    - name: Comment on the pull request
+      if: inputs.comment == 'true' && github.event.pull_request.number
+      # A fork's token cannot comment; the review is still in the job summary.
+      continue-on-error: true
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        PR: ${{ github.event.pull_request.number }}
+      run: |
+        [ -f "$RUNNER_TEMP/mempr-comment.md" ] || exit 0
+        id=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" --paginate \
+          -q '.[] | select(.body | startswith("<!-- mempr-review -->")) | .id' | tail -1)
+        if [ -n "$id" ]; then
+          gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$id" \
+            -F body=@"$RUNNER_TEMP/mempr-comment.md" -q .html_url
+        else
+          gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" \
+            -F body=@"$RUNNER_TEMP/mempr-comment.md" -q .html_url
+        fi
+    - name: Block the merge when the review found problems
+      shell: bash
+      env:
+        CODE: ${{ steps.review.outputs.code }}
+      run: exit "$CODE"
