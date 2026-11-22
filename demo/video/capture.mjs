@@ -222,7 +222,7 @@ await page.evaluate(() => {
 await caption('live_hero');
 await sleep(4400);
 
-// Write a memory: blocked, fixed in two clicks, merged.
+// Write a memory: blocked, fixed in two clicks, then opened on GitHub as a real pull request.
 await caption(null);
 await scrollTo('#write', 62);
 await caption('play_open');
@@ -242,12 +242,30 @@ await verdict(2100);
 await caption('play_fix2');
 await click('#outcome [data-draft-fix] >> nth=0');
 await verdict(1900);
-await caption('play_merge');
-await click('#outcome [data-merge-pull]');
-await verdict(1900);
+await caption('play_github');
+await ring('#outcome [data-open-github]', 6);
+await sleep(1500);
+await ring(null);
+await click('#outcome [data-open-github]');
+await sleep(2400);
+// GitHub takes about a minute to open it and run the review. That wait is cut.
+pause();
+const opened = '#outcome p.github';
+await page.waitForFunction((sel) => /memory-review passed/.test(document.querySelector(sel)?.innerText ?? ''), opened, { timeout: 240000 });
+const real = await page.locator(`${opened} a`).first().getAttribute('href');
+roll();
+await caption('play_real');
+await ring(opened, 6);
+await sleep(3400);
+await ring(null);
+await open(real, github);
+await page.locator(review).last().evaluate((node) => scrollTo({ top: node.getBoundingClientRect().top + scrollY - 40, behavior: 'instant' }));
+await ring(`${review} >> nth=-1`, 4);
+await caption('pr_real');
+await sleep(3800);
 
 // The scripted pull requests: a stale clone that git merges cleanly.
-await caption(null);
+await open(SITE, () => page.waitForSelector('#engine.ok'));
 await scrollTo('#views', 62);
 await click('#views button:has-text("Auditor")');
 await scrollTo('.layout', 66);
@@ -257,7 +275,7 @@ await ring('#review .problems', 4);
 await sleep(3900);
 await ring(null);
 
-// Cypher in the page, then a write that makes the review fail.
+// Cypher in the page.
 await click('#views button >> nth=0');
 await caption(null);
 await scrollTo('#console .hint', 74); // the query box and its result both fit above the caption
@@ -266,13 +284,6 @@ await click('#examples button:has-text("What rests on the Postgres fact")');
 await sleep(1300);
 await ring('#result', 4);
 await sleep(2400);
-await ring(null);
-await caption('live_break');
-await click('#examples button:has-text("Break it")');
-await sleep(500);
-await scrollTo('#review', 76);
-await ring('#review .problems', 4);
-await sleep(3600);
 await ring(null);
 
 await card('relate', 5000);
