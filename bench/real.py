@@ -27,6 +27,7 @@ from mempr.vault import open_vault, rows
 
 ROOT = Path(__file__).resolve().parent.parent
 REPOS = Path(__file__).with_name("repos.txt")
+LABELS = {"Agent", "Entity", "Fact", "Source"}
 
 
 def _files(graph: dict, root: Path, keep: str | None = None) -> None:
@@ -61,16 +62,21 @@ def main() -> None:
     token = os.environ.get("GITHUB_READ_TOKEN")
     done, failed = run(repos, args.months, token)
 
+    if not done:
+        raise SystemExit("no repository could be read; the vault and report are unchanged")
     vault = Path(args.vault)
-    shutil.rmtree(vault, ignore_errors=True)
+    if vault.exists() and not {p.name for p in vault.iterdir()} <= LABELS:
+        raise SystemExit(f"{vault} holds files other than a memory vault; pick another --vault")
     with tempfile.TemporaryDirectory() as tmp:
-        before, stale = Path(tmp, "before"), Path(tmp, "stale")
+        before, stale, fresh = Path(tmp, "before"), Path(tmp, "stale"), Path(tmp, "fixed")
         for r in done:
             _files(r["before"], before)
             _files(r["after"], stale)
-            _files(r["fixed_after"], vault)
+            _files(r["fixed_after"], fresh)
         whole = review_vaults(before, stale, default_rules())
-        fixed = review_vaults(before, vault, default_rules())
+        fixed = review_vaults(before, fresh, default_rules())
+        shutil.rmtree(vault, ignore_errors=True)
+        shutil.copytree(fresh, vault)
     with open_vault(vault) as conn:
         superseded = rows(conn, "MATCH (:Fact)-[:SUPERSEDES]->(o:Fact) RETURN count(o) AS n")
         facts = rows(conn, "MATCH (f:Fact) RETURN count(f) AS n")
