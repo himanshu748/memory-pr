@@ -44,7 +44,7 @@ def _ours(handler: dict) -> bool:
     if len(words) < 6 or words[-5::2] != ["--repo", "--vault", "hook"]:
         return False
     exe = PureWindowsPath(words[-6])
-    return exe.stem.lower() == "mempr" and exe.suffix.lower() in ("", ".exe")
+    return exe.stem.lower() == "mempr" and exe.suffix.lower() in ("", ".exe", ".cmd", ".bat")
 
 
 def _hook(data: dict, cmd: list[str], repo: Path, vault: str) -> None:
