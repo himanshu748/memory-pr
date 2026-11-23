@@ -9,9 +9,9 @@ CMD = ["mempr"]
 
 
 def test_setup_writes_each_agent_config_and_keeps_what_was_there(repo):
-    servers = {"other": {"command": "x"}, "memory": {"command": "old", "env": {"A": "1"}}}
+    servers = {"other": {"command": "x"}, "memory": {"type": "http", "url": "u", "env": {"A": "1"}}}
     (repo.path / ".mcp.json").write_text(json.dumps({"mcpServers": servers}))
-    other = {"type": "command", "command": "lint-on-edit"}
+    other = {"type": "command", "command": "python tools/mempr_audit.py --repo . hook"}
     claude = repo.path / ".claude"
     claude.mkdir()
     (claude / "settings.json").write_text(
@@ -24,6 +24,7 @@ def test_setup_writes_each_agent_config_and_keeps_what_was_there(repo):
     assert set(mcp["mcpServers"]) == {"other", "memory"}
     assert mcp["mcpServers"]["memory"]["args"][-1] == "mcp"
     assert mcp["mcpServers"]["memory"]["env"] == {"A": "1"}
+    assert "url" not in mcp["mcpServers"]["memory"]
     assert str(repo.path.resolve()) in mcp["mcpServers"]["memory"]["args"]
     cursor = json.loads((repo.path / ".cursor" / "mcp.json").read_text())
     assert cursor["mcpServers"]["memory"]["args"] == mcp["mcpServers"]["memory"]["args"]

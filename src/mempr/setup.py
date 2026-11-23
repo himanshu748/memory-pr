@@ -30,13 +30,18 @@ def _merge(path: Path, update) -> None:
 
 def _server(data: dict, cmd: list[str], repo: Path, vault: str) -> None:
     args = cmd[1:] + ["--repo", str(repo), "--vault", vault, "mcp"]
-    entry = data.setdefault("mcpServers", {}).setdefault("memory", {})
-    entry.update(command=cmd[0], args=args)
+    servers = data.setdefault("mcpServers", {})
+    env = servers.get("memory", {}).get("env")
+    servers["memory"] = {"command": cmd[0], "args": args, **({"env": env} if env else {})}
 
 
 def _ours(handler: dict) -> bool:
-    command = handler.get("command", "")
-    return "mempr" in command and command.endswith(" hook")
+    try:
+        words = shlex.split(handler.get("command", ""))
+    except ValueError:
+        return False
+    named = any(Path(w).name == "mempr" for w in words)
+    return named and words[-1:] == ["hook"] and "--repo" in words
 
 
 def _hook(data: dict, cmd: list[str], repo: Path, vault: str) -> None:
