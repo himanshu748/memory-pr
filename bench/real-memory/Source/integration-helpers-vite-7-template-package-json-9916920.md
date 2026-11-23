@@ -1,0 +1,7 @@
+---
+type: Source
+name: integration-helpers-vite-7-template-package-json-9916920
+uri: "https://github.com/remix-run/react-router/blob/9916920a490c018eb78d7cc8c55a0efd6e9feac9/integration/helpers/vite-7-template/package.json"
+---
+
+
