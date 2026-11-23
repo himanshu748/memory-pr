@@ -229,6 +229,23 @@ it is reviewed with.
 
 ## Use it from an agent
 
+One command, run in the repository that holds `memory/`:
+
+```bash
+mempr setup            # or: --agent claude / cursor / codex
+```
+
+It adds the MCP server below to `.mcp.json` (Claude Code) and `.cursor/mcp.json` (Cursor),
+copies the [skill](#a-skill-for-coding-agents) into `.claude/skills/`, prints the
+`codex mcp add` line for Codex, and adds a Claude Code `PreToolUse` hook: before an agent
+edits a file, `mempr hook` recalls what the memory knows about the entity the file belongs
+to (`services/payments-api/db.go` gets the `payments-api` facts, each with its source) and
+hands it to the agent as context. The hook never blocks an edit, and says nothing when
+nothing is known. Existing entries in those files are kept; running it twice changes
+nothing.
+
+To configure it by hand instead:
+
 `mempr mcp` is an [MCP](https://modelcontextprotocol.io) server over stdio, so Claude Code,
 Cursor, Devin or any other MCP client can use the memory while it works. Add it to the
 client's MCP config (`.mcp.json` for Claude Code, `.cursor/mcp.json` for Cursor), with the

@@ -91,6 +91,28 @@ def cmd_mcp(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_setup(args: argparse.Namespace) -> int:
+    from .setup import AGENTS, setup
+
+    agents = list(AGENTS) if not args.agent or "all" in args.agent else args.agent
+    for line in setup(_repo(args), args.vault, agents):
+        print(line)
+    return 0
+
+
+def cmd_hook(args: argparse.Namespace) -> int:
+    # A hook must never stop the agent: any failure is silence.
+    from .setup import recall_for_edit
+
+    try:
+        out = recall_for_edit(_vault(args), json.loads(sys.stdin.read() or "{}"))
+    except Exception:  # noqa: BLE001
+        return 0
+    if out:
+        print(json.dumps(out))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="mempr", description="Pull requests for agent memory, checked with Relate."
@@ -140,6 +162,18 @@ def build_parser() -> argparse.ArgumentParser:
     mcp.add_argument("--rules", default="memory-rules.yaml", help="extra rules file on the base")
     mcp.add_argument("--remote", default="origin", help="remote that pull requests are pushed to")
     mcp.set_defaults(func=cmd_mcp)
+
+    setup = sub.add_parser("setup", help="add the memory to Claude Code, Cursor or Codex")
+    setup.add_argument(
+        "--agent",
+        action="append",
+        choices=["claude", "cursor", "codex", "all"],
+        help="agent to set up (repeatable; default: all)",
+    )
+    setup.set_defaults(func=cmd_setup, agent=None)
+
+    hook = sub.add_parser("hook", help="Claude Code PreToolUse hook: recall before an edit")
+    hook.set_defaults(func=cmd_hook)
     return parser
 
 

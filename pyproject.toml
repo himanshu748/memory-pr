@@ -21,7 +21,7 @@ mempr = "mempr.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-mempr = ["*.yaml"]
+mempr = ["*.yaml", "SKILL.md"]
 
 [tool.ruff]
 line-length = 100
