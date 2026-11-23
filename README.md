@@ -14,6 +14,18 @@ memory-pr gives a team of agents one shared memory that is reviewed like code:
   cannot be merged.
 
 Built for the [Relate by Neo4j hackathon](https://relate.devpost.com/).
+[Live page](https://memory-pr.vercel.app/) · [Demo video](https://youtu.be/z1qjJQhkVJ0) ·
+[Devpost](https://devpost.com/software/memory-pr-pull-requests-for-agent-memory)
+
+## For judges
+
+| Criterion | Where to see it |
+| --- | --- |
+| Relate and connected context (30) | The store is the Markdown vault [`memory/`](memory/), opened by Relate in `directory` mode; facts link to the entity they are `ABOUT`, the agent they are `ASSERTED_BY`, their `SOURCE`, and the facts they `SUPERSEDES` or are `DERIVED_FROM`. Every review rule is Cypher ([`default_rules.yaml`](src/mempr/default_rules.yaml)), run by Relate in CI, on the server and in the page (WebAssembly). [`bench/real-memory/`](bench/real-memory/) is a second store: 590 real facts from 50 public repositories. |
+| Functionality and completeness (25) | A required GitHub check ([`action.yml`](action.yml)) that blocks pull requests [#15](https://github.com/himanshu748/memory-pr/pull/15) and passes [#6](https://github.com/himanshu748/memory-pr/pull/6); an [MCP server](#use-it-from-an-agent); a [backend](#backend); the [live page](https://memory-pr.vercel.app/), which reviews any public GitHub repository and can open a real pull request here. 240 tests run in CI. |
+| Usefulness (20) | [On 50 popular public repositories](#measured-on-50-real-repositories), 154 of the 328 facts an agent would have learned a year ago are wrong today; the check blocks all 154 until the new fact replaces the old one. On [300 simulated pull requests](#measured-result) it cuts wrong facts left in memory from 21 to 1. |
+| Documentation and reproducibility (15) | [Try it in two minutes](#try-it-in-two-minutes) (nothing to install, or `pip install -e ".[dev]" && pytest -q`); both measurements are rerun by one command each, and their raw numbers are committed in [`docs/`](docs/). |
+| Creativity (10) | Agent memory reviewed the way code is: each change is a pull request, and the check reads it as a graph, so it catches damage git calls a clean merge ([why a text diff is not enough](#why-a-text-diff-is-not-enough)). |
 
 ## How it uses Relate
 
@@ -103,6 +115,34 @@ Two repository settings make this work, both set once by the owner:
   create and approve pull requests", so the agent workflow can open its pull request.
 - **Settings → Branches**: protect `main` and require the `memory-review` status check,
   so a blocked pull request cannot be merged.
+
+## Measured on 50 real repositories
+
+An agent's memory of 50 popular public GitHub repositories (Go, Rust, Python, Node and
+Docker projects, from `tokio` and `fastapi` to `gitea` and `opentelemetry-demo`), learned
+from their real files a year ago and compared with what the same files say today:
+
+| | |
+| --- | --- |
+| Repositories read | 50 |
+| Facts learned a year ago | 328 |
+| Of those, wrong today | 154 (47%), in 36 repositories |
+| Wrong facts the check blocked | 154 |
+| Blocked after each new fact `SUPERSEDES` the old one | 0 |
+
+Typical moves: `fastapi` now requires Python 3.11 instead of 3.8, `n8n` Node 24 instead of
+22.16, `traefik` builds on Alpine 3.24 instead of 3.22. Each fact links to the file at the
+commit it was read from.
+
+Reproduce: `GITHUB_READ_TOKEN=$(gh auth token) python bench/real.py` (a few minutes; the
+repositories are listed in [`bench/repos.txt`](bench/repos.txt), and the numbers change as
+the repositories do). Per-repository results, with every changed value and both source
+links, are in [`docs/real-repos.json`](docs/real-repos.json); the memory itself, with each
+new fact superseding the stale one, is the Relate vault [`bench/real-memory/`](bench/real-memory/):
+
+```bash
+mempr --vault bench/real-memory query "MATCH (new:Fact)-[:SUPERSEDES]->(old:Fact) RETURN old.value, new.value LIMIT 5"
+```
 
 ## Measured result
 

@@ -1,0 +1,15 @@
+---
+type: Fact
+name: n8n-packages-n8n-benchmark--node-engine--22-16
+predicate: "node-engine"
+status: "active"
+value: ">=22.16"
+ABOUT:
+  - "[[Entity/n8n-packages-n8n-benchmark]]"
+ASSERTED_BY:
+  - "[[Agent/scout]]"
+SOURCE:
+  - "[[Source/packages-n8n-benchmark-package-json-e203b0a]]"
+---
+
+n8n-packages-n8n-benchmark node-engine: >=22.16

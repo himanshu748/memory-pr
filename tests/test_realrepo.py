@@ -159,3 +159,9 @@ def test_long_values_that_differ_late_stay_distinct():
     first = extract("Dockerfile", f"FROM {long}:1\n")[0][1]
     second = extract("Dockerfile", f"FROM {long}:2\n")[0][1]
     assert len(first) == len(second) == 120 and first != second
+
+
+def test_qualified_entities_name_the_repository():
+    assert entity_of("o/shop", "frontend/Dockerfile") == "frontend"
+    assert entity_of("o/shop", "frontend/Dockerfile", qualify=True) == "shop-frontend"
+    assert entity_of("o/shop", "go.mod", qualify=True) == "shop"
