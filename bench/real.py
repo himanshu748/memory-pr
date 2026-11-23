@@ -27,7 +27,7 @@ from mempr.vault import open_vault, rows
 
 ROOT = Path(__file__).resolve().parent.parent
 REPOS = Path(__file__).with_name("repos.txt")
-LABELS = {"Agent", "Entity", "Fact", "Predicate", "Source", "index.md"}
+LABELS = {"Agent", "Entity", "Fact", "Predicate", "Source", "index.md", ".relate"}
 
 
 def _files(graph: dict, root: Path, keep: str | None = None) -> None:
@@ -65,7 +65,7 @@ def main() -> None:
     if not done:
         raise SystemExit("no repository could be read; the vault and report are unchanged")
     vault = Path(args.vault)
-    if vault.exists() and not {p.name for p in vault.iterdir() if p.name[0] != "."} <= LABELS:
+    if vault.exists() and not {p.name for p in vault.iterdir()} <= LABELS:
         raise SystemExit(f"{vault} holds files other than a memory vault; pick another --vault")
     with tempfile.TemporaryDirectory() as tmp:
         before, stale, fresh = Path(tmp, "before"), Path(tmp, "stale"), Path(tmp, "fixed")
