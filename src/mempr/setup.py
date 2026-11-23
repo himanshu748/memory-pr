@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import shlex
 import shutil
 from pathlib import Path, PurePosixPath
 from typing import Any
@@ -29,18 +30,21 @@ def _merge(path: Path, update) -> None:
 
 def _server(data: dict, cmd: list[str], repo: Path, vault: str) -> None:
     args = cmd[1:] + ["--repo", str(repo), "--vault", vault, "mcp"]
-    data.setdefault("mcpServers", {})["memory"] = {"command": cmd[0], "args": args}
+    entry = data.setdefault("mcpServers", {}).setdefault("memory", {})
+    entry.update(command=cmd[0], args=args)
 
 
 def _ours(handler: dict) -> bool:
     command = handler.get("command", "")
-    return "mempr" in command and command.endswith('"hook"')
+    return "mempr" in command and command.endswith(" hook")
 
 
 def _hook(data: dict, cmd: list[str], repo: Path, vault: str) -> None:
-    line = " ".join(json.dumps(c) for c in cmd + ["--repo", str(repo), "--vault", vault, "hook"])
+    line = shlex.join(cmd + ["--repo", str(repo), "--vault", vault, "hook"])
     groups = data.setdefault("hooks", {}).setdefault("PreToolUse", [])
-    groups[:] = [g for g in groups if not any(_ours(h) for h in g.get("hooks", []))]
+    for group in groups:
+        group["hooks"] = [h for h in group.get("hooks", []) if not _ours(h)]
+    groups[:] = [g for g in groups if g["hooks"]]
     groups.append({"matcher": EDITS, "hooks": [{"type": "command", "command": line}]})
 
 
@@ -63,7 +67,7 @@ def setup(repo: Path, vault: str, agents: list[str], cmd: list[str] | None = Non
         _merge(repo / ".cursor" / "mcp.json", lambda d: _server(d, cmd, repo, vault))
         done.append("Cursor: MCP server in .cursor/mcp.json")
     if "codex" in agents:
-        args = " ".join(cmd + ["--repo", str(repo), "--vault", vault, "mcp"])
+        args = shlex.join(cmd + ["--repo", str(repo), "--vault", vault, "mcp"])
         done.append(f"Codex: run `codex mcp add memory -- {args}` (Codex keeps it in ~/.codex)")
     return done
 
