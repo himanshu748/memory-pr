@@ -40,8 +40,11 @@ def _ours(handler: dict) -> bool:
         words = shlex.split(handler.get("command", ""))
     except ValueError:
         return False
-    named = any(PureWindowsPath(w).stem.lower() == "mempr" for w in words)
-    return named and words[-1:] == ["hook"] and "--repo" in words
+    # Exactly the shape _hook writes: <...> mempr --repo R --vault V hook
+    if len(words) < 6 or words[-5::2] != ["--repo", "--vault", "hook"]:
+        return False
+    exe = PureWindowsPath(words[-6])
+    return exe.stem.lower() == "mempr" and exe.suffix.lower() in ("", ".exe")
 
 
 def _hook(data: dict, cmd: list[str], repo: Path, vault: str) -> None:

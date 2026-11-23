@@ -11,7 +11,7 @@ CMD = ["mempr"]
 def test_setup_writes_each_agent_config_and_keeps_what_was_there(repo):
     servers = {"other": {"command": "x"}, "memory": {"type": "http", "url": "u", "env": {"A": "1"}}}
     (repo.path / ".mcp.json").write_text(json.dumps({"mcpServers": servers}))
-    other = {"type": "command", "command": "python tools/mempr_audit.py --repo . hook"}
+    other = {"type": "command", "command": "python tools/mempr.py --repo . --vault m hook"}
     claude = repo.path / ".claude"
     claude.mkdir()
     (claude / "settings.json").write_text(
