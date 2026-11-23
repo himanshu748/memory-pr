@@ -150,18 +150,23 @@ def _short(value: str) -> str:
     return f"{value[:111]}~{hashlib.sha1(value.encode()).hexdigest()[:8]}"
 
 
-def entity_of(repo: str, path: str) -> str:
+def entity_of(repo: str, path: str, qualify: bool = False) -> str:
     folder = path.rsplit("/", 1)[0] if "/" in path else ""
-    return slug(folder) or slug(repo.split("/", 1)[1])
+    name = repo.split("/", 1)[1]
+    if qualify:
+        return slug(f"{name}-{folder}" if folder else name)
+    return slug(folder) or slug(name)
 
 
-def _snapshot(repo: str, commit: dict[str, str], texts: dict[str, str]) -> list[dict[str, str]]:
+def _snapshot(
+    repo: str, commit: dict[str, str], texts: dict[str, str], qualify: bool = False
+) -> list[dict[str, str]]:
     facts = []
     for path in sorted(texts):
         for predicate, value in extract(path, texts[path]):
             facts.append(
                 {
-                    "entity": entity_of(repo, path),
+                    "entity": entity_of(repo, path, qualify),
                     "predicate": predicate,
                     "value": value,
                     "path": path,
@@ -244,8 +249,13 @@ def learn(
     *,
     token: str | None = None,
     fetch: Fetch | None = None,
+    qualify: bool = False,
 ) -> dict[str, Any]:
-    """The review of what changed in `repo` over the last `months`, read from GitHub."""
+    """The review of what changed in `repo` over the last `months`, read from GitHub.
+
+    `qualify` names entities after the repository too, so several repositories can share
+    one memory without two `frontend` folders becoming one entity.
+    """
     if not isinstance(repo, str) or not REPO.match(repo.strip()):
         raise RepoError(422, "repo must look like owner/name")
     repo = repo.strip()
@@ -308,8 +318,8 @@ def learn(
         for sha, path, text in pool.map(raw, [(s, p) for s, ps in paths.items() for p in ps]):
             texts[sha][path] = text
 
-    then = _snapshot(repo, old, texts[old["sha"]])
-    now = _snapshot(repo, head, texts[head["sha"]])
+    then = _snapshot(repo, old, texts[old["sha"]], qualify)
+    now = _snapshot(repo, head, texts[head["sha"]], qualify)
     held = {fact_name(f["entity"], f["predicate"], f["value"]): f["value"] for f in then}
     for f in then:
         f["name"] = fact_name(f["entity"], f["predicate"], f["value"])

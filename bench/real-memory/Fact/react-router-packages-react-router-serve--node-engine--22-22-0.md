@@ -1,0 +1,17 @@
+---
+type: Fact
+name: react-router-packages-react-router-serve--node-engine--22-22-0
+predicate: "node-engine"
+status: "active"
+value: ">=22.22.0"
+ABOUT:
+  - "[[Entity/react-router-packages-react-router-serve]]"
+ASSERTED_BY:
+  - "[[Agent/builder]]"
+SOURCE:
+  - "[[Source/packages-react-router-serve-package-json-9916920]]"
+SUPERSEDES:
+  - "[[Fact/react-router-packages-react-router-serve--node-engine--20-0-0]]"
+---
+
+react-router-packages-react-router-serve node-engine: >=22.22.0

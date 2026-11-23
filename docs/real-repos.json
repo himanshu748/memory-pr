@@ -1,0 +1,2185 @@
+{
+ "months": 12,
+ "repos": 50,
+ "read": 50,
+ "with_facts": 49,
+ "with_changes": 36,
+ "facts_in_memory": 590,
+ "facts_learned_then": 328,
+ "facts_changed": 154,
+ "superseded_in_vault": 154,
+ "blocked_stale": true,
+ "blocking_findings_stale": 154,
+ "blocked_fixed": false,
+ "failed": [],
+ "results": [
+  {
+   "repo": "alacritty/alacritty",
+   "old": {
+    "sha": "6ea359d369c117bf7d196ccaf25a030242b454f2",
+    "date": "2025-11-17T22:32:53Z",
+    "url": "https://github.com/alacritty/alacritty/commit/6ea359d369c117bf7d196ccaf25a030242b454f2"
+   },
+   "head": {
+    "sha": "791efff6d74c66bee390c259e322626ca93aadb6",
+    "date": "2026-11-18T15:50:57Z",
+    "url": "https://github.com/alacritty/alacritty/commit/791efff6d74c66bee390c259e322626ca93aadb6"
+   },
+   "learned": 2,
+   "proposed": 0,
+   "blocked": false,
+   "fixed_blocked": false,
+   "changed": []
+  },
+  {
+   "repo": "appwrite/appwrite",
+   "old": {
+    "sha": "abe1257bd5e12c41d594cd34c965043d330ea2c9",
+    "date": "2025-11-21T14:47:59Z",
+    "url": "https://github.com/appwrite/appwrite/commit/abe1257bd5e12c41d594cd34c965043d330ea2c9"
+   },
+   "head": {
+    "sha": "246edb48cd793830df7355c6e44d656e4ae3835c",
+    "date": "2026-11-23T04:17:10Z",
+    "url": "https://github.com/appwrite/appwrite/commit/246edb48cd793830df7355c6e44d656e4ae3835c"
+   },
+   "learned": 1,
+   "proposed": 7,
+   "blocked": false,
+   "fixed_blocked": false,
+   "changed": []
+  },
+  {
+   "repo": "astral-sh/ruff",
+   "old": {
+    "sha": "d24c891a4b8663abe8abb98eae30f5a0065af940",
+    "date": "2025-11-22T17:42:56Z",
+    "url": "https://github.com/astral-sh/ruff/commit/d24c891a4b8663abe8abb98eae30f5a0065af940"
+   },
+   "head": {
+    "sha": "665c624babc8356d5fc6cca3763b2cfa5294b272",
+    "date": "2026-11-23T03:38:04Z",
+    "url": "https://github.com/astral-sh/ruff/commit/665c624babc8356d5fc6cca3763b2cfa5294b272"
+   },
+   "learned": 7,
+   "proposed": 1,
+   "blocked": true,
+   "fixed_blocked": false,
+   "changed": [
+    {
+     "entity": "ruff",
+     "predicate": "rust-version",
+     "old": "1.89",
+     "new": "1.98",
+     "old_url": "https://github.com/astral-sh/ruff/blob/d24c891a4b8663abe8abb98eae30f5a0065af940/Cargo.toml",
+     "new_url": "https://github.com/astral-sh/ruff/blob/665c624babc8356d5fc6cca3763b2cfa5294b272/Cargo.toml"
+    }
+   ]
+  },
+  {
+   "repo": "astral-sh/uv",
+   "old": {
+    "sha": "7b8240dca9cd267b41903672dda4cff6cce08c4f",
+    "date": "2025-11-21T21:44:05Z",
+    "url": "https://github.com/astral-sh/uv/commit/7b8240dca9cd267b41903672dda4cff6cce08c4f"
+   },
+   "head": {
+    "sha": "264d8b4a5e10d195d2cc2a34dffa807cfbe6298c",
+    "date": "2026-11-21T17:23:51Z",
+    "url": "https://github.com/astral-sh/uv/commit/264d8b4a5e10d195d2cc2a34dffa807cfbe6298c"
+   },
+   "learned": 5,
+   "proposed": 1,
+   "blocked": true,
+   "fixed_blocked": false,
+   "changed": [
+    {
+     "entity": "uv",
+     "predicate": "rust-version",
+     "old": "1.89",
+     "new": "1.98.0",
+     "old_url": "https://github.com/astral-sh/uv/blob/7b8240dca9cd267b41903672dda4cff6cce08c4f/Cargo.toml",
+     "new_url": "https://github.com/astral-sh/uv/blob/264d8b4a5e10d195d2cc2a34dffa807cfbe6298c/Cargo.toml"
+    }
+   ]
+  },
+  {
+   "repo": "BurntSushi/ripgrep",
+   "old": {
+    "sha": "57c190d56eedac90c061a238b63dbfed434fee50",
+    "date": "2025-10-30T17:30:14Z",
+    "url": "https://github.com/BurntSushi/ripgrep/commit/57c190d56eedac90c061a238b63dbfed434fee50"
+   },
+   "head": {
+    "sha": "4a51093f78bfbef86d89275f4916fd6b6039fe9e",
+    "date": "2026-11-22T23:03:56Z",
+    "url": "https://github.com/BurntSushi/ripgrep/commit/4a51093f78bfbef86d89275f4916fd6b6039fe9e"
+   },
+   "learned": 12,
+   "proposed": 3,
+   "blocked": true,
+   "fixed_blocked": false,
+   "changed": [
+    {
+     "entity": "ripgrep",
+     "predicate": "rust-version",
+     "old": "1.85",
+     "new": "1.96",
+     "old_url": "https://github.com/BurntSushi/ripgrep/blob/57c190d56eedac90c061a238b63dbfed434fee50/Cargo.toml",
+     "new_url": "https://github.com/BurntSushi/ripgrep/blob/4a51093f78bfbef86d89275f4916fd6b6039fe9e/Cargo.toml"
+    }
+   ]
+  },
+  {
+   "repo": "caddyserver/caddy",
+   "old": {
+    "sha": "2cb426776c091febccc6b9a6669f1c5a745648a4",
+    "date": "2025-11-21T22:30:26Z",
+    "url": "https://github.com/caddyserver/caddy/commit/2cb426776c091febccc6b9a6669f1c5a745648a4"
+   },
+   "head": {
+    "sha": "edcdfa0ed88f7dcc1c53720d25218fde9d63eb1e",
+    "date": "2026-11-19T07:04:44Z",
+    "url": "https://github.com/caddyserver/caddy/commit/edcdfa0ed88f7dcc1c53720d25218fde9d63eb1e"
+   },
+   "learned": 1,
+   "proposed": 1,
+   "blocked": true,
+   "fixed_blocked": false,
+   "changed": [
+    {
+     "entity": "caddy",
+     "predicate": "go-version",
+     "old": "1.25",
+     "new": "1.26.0",
+     "old_url": "https://github.com/caddyserver/caddy/blob/2cb426776c091febccc6b9a6669f1c5a745648a4/go.mod",
+     "new_url": "https://github.com/caddyserver/caddy/blob/edcdfa0ed88f7dcc1c53720d25218fde9d63eb1e/go.mod"
+    }
+   ]
+  },
+  {
+   "repo": "calcom/cal.diy",
+   "old": {
+    "sha": "8e1a0999d2ffba50c269488828e4c72edbba37cb",
+    "date": "2025-11-22T15:49:28Z",
+    "url": "https://github.com/calcom/cal.diy/commit/8e1a0999d2ffba50c269488828e4c72edbba37cb"
+   },
+   "head": {
+    "sha": "ae027bb70e694e2d2c44569f398d6cbcee0389b1",
+    "date": "2026-11-13T19:35:06Z",
+    "url": "https://github.com/calcom/cal.diy/commit/ae027bb70e694e2d2c44569f398d6cbcee0389b1"
+   },
+   "learned": 4,
+   "proposed": 3,
+   "blocked": true,
+   "fixed_blocked": false,
+   "changed": [
+    {
+     "entity": "cal-diy",
+     "predicate": "base-image",
+     "old": "node:20",
+     "new": "node:22",
+     "old_url": "https://github.com/calcom/cal.diy/blob/8e1a0999d2ffba50c269488828e4c72edbba37cb/Dockerfile",
+     "new_url": "https://github.com/calcom/cal.diy/blob/ae027bb70e694e2d2c44569f398d6cbcee0389b1/Dockerfile"
+    },
+    {
+     "entity": "cal-diy-apps-api-v2",
+     "predicate": "base-image",
+     "old": "node:20-alpine",
+     "new": "node:22-alpine",
+     "old_url": "https://github.com/calcom/cal.diy/blob/8e1a0999d2ffba50c269488828e4c72edbba37cb/apps/api/v2/Dockerfile",
+     "new_url": "https://github.com/calcom/cal.diy/blob/ae027bb70e694e2d2c44569f398d6cbcee0389b1/apps/api/v2/Dockerfile"
+    },
+    {
+     "entity": "cal-diy",
+     "predicate": "package-manager",
+     "old": "yarn@3.4.1",
+     "new": "yarn@4.12.0",
+     "old_url": "https://github.com/calcom/cal.diy/blob/8e1a0999d2ffba50c269488828e4c72edbba37cb/package.json",
+     "new_url": "https://github.com/calcom/cal.diy/blob/ae027bb70e694e2d2c44569f398d6cbcee0389b1/package.json"
+    }
+   ]
+  },
+  {
+   "repo": "denoland/deno",
+   "old": {
+    "sha": "355d8994b2ab3b4979214d6d47ed70e39a37a92c",
+    "date": "2025-11-22T02:27:04Z",
+    "url": "https://github.com/denoland/deno/commit/355d8994b2ab3b4979214d6d47ed70e39a37a92c"
+   },
+   "head": {
+    "sha": "d8c551b5a5b46d8ec3892a91d0364cfcbca2c681",
+    "date": "2026-11-17T15:44:23Z",
+    "url": "https://github.com/denoland/deno/commit/d8c551b5a5b46d8ec3892a91d0364cfcbca2c681"
+   },
+   "learned": 2,
+   "proposed": 0,
+   "blocked": false,
+   "fixed_blocked": false,
+   "changed": []
+  },
+  {
+   "repo": "docker/awesome-compose",
+   "old": {
+    "sha": "18f59bdb09ecf520dd5758fbf90dec314baec545",
+    "date": "2024-05-18T09:08:07Z",
+    "url": "https://github.com/docker/awesome-compose/commit/18f59bdb09ecf520dd5758fbf90dec314baec545"
+   },
+   "head": {
+    "sha": "503c0dcef31b07fb77b2d4c5556bfafdf86f4f1a",
+    "date": "2026-11-19T06:56:28Z",
+    "url": "https://github.com/docker/awesome-compose/commit/503c0dcef31b07fb77b2d4c5556bfafdf86f4f1a"
+   },
+   "learned": 20,
+   "proposed": 0,
+   "blocked": false,
+   "fixed_blocked": false,
+   "changed": []
+  },
+  {
+   "repo": "dockersamples/example-voting-app",
+   "old": {
+    "sha": "63e9150ca17af4ed05880d4245e486481f73fcb4",
+    "date": "2024-10-10T15:05:02Z",
+    "url": "https://github.com/dockersamples/example-voting-app/commit/63e9150ca17af4ed05880d4245e486481f73fcb4"
+   },
+   "head": {
+    "sha": "63e9150ca17af4ed05880d4245e486481f73fcb4",
+    "date": "2024-10-10T15:05:02Z",
+    "url": "https://github.com/dockersamples/example-voting-app/commit/63e9150ca17af4ed05880d4245e486481f73fcb4"
+   },
+   "learned": 4,
+   "proposed": 0,
+   "blocked": false,
+   "fixed_blocked": false,
+   "changed": []
+  },
+  {
+   "repo": "encode/httpx",
+   "old": {
+    "sha": "def4778d622e8bf49a9fea4dda78cca4cf666d8a",
+    "date": "2025-10-16T09:04:38Z",
+    "url": "https://github.com/encode/httpx/commit/def4778d622e8bf49a9fea4dda78cca4cf666d8a"
+   },
+   "head": {
+    "sha": "7cff5f79bc78649bbcd3fd9aa7a74c86e0f63016",
+    "date": "2026-11-16T19:43:14Z",
+    "url": "https://github.com/encode/httpx/commit/7cff5f79bc78649bbcd3fd9aa7a74c86e0f63016"
+   },
+   "learned": 1,
+   "proposed": 1,
+   "blocked": true,
+   "fixed_blocked": false,
+   "changed": [
+    {
+     "entity": "httpx",
+     "predicate": "python-requires",
+     "old": ">=3.9",
+     "new": ">=3.10",
+     "old_url": "https://github.com/encode/httpx/blob/def4778d622e8bf49a9fea4dda78cca4cf666d8a/pyproject.toml",
+     "new_url": "https://github.com/encode/httpx/blob/7cff5f79bc78649bbcd3fd9aa7a74c86e0f63016/pyproject.toml"
+    }
+   ]
+  },
+  {
+   "repo": "etcd-io/etcd",
+   "old": {
+    "sha": "5acaf85058d3e68a72c9837b4740d0775db6b69a",
+    "date": "2025-11-21T19:52:28Z",
+    "url": "https://github.com/etcd-io/etcd/commit/5acaf85058d3e68a72c9837b4740d0775db6b69a"
+   },
+   "head": {
+    "sha": "a99e920890e0b9df77825c30e6a7a9b3bc06c324",
+    "date": "2026-11-23T02:57:30Z",
+    "url": "https://github.com/etcd-io/etcd/commit/a99e920890e0b9df77825c30e6a7a9b3bc06c324"
+   },
+   "learned": 17,
+   "proposed": 16,
+   "blocked": true,
+   "fixed_blocked": false,
+   "changed": [
+    {
+     "entity": "etcd",
+     "predicate": "base-image",
+     "old": "gcr.io/distroless/static-debian12:latest@sha256:87bce11be0af",
+     "new": "gcr.io/distroless/static-debian13:latest@sha256:1a64f4636462",
+     "old_url": "https://github.com/etcd-io/etcd/blob/5acaf85058d3e68a72c9837b4740d0775db6b69a/Dockerfile",
+     "new_url": "https://github.com/etcd-io/etcd/blob/a99e920890e0b9df77825c30e6a7a9b3bc06c324/Dockerfile"
+    },
+    {
+     "entity": "etcd-api",
+     "predicate": "go-version",
+     "old": "1.25.0",
+     "new": "1.27",
+     "old_url": "https://github.com/etcd-io/etcd/blob/5acaf85058d3e68a72c9837b4740d0775db6b69a/api/go.mod",
+     "new_url": "https://github.com/etcd-io/etcd/blob/a99e920890e0b9df77825c30e6a7a9b3bc06c324/api/go.mod"
+    },
+    {
+     "entity": "etcd-cache",
+     "predicate": "go-version",
+     "old": "1.25.0",
+     "new": "1.27",
+     "old_url": "https://github.com/etcd-io/etcd/blob/5acaf85058d3e68a72c9837b4740d0775db6b69a/cache/go.mod",
+     "new_url": "https://github.com/etcd-io/etcd/blob/a99e920890e0b9df77825c30e6a7a9b3bc06c324/cache/go.mod"
+    },
+    {
+     "entity": "etcd-client-pkg",
+     "predicate": "go-version",
+     "old": "1.25.0",
+     "new": "1.27",
+     "old_url": "https://github.com/etcd-io/etcd/blob/5acaf85058d3e68a72c9837b4740d0775db6b69a/client/pkg/go.mod",
+     "new_url": "https://github.com/etcd-io/etcd/blob/a99e920890e0b9df77825c30e6a7a9b3bc06c324/client/pkg/go.mod"
+    },
+    {
+     "entity": "etcd-client-v3",
+     "predicate": "go-version",
+     "old": "1.25.0",
+     "new": "1.27",
+     "old_url": "https://github.com/etcd-io/etcd/blob/5acaf85058d3e68a72c9837b4740d0775db6b69a/client/v3/go.mod",
+     "new_url": "https://github.com/etcd-io/etcd/blob/a99e920890e0b9df77825c30e6a7a9b3bc06c324/client/v3/go.mod"
+    },
+    {
+     "entity": "etcd-etcdctl",
+     "predicate": "go-version",
+     "old": "1.25.0",
+     "new": "1.27",
+     "old_url": "https://github.com/etcd-io/etcd/blob/5acaf85058d3e68a72c9837b4740d0775db6b69a/etcdctl/go.mod",
+     "new_url": "https://github.com/etcd-io/etcd/blob/a99e920890e0b9df77825c30e6a7a9b3bc06c324/etcdctl/go.mod"
+    },
+    {
+     "entity": "etcd-etcdutl",
+     "predicate": "go-version",
+     "old": "1.25.0",
+     "new": "1.27",
+     "old_url": "https://github.com/etcd-io/etcd/blob/5acaf85058d3e68a72c9837b4740d0775db6b69a/etcdutl/go.mod",
+     "new_url": "https://github.com/etcd-io/etcd/blob/a99e920890e0b9df77825c30e6a7a9b3bc06c324/etcdutl/go.mod"
+    },
+    {
+     "entity": "etcd",
+     "predicate": "go-version",
+     "old": "1.25.0",
+     "new": "1.27",
+     "old_url": "https://github.com/etcd-io/etcd/blob/5acaf85058d3e68a72c9837b4740d0775db6b69a/go.mod",
+     "new_url": "https://github.com/etcd-io/etcd/blob/a99e920890e0b9df77825c30e6a7a9b3bc06c324/go.mod"
+    },
+    {
+     "entity": "etcd-pkg",
+     "predicate": "go-version",
+     "old": "1.25.0",
+     "new": "1.27",
+     "old_url": "https://github.com/etcd-io/etcd/blob/5acaf85058d3e68a72c9837b4740d0775db6b69a/pkg/go.mod",
+     "new_url": "https://github.com/etcd-io/etcd/blob/a99e920890e0b9df77825c30e6a7a9b3bc06c324/pkg/go.mod"
+    },
+    {
+     "entity": "etcd-server",
+     "predicate": "go-version",
+     "old": "1.25.0",
+     "new": "1.27",
+     "old_url": "https://github.com/etcd-io/etcd/blob/5acaf85058d3e68a72c9837b4740d0775db6b69a/server/go.mod",
+     "new_url": "https://github.com/etcd-io/etcd/blob/a99e920890e0b9df77825c30e6a7a9b3bc06c324/server/go.mod"
+    },
+    {
+     "entity": "etcd-tests",
+     "predicate": "go-version",
+     "old": "1.25.0",
+     "new": "1.27",
+     "old_url": "https://github.com/etcd-io/etcd/blob/5acaf85058d3e68a72c9837b4740d0775db6b69a/tests/go.mod",
+     "new_url": "https://github.com/etcd-io/etcd/blob/a99e920890e0b9df77825c30e6a7a9b3bc06c324/tests/go.mod"
+    },
+    {
+     "entity": "etcd-tools-mod",
+     "predicate": "go-version",
+     "old": "1.25.0",
+     "new": "1.27",
+     "old_url": "https://github.com/etcd-io/etcd/blob/5acaf85058d3e68a72c9837b4740d0775db6b69a/tools/mod/go.mod",
+     "new_url": "https://github.com/etcd-io/etcd/blob/a99e920890e0b9df77825c30e6a7a9b3bc06c324/tools/mod/go.mod"
+    },
+    {
+     "entity": "etcd-tools-rw-heatmaps",
+     "predicate": "go-version",
+     "old": "1.25.0",
+     "new": "1.27",
+     "old_url": "https://github.com/etcd-io/etcd/blob/5acaf85058d3e68a72c9837b4740d0775db6b69a/tools/rw-heatmaps/go.mod",
+     "new_url": "https://github.com/etcd-io/etcd/blob/a99e920890e0b9df77825c30e6a7a9b3bc06c324/tools/rw-heatmaps/go.mod"
+    },
+    {
+     "entity": "etcd-tools-testgrid-analysis",
+     "predicate": "go-version",
+     "old": "1.25.0",
+     "new": "1.27",
+     "old_url": "https://github.com/etcd-io/etcd/blob/5acaf85058d3e68a72c9837b4740d0775db6b69a/tools/testgrid-analysis/go.mod",
+     "new_url": "https://github.com/etcd-io/etcd/blob/a99e920890e0b9df77825c30e6a7a9b3bc06c324/tools/testgrid-analysis/go.mod"
+    }
+   ]
+  },
+  {
+   "repo": "excalidraw/excalidraw",
+   "old": {
+    "sha": "b660478164a9137f6c48893f38671eedab22b83e",
+    "date": "2025-11-22T15:16:30Z",
+    "url": "https://github.com/excalidraw/excalidraw/commit/b660478164a9137f6c48893f38671eedab22b83e"
+   },
+   "head": {
+    "sha": "9c2e462ec23e54c4cf0493328840d6a27191c674",
+    "date": "2026-11-21T18:23:03Z",
+    "url": "https://github.com/excalidraw/excalidraw/commit/9c2e462ec23e54c4cf0493328840d6a27191c674"
+   },
+   "learned": 5,
+   "proposed": 2,
+   "blocked": true,
+   "fixed_blocked": false,
+   "changed": [
+    {
+     "entity": "excalidraw",
+     "predicate": "base-image",
+     "old": "nginx:1.27-alpine",
+     "new": "nginx:stable-alpine-slim@sha256:2c605dbeab79",
+     "old_url": "https://github.com/excalidraw/excalidraw/blob/b660478164a9137f6c48893f38671eedab22b83e/Dockerfile",
+     "new_url": "https://github.com/excalidraw/excalidraw/blob/9c2e462ec23e54c4cf0493328840d6a27191c674/Dockerfile"
+    }
+   ]
+  },
+  {
+   "repo": "expressjs/express",
+   "old": {
+    "sha": "2551a7d8afd82e41b9282bd0235190a847a59f44",
+    "date": "2025-11-18T09:42:56Z",
+    "url": "https://github.com/expressjs/express/commit/2551a7d8afd82e41b9282bd0235190a847a59f44"
+   },
+   "head": {
+    "sha": "43fca52d28a422c8be48fd489cbd4f2d6152bab6",
+    "date": "2026-11-02T20:15:26Z",
+    "url": "https://github.com/expressjs/express/commit/43fca52d28a422c8be48fd489cbd4f2d6152bab6"
+   },
+   "learned": 1,
+   "proposed": 0,
+   "blocked": false,
+   "fixed_blocked": false,
+   "changed": []
+  },
+  {
+   "repo": "fastapi/fastapi",
+   "old": {
+    "sha": "cbe5bdb85f393712e5176cfa27275781ffcc07c0",
+    "date": "2025-11-21T13:03:21Z",
+    "url": "https://github.com/fastapi/fastapi/commit/cbe5bdb85f393712e5176cfa27275781ffcc07c0"
+   },
+   "head": {
+    "sha": "05e6df7e906c3decba377c37548019973f40bf15",
+    "date": "2026-11-18T19:13:45Z",
+    "url": "https://github.com/fastapi/fastapi/commit/05e6df7e906c3decba377c37548019973f40bf15"
+   },
+   "learned": 1,
+   "proposed": 2,
+   "blocked": true,
+   "fixed_blocked": false,
+   "changed": [
+    {
+     "entity": "fastapi",
+     "predicate": "python-requires",
+     "old": ">=3.8",
+     "new": ">=3.11",
+     "old_url": "https://github.com/fastapi/fastapi/blob/cbe5bdb85f393712e5176cfa27275781ffcc07c0/pyproject.toml",
+     "new_url": "https://github.com/fastapi/fastapi/blob/05e6df7e906c3decba377c37548019973f40bf15/pyproject.toml"
+    }
+   ]
+  },
+  {
+   "repo": "fastapi/full-stack-fastapi-template",
+   "old": {
+    "sha": "73f37aae516d3d6372efe988c3c5bce54ac546ca",
+    "date": "2025-11-22T13:29:40Z",
+    "url": "https://github.com/fastapi/full-stack-fastapi-template/commit/73f37aae516d3d6372efe988c3c5bce54ac546ca"
+   },
+   "head": {
+    "sha": "77e550a73bb49dd2967622c5ed11bf7a49603c93",
+    "date": "2026-11-16T13:14:57Z",
+    "url": "https://github.com/fastapi/full-stack-fastapi-template/commit/77e550a73bb49dd2967622c5ed11bf7a49603c93"
+   },
+   "learned": 5,
+   "proposed": 4,
+   "blocked": true,
+   "fixed_blocked": false,
+   "changed": [
+    {
+     "entity": "full-stack-fastapi-template-backend",
+     "predicate": "base-image",
+     "old": "python:3.10",
+     "new": "python:3.14",
+     "old_url": "https://github.com/fastapi/full-stack-fastapi-template/blob/73f37aae516d3d6372efe988c3c5bce54ac546ca/backend/Dockerfile",
+     "new_url": "https://github.com/fastapi/full-stack-fastapi-template/blob/77e550a73bb49dd2967622c5ed11bf7a49603c93/backend/Dockerfile"
+    },
+    {
+     "entity": "full-stack-fastapi-template-backend",
+     "predicate": "python-requires",
+     "old": ">=3.10,<4.0",
+     "new": ">=3.14,<4.0",
+     "old_url": "https://github.com/fastapi/full-stack-fastapi-template/blob/73f37aae516d3d6372efe988c3c5bce54ac546ca/backend/pyproject.toml",
+     "new_url": "https://github.com/fastapi/full-stack-fastapi-template/blob/77e550a73bb49dd2967622c5ed11bf7a49603c93/backend/pyproject.toml"
+    },
+    {
+     "entity": "full-stack-fastapi-template-frontend",
+     "predicate": "base-image-playwright",
+     "old": "mcr.microsoft.com/playwright:v1.56.1-noble",
+     "new": "mcr.microsoft.com/playwright:v1.64.1-noble",
+     "old_url": "https://github.com/fastapi/full-stack-fastapi-template/blob/73f37aae516d3d6372efe988c3c5bce54ac546ca/frontend/Dockerfile.playwright",
+     "new_url": "https://github.com/fastapi/full-stack-fastapi-template/blob/77e550a73bb49dd2967622c5ed11bf7a49603c93/frontend/Dockerfile.playwright"
+    }
+   ]
+  },
+  {
+   "repo": "fastify/fastify",
+   "old": {
+    "sha": "61ca0021db7c338626395117ee9fb9444515bfce",
+    "date": "2025-11-16T09:20:22Z",
+    "url": "https://github.com/fastify/fastify/commit/61ca0021db7c338626395117ee9fb9444515bfce"
+   },
+   "head": {
+    "sha": "6de5abedb24424f0e8fa3612035d212d580f8d90",
+    "date": "2026-11-21T12:58:04Z",
+    "url": "https://github.com/fastify/fastify/commit/6de5abedb24424f0e8fa3612035d212d580f8d90"
+   },
+   "learned": 0,
+   "proposed": 0,
+   "blocked": false,
+   "fixed_blocked": false,
+   "changed": []
+  },
+  {
+   "repo": "gin-gonic/gin",
+   "old": {
+    "sha": "ecb3f7b5e2f3915bf1db240ed5eee572f8dbea36",
+    "date": "2025-11-23T03:46:13Z",
+    "url": "https://github.com/gin-gonic/gin/commit/ecb3f7b5e2f3915bf1db240ed5eee572f8dbea36"
+   },
+   "head": {
+    "sha": "0f09c3a9b4626d9fe9979cf4d0521d6ae32ab646",
+    "date": "2026-10-10T04:20:35Z",
+    "url": "https://github.com/gin-gonic/gin/commit/0f09c3a9b4626d9fe9979cf4d0521d6ae32ab646"
+   },
+   "learned": 1,
+   "proposed": 1,
+   "blocked": true,
+   "fixed_blocked": false,
+   "changed": [
+    {
+     "entity": "gin",
+     "predicate": "go-version",
+     "old": "1.24.0",
+     "new": "1.26.0",
+     "old_url": "https://github.com/gin-gonic/gin/blob/ecb3f7b5e2f3915bf1db240ed5eee572f8dbea36/go.mod",
+     "new_url": "https://github.com/gin-gonic/gin/blob/0f09c3a9b4626d9fe9979cf4d0521d6ae32ab646/go.mod"
+    }
+   ]
+  },
+  {
+   "repo": "go-gitea/gitea",
+   "old": {
+    "sha": "ed977d97027ed075a91bd1ea7a88b5f7dc1f7898",
+    "date": "2025-11-22T17:20:45Z",
+    "url": "https://github.com/go-gitea/gitea/commit/ed977d97027ed075a91bd1ea7a88b5f7dc1f7898"
+   },
+   "head": {
+    "sha": "c04f64824b145ec4b7ac5e77b5a3d0212f4cdfa0",
+    "date": "2026-11-23T00:37:08Z",
+    "url": "https://github.com/go-gitea/gitea/commit/c04f64824b145ec4b7ac5e77b5a3d0212f4cdfa0"
+   },
+   "learned": 6,
+   "proposed": 6,
+   "blocked": true,
+   "fixed_blocked": false,
+   "changed": [
+    {
+     "entity": "gitea",
+     "predicate": "base-image",
+     "old": "docker.io/library/alpine:3.22",
+     "new": "docker.io/library/alpine:3.24",
+     "old_url": "https://github.com/go-gitea/gitea/blob/ed977d97027ed075a91bd1ea7a88b5f7dc1f7898/Dockerfile",
+     "new_url": "https://github.com/go-gitea/gitea/blob/c04f64824b145ec4b7ac5e77b5a3d0212f4cdfa0/Dockerfile"
+    },
+    {
+     "entity": "gitea",
+     "predicate": "base-image-rootless",
+     "old": "docker.io/library/alpine:3.22",
+     "new": "docker.io/library/alpine:3.24",
+     "old_url": "https://github.com/go-gitea/gitea/blob/ed977d97027ed075a91bd1ea7a88b5f7dc1f7898/Dockerfile.rootless",
+     "new_url": "https://github.com/go-gitea/gitea/blob/c04f64824b145ec4b7ac5e77b5a3d0212f4cdfa0/Dockerfile.rootless"
+    },
+    {
+     "entity": "gitea",
+     "predicate": "go-version",
+     "old": "1.25.0",
+     "new": "1.27",
+     "old_url": "https://github.com/go-gitea/gitea/blob/ed977d97027ed075a91bd1ea7a88b5f7dc1f7898/go.mod",
+     "new_url": "https://github.com/go-gitea/gitea/blob/c04f64824b145ec4b7ac5e77b5a3d0212f4cdfa0/go.mod"
+    },
+    {
+     "entity": "gitea",
+     "predicate": "node-engine",
+     "old": ">= 22.6.0",
+     "new": ">= 22.18.0",
+     "old_url": "https://github.com/go-gitea/gitea/blob/ed977d97027ed075a91bd1ea7a88b5f7dc1f7898/package.json",
+     "new_url": "https://github.com/go-gitea/gitea/blob/c04f64824b145ec4b7ac5e77b5a3d0212f4cdfa0/package.json"
+    },
+    {
+     "entity": "gitea",
+     "predicate": "package-manager",
+     "old": "pnpm@10.22.0",
+     "new": "pnpm@12.19.0",
+     "old_url": "https://github.com/go-gitea/gitea/blob/ed977d97027ed075a91bd1ea7a88b5f7dc1f7898/package.json",
+     "new_url": "https://github.com/go-gitea/gitea/blob/c04f64824b145ec4b7ac5e77b5a3d0212f4cdfa0/package.json"
+    },
+    {
+     "entity": "gitea",
+     "predicate": "python-requires",
+     "old": ">=3.10",
+     "new": ">=3.12",
+     "old_url": "https://github.com/go-gitea/gitea/blob/ed977d97027ed075a91bd1ea7a88b5f7dc1f7898/pyproject.toml",
+     "new_url": "https://github.com/go-gitea/gitea/blob/c04f64824b145ec4b7ac5e77b5a3d0212f4cdfa0/pyproject.toml"
+    }
+   ]
+  },
+  {
+   "repo": "gofiber/fiber",
+   "old": {
+    "sha": "5caa478c02c5eb6cd1c251ddc634ec0600e66a7b",
+    "date": "2025-11-22T10:06:49Z",
+    "url": "https://github.com/gofiber/fiber/commit/5caa478c02c5eb6cd1c251ddc634ec0600e66a7b"
+   },
+   "head": {
+    "sha": "e0466d29e78d94999d86151a27c5efc1d3dc9248",
+    "date": "2026-11-22T23:27:33Z",
+    "url": "https://github.com/gofiber/fiber/commit/e0466d29e78d94999d86151a27c5efc1d3dc9248"
+   },
+   "learned": 1,
+   "proposed": 1,
+   "blocked": true,
+   "fixed_blocked": false,
+   "changed": [
+    {
+     "entity": "fiber",
+     "predicate": "go-version",
+     "old": "1.25.0",
+     "new": "1.26.0",
+     "old_url": "https://github.com/gofiber/fiber/blob/5caa478c02c5eb6cd1c251ddc634ec0600e66a7b/go.mod",
+     "new_url": "https://github.com/gofiber/fiber/blob/e0466d29e78d94999d86151a27c5efc1d3dc9248/go.mod"
+    }
+   ]
+  },
+  {
+   "repo": "GoogleCloudPlatform/microservices-demo",
+   "old": {
+    "sha": "f9ce08e4f92c1da6b9cd88c2bd09f862f6a956a7",
+    "date": "2025-10-27T20:53:03Z",
+    "url": "https://github.com/GoogleCloudPlatform/microservices-demo/commit/f9ce08e4f92c1da6b9cd88c2bd09f862f6a956a7"
+   },
+   "head": {
+    "sha": "c7cb6d5bfd6ea3aed768634ebbcb98cb7a523712",
+    "date": "2026-10-27T20:18:40Z",
+    "url": "https://github.com/GoogleCloudPlatform/microservices-demo/commit/c7cb6d5bfd6ea3aed768634ebbcb98cb7a523712"
+   },
+   "learned": 13,
+   "proposed": 13,
+   "blocked": true,
+   "fixed_blocked": false,
+   "changed": [
+    {
+     "entity": "microservices-demo-src-adservice",
+     "predicate": "base-image",
+     "old": "eclipse-temurin:25-jre-alpine@sha256:bf9c91071c4f",
+     "new": "eclipse-temurin:25.0.4_7-jre-alpine@sha256:3137541deb3c",
+     "old_url": "https://github.com/GoogleCloudPlatform/microservices-demo/blob/f9ce08e4f92c1da6b9cd88c2bd09f862f6a956a7/src/adservice/Dockerfile",
+     "new_url": "https://github.com/GoogleCloudPlatform/microservices-demo/blob/c7cb6d5bfd6ea3aed768634ebbcb98cb7a523712/src/adservice/Dockerfile"
+    },
+    {
+     "entity": "microservices-demo-src-cartservice-src",
+     "predicate": "base-image",
+     "old": "mcr.microsoft.com/dotnet/runtime-deps:9.0.1-noble-chiseled@sha256:6f7466eda39e",
+     "new": "mcr.microsoft.com/dotnet/runtime-deps:10.0.0-noble-chiseled@sha256:b857c8cb8d92",
+     "old_url": "https://github.com/GoogleCloudPlatform/microservices-demo/blob/f9ce08e4f92c1da6b9cd88c2bd09f862f6a956a7/src/cartservice/src/Dockerfile",
+     "new_url": "https://github.com/GoogleCloudPlatform/microservices-demo/blob/c7cb6d5bfd6ea3aed768634ebbcb98cb7a523712/src/cartservice/src/Dockerfile"
+    },
+    {
+     "entity": "microservices-demo-src-cartservice-src",
+     "predicate": "base-image-debug",
+     "old": "mcr.microsoft.com/dotnet/aspnet:10.0@sha256:5b558c0d5f65",
+     "new": "mcr.microsoft.com/dotnet/aspnet:10.0@sha256:7644f992230d",
+     "old_url": "https://github.com/GoogleCloudPlatform/microservices-demo/blob/f9ce08e4f92c1da6b9cd88c2bd09f862f6a956a7/src/cartservice/src/Dockerfile.debug",
+     "new_url": "https://github.com/GoogleCloudPlatform/microservices-demo/blob/c7cb6d5bfd6ea3aed768634ebbcb98cb7a523712/src/cartservice/src/Dockerfile.debug"
+    },
+    {
+     "entity": "microservices-demo-src-checkoutservice",
+     "predicate": "base-image",
+     "old": "scratch",
+     "new": "gcr.io/distroless/static:latest",
+     "old_url": "https://github.com/GoogleCloudPlatform/microservices-demo/blob/f9ce08e4f92c1da6b9cd88c2bd09f862f6a956a7/src/checkoutservice/Dockerfile",
+     "new_url": "https://github.com/GoogleCloudPlatform/microservices-demo/blob/c7cb6d5bfd6ea3aed768634ebbcb98cb7a523712/src/checkoutservice/Dockerfile"
+    },
+    {
+     "entity": "microservices-demo-src-checkoutservice",
+     "predicate": "go-version",
+     "old": "1.23.0",
+     "new": "1.25.0",
+     "old_url": "https://github.com/GoogleCloudPlatform/microservices-demo/blob/f9ce08e4f92c1da6b9cd88c2bd09f862f6a956a7/src/checkoutservice/go.mod",
+     "new_url": "https://github.com/GoogleCloudPlatform/microservices-demo/blob/c7cb6d5bfd6ea3aed768634ebbcb98cb7a523712/src/checkoutservice/go.mod"
+    },
+    {
+     "entity": "microservices-demo-src-currencyservice",
+     "predicate": "base-image",
+     "old": "alpine:3.20.3@sha256:1e42bbe25081",
+     "new": "alpine:3.24.1@sha256:28bd5fe8b56d",
+     "old_url": "https://github.com/GoogleCloudPlatform/microservices-demo/blob/f9ce08e4f92c1da6b9cd88c2bd09f862f6a956a7/src/currencyservice/Dockerfile",
+     "new_url": "https://github.com/GoogleCloudPlatform/microservices-demo/blob/c7cb6d5bfd6ea3aed768634ebbcb98cb7a523712/src/currencyservice/Dockerfile"
+    },
+    {
+     "entity": "microservices-demo-src-frontend",
+     "predicate": "base-image",
+     "old": "scratch",
+     "new": "gcr.io/distroless/static:latest",
+     "old_url": "https://github.com/GoogleCloudPlatform/microservices-demo/blob/f9ce08e4f92c1da6b9cd88c2bd09f862f6a956a7/src/frontend/Dockerfile",
+     "new_url": "https://github.com/GoogleCloudPlatform/microservices-demo/blob/c7cb6d5bfd6ea3aed768634ebbcb98cb7a523712/src/frontend/Dockerfile"
+    },
+    {
+     "entity": "microservices-demo-src-frontend",
+     "predicate": "go-version",
+     "old": "1.23.0",
+     "new": "1.25.0",
+     "old_url": "https://github.com/GoogleCloudPlatform/microservices-demo/blob/f9ce08e4f92c1da6b9cd88c2bd09f862f6a956a7/src/frontend/go.mod",
+     "new_url": "https://github.com/GoogleCloudPlatform/microservices-demo/blob/c7cb6d5bfd6ea3aed768634ebbcb98cb7a523712/src/frontend/go.mod"
+    },
+    {
+     "entity": "microservices-demo-src-paymentservice",
+     "predicate": "base-image",
+     "old": "alpine:3.20.3@sha256:1e42bbe25081",
+     "new": "alpine:3.24.1@sha256:28bd5fe8b56d",
+     "old_url": "https://github.com/GoogleCloudPlatform/microservices-demo/blob/f9ce08e4f92c1da6b9cd88c2bd09f862f6a956a7/src/paymentservice/Dockerfile",
+     "new_url": "https://github.com/GoogleCloudPlatform/microservices-demo/blob/c7cb6d5bfd6ea3aed768634ebbcb98cb7a523712/src/paymentservice/Dockerfile"
+    },
+    {
+     "entity": "microservices-demo-src-productcatalogservice",
+     "predicate": "base-image",
+     "old": "scratch",
+     "new": "gcr.io/distroless/static:latest",
+     "old_url": "https://github.com/GoogleCloudPlatform/microservices-demo/blob/f9ce08e4f92c1da6b9cd88c2bd09f862f6a956a7/src/productcatalogservice/Dockerfile",
+     "new_url": "https://github.com/GoogleCloudPlatform/microservices-demo/blob/c7cb6d5bfd6ea3aed768634ebbcb98cb7a523712/src/productcatalogservice/Dockerfile"
+    },
+    {
+     "entity": "microservices-demo-src-productcatalogservice",
+     "predicate": "go-version",
+     "old": "1.23.0",
+     "new": "1.25.8",
+     "old_url": "https://github.com/GoogleCloudPlatform/microservices-demo/blob/f9ce08e4f92c1da6b9cd88c2bd09f862f6a956a7/src/productcatalogservice/go.mod",
+     "new_url": "https://github.com/GoogleCloudPlatform/microservices-demo/blob/c7cb6d5bfd6ea3aed768634ebbcb98cb7a523712/src/productcatalogservice/go.mod"
+    },
+    {
+     "entity": "microservices-demo-src-shippingservice",
+     "predicate": "base-image",
+     "old": "scratch",
+     "new": "gcr.io/distroless/static:latest",
+     "old_url": "https://github.com/GoogleCloudPlatform/microservices-demo/blob/f9ce08e4f92c1da6b9cd88c2bd09f862f6a956a7/src/shippingservice/Dockerfile",
+     "new_url": "https://github.com/GoogleCloudPlatform/microservices-demo/blob/c7cb6d5bfd6ea3aed768634ebbcb98cb7a523712/src/shippingservice/Dockerfile"
+    },
+    {
+     "entity": "microservices-demo-src-shippingservice",
+     "predicate": "go-version",
+     "old": "1.23.0",
+     "new": "1.26.0",
+     "old_url": "https://github.com/GoogleCloudPlatform/microservices-demo/blob/f9ce08e4f92c1da6b9cd88c2bd09f862f6a956a7/src/shippingservice/go.mod",
+     "new_url": "https://github.com/GoogleCloudPlatform/microservices-demo/blob/c7cb6d5bfd6ea3aed768634ebbcb98cb7a523712/src/shippingservice/go.mod"
+    }
+   ]
+  },
+  {
+   "repo": "grafana/k6",
+   "old": {
+    "sha": "617faf7d2d12c87e1eb1c68e02250f4e375601b7",
+    "date": "2025-11-21T14:30:59Z",
+    "url": "https://github.com/grafana/k6/commit/617faf7d2d12c87e1eb1c68e02250f4e375601b7"
+   },
+   "head": {
+    "sha": "0110662a25cdb14690d7ba5454d6b6e718d8f9d5",
+    "date": "2026-11-18T10:14:23Z",
+    "url": "https://github.com/grafana/k6/commit/0110662a25cdb14690d7ba5454d6b6e718d8f9d5"
+   },
+   "learned": 3,
+   "proposed": 3,
+   "blocked": true,
+   "fixed_blocked": false,
+   "changed": [
+    {
+     "entity": "k6-examples-grpc-server",
+     "predicate": "go-version",
+     "old": "1.24.0",
+     "new": "1.26.0",
+     "old_url": "https://github.com/grafana/k6/blob/617faf7d2d12c87e1eb1c68e02250f4e375601b7/examples/grpc_server/go.mod",
+     "new_url": "https://github.com/grafana/k6/blob/0110662a25cdb14690d7ba5454d6b6e718d8f9d5/examples/grpc_server/go.mod"
+    },
+    {
+     "entity": "k6",
+     "predicate": "go-version",
+     "old": "1.24.0",
+     "new": "1.26.0",
+     "old_url": "https://github.com/grafana/k6/blob/617faf7d2d12c87e1eb1c68e02250f4e375601b7/go.mod",
+     "new_url": "https://github.com/grafana/k6/blob/0110662a25cdb14690d7ba5454d6b6e718d8f9d5/go.mod"
+    },
+    {
+     "entity": "k6-packaging",
+     "predicate": "base-image",
+     "old": "debian:bullseye-20250811@sha256:8ec25a9073e8",
+     "new": "debian:13@sha256:913f6706df59",
+     "old_url": "https://github.com/grafana/k6/blob/617faf7d2d12c87e1eb1c68e02250f4e375601b7/packaging/Dockerfile",
+     "new_url": "https://github.com/grafana/k6/blob/0110662a25cdb14690d7ba5454d6b6e718d8f9d5/packaging/Dockerfile"
+    }
+   ]
+  },
+  {
+   "repo": "hashicorp/terraform",
+   "old": {
+    "sha": "3df28c31019d76ac17bcfc5e2ee3304fff58c0fe",
+    "date": "2025-11-21T19:24:03Z",
+    "url": "https://github.com/hashicorp/terraform/commit/3df28c31019d76ac17bcfc5e2ee3304fff58c0fe"
+   },
+   "head": {
+    "sha": "80e6fc2811a0cee0a4f16a92d37622bb8b8aa13c",
+    "date": "2026-11-20T20:27:02Z",
+    "url": "https://github.com/hashicorp/terraform/commit/80e6fc2811a0cee0a4f16a92d37622bb8b8aa13c"
+   },
+   "learned": 3,
+   "proposed": 2,
+   "blocked": true,
+   "fixed_blocked": false,
+   "changed": [
+    {
+     "entity": "terraform",
+     "predicate": "go-version",
+     "old": "1.25",
+     "new": "1.26.11",
+     "old_url": "https://github.com/hashicorp/terraform/blob/3df28c31019d76ac17bcfc5e2ee3304fff58c0fe/go.mod",
+     "new_url": "https://github.com/hashicorp/terraform/blob/80e6fc2811a0cee0a4f16a92d37622bb8b8aa13c/go.mod"
+    },
+    {
+     "entity": "terraform-internal-legacy",
+     "predicate": "go-version",
+     "old": "1.25",
+     "new": "1.26.11",
+     "old_url": "https://github.com/hashicorp/terraform/blob/3df28c31019d76ac17bcfc5e2ee3304fff58c0fe/internal/legacy/go.mod",
+     "new_url": "https://github.com/hashicorp/terraform/blob/80e6fc2811a0cee0a4f16a92d37622bb8b8aa13c/internal/legacy/go.mod"
+    }
+   ]
+  },
+  {
+   "repo": "honojs/hono",
+   "old": {
+    "sha": "342ff3b52dda2d655aa5c5b649557e9d6f247909",
+    "date": "2025-11-22T08:43:47Z",
+    "url": "https://github.com/honojs/hono/commit/342ff3b52dda2d655aa5c5b649557e9d6f247909"
+   },
+   "head": {
+    "sha": "cd50668335738d170ecd03e783f2f2d5317b95d6",
+    "date": "2026-11-22T06:36:17Z",
+    "url": "https://github.com/honojs/hono/commit/cd50668335738d170ecd03e783f2f2d5317b95d6"
+   },
+   "learned": 2,
+   "proposed": 9,
+   "blocked": true,
+   "fixed_blocked": false,
+   "changed": [
+    {
+     "entity": "hono",
+     "predicate": "package-manager",
+     "old": "bun@1.2.20",
+     "new": "pnpm@12.6.0",
+     "old_url": "https://github.com/honojs/hono/blob/342ff3b52dda2d655aa5c5b649557e9d6f247909/package.json",
+     "new_url": "https://github.com/honojs/hono/blob/cd50668335738d170ecd03e783f2f2d5317b95d6/package.json"
+    }
+   ]
+  },
+  {
+   "repo": "hoppscotch/hoppscotch",
+   "old": {
+    "sha": "51840cb5e5e0526d5e186cfcdb9b701ff056f230",
+    "date": "2025-11-13T08:32:55Z",
+    "url": "https://github.com/hoppscotch/hoppscotch/commit/51840cb5e5e0526d5e186cfcdb9b701ff056f230"
+   },
+   "head": {
+    "sha": "55908a76a1d0555c9bbb5d74244c14173df95b06",
+    "date": "2026-11-04T05:41:52Z",
+    "url": "https://github.com/hoppscotch/hoppscotch/commit/55908a76a1d0555c9bbb5d74244c14173df95b06"
+   },
+   "learned": 10,
+   "proposed": 4,
+   "blocked": true,
+   "fixed_blocked": false,
+   "changed": [
+    {
+     "entity": "hoppscotch",
+     "predicate": "package-manager",
+     "old": "pnpm@10.18.3",
+     "new": "pnpm@10.34.5",
+     "old_url": "https://github.com/hoppscotch/hoppscotch/blob/51840cb5e5e0526d5e186cfcdb9b701ff056f230/package.json",
+     "new_url": "https://github.com/hoppscotch/hoppscotch/blob/55908a76a1d0555c9bbb5d74244c14173df95b06/package.json"
+    },
+    {
+     "entity": "hoppscotch-packages-hoppscotch-cli",
+     "predicate": "node-engine",
+     "old": ">=20",
+     "new": ">=22",
+     "old_url": "https://github.com/hoppscotch/hoppscotch/blob/51840cb5e5e0526d5e186cfcdb9b701ff056f230/packages/hoppscotch-cli/package.json",
+     "new_url": "https://github.com/hoppscotch/hoppscotch/blob/55908a76a1d0555c9bbb5d74244c14173df95b06/packages/hoppscotch-cli/package.json"
+    },
+    {
+     "entity": "hoppscotch-packages-hoppscotch-js-sandbox",
+     "predicate": "node-engine",
+     "old": ">=14",
+     "new": ">=22",
+     "old_url": "https://github.com/hoppscotch/hoppscotch/blob/51840cb5e5e0526d5e186cfcdb9b701ff056f230/packages/hoppscotch-js-sandbox/package.json",
+     "new_url": "https://github.com/hoppscotch/hoppscotch/blob/55908a76a1d0555c9bbb5d74244c14173df95b06/packages/hoppscotch-js-sandbox/package.json"
+    }
+   ]
+  },
+  {
+   "repo": "immich-app/immich",
+   "old": {
+    "sha": "1e1c4ac9d21da31d43638070167dd54f6af47a3a",
+    "date": "2025-11-21T22:46:30Z",
+    "url": "https://github.com/immich-app/immich/commit/1e1c4ac9d21da31d43638070167dd54f6af47a3a"
+   },
+   "head": {
+    "sha": "645d2b8fd1a426fa6e9d88fc238ab38172580c21",
+    "date": "2026-11-22T18:14:09Z",
+    "url": "https://github.com/immich-app/immich/commit/645d2b8fd1a426fa6e9d88fc238ab38172580c21"
+   },
+   "learned": 12,
+   "proposed": 12,
+   "blocked": true,
+   "fixed_blocked": false,
+   "changed": [
+    {
+     "entity": "immich-machine-learning",
+     "predicate": "python-requires",
+     "old": ">=3.10,<4.0",
+     "new": ">=3.12,<4.0",
+     "old_url": "https://github.com/immich-app/immich/blob/1e1c4ac9d21da31d43638070167dd54f6af47a3a/machine-learning/pyproject.toml",
+     "new_url": "https://github.com/immich-app/immich/blob/645d2b8fd1a426fa6e9d88fc238ab38172580c21/machine-learning/pyproject.toml"
+    },
+    {
+     "entity": "immich",
+     "predicate": "package-manager",
+     "old": "pnpm@10.20.0",
+     "new": "pnpm@12.20.0",
+     "old_url": "https://github.com/immich-app/immich/blob/1e1c4ac9d21da31d43638070167dd54f6af47a3a/package.json",
+     "new_url": "https://github.com/immich-app/immich/blob/645d2b8fd1a426fa6e9d88fc238ab38172580c21/package.json"
+    },
+    {
+     "entity": "immich-server",
+     "predicate": "base-image",
+     "old": "ghcr.io/immich-app/base-server-prod:202511181104@sha256:1bc2b7cebc4f",
+     "new": "ghcr.io/immich-app/base-server-prod:202611101105@sha256:282c05976d23",
+     "old_url": "https://github.com/immich-app/immich/blob/1e1c4ac9d21da31d43638070167dd54f6af47a3a/server/Dockerfile",
+     "new_url": "https://github.com/immich-app/immich/blob/645d2b8fd1a426fa6e9d88fc238ab38172580c21/server/Dockerfile"
+    }
+   ]
+  },
+  {
+   "repo": "langchain-ai/langchain",
+   "old": {
+    "sha": "f070217c3b7630ad47f228abd39e8886d289af83",
+    "date": "2025-11-22T23:35:09Z",
+    "url": "https://github.com/langchain-ai/langchain/commit/f070217c3b7630ad47f228abd39e8886d289af83"
+   },
+   "head": {
+    "sha": "4af34be7bee448ef32ea4f100b61e6df09a74cf6",
+    "date": "2026-11-23T03:25:07Z",
+    "url": "https://github.com/langchain-ai/langchain/commit/4af34be7bee448ef32ea4f100b61e6df09a74cf6"
+   },
+   "learned": 23,
+   "proposed": 22,
+   "blocked": true,
+   "fixed_blocked": false,
+   "changed": [
+    {
+     "entity": "langchain-libs-core",
+     "predicate": "python-requires",
+     "old": ">=3.10.0,<4.0.0",
+     "new": ">=3.11.0,<4.0.0",
+     "old_url": "https://github.com/langchain-ai/langchain/blob/f070217c3b7630ad47f228abd39e8886d289af83/libs/core/pyproject.toml",
+     "new_url": "https://github.com/langchain-ai/langchain/blob/4af34be7bee448ef32ea4f100b61e6df09a74cf6/libs/core/pyproject.toml"
+    },
+    {
+     "entity": "langchain-libs-langchain",
+     "predicate": "python-requires",
+     "old": ">=3.10.0,<4.0.0",
+     "new": ">=3.11.0,<4.0.0",
+     "old_url": "https://github.com/langchain-ai/langchain/blob/f070217c3b7630ad47f228abd39e8886d289af83/libs/langchain/pyproject.toml",
+     "new_url": "https://github.com/langchain-ai/langchain/blob/4af34be7bee448ef32ea4f100b61e6df09a74cf6/libs/langchain/pyproject.toml"
+    },
+    {
+     "entity": "langchain-libs-langchain-v1",
+     "predicate": "python-requires",
+     "old": ">=3.10.0,<4.0.0",
+     "new": ">=3.11.0,<4.0.0",
+     "old_url": "https://github.com/langchain-ai/langchain/blob/f070217c3b7630ad47f228abd39e8886d289af83/libs/langchain_v1/pyproject.toml",
+     "new_url": "https://github.com/langchain-ai/langchain/blob/4af34be7bee448ef32ea4f100b61e6df09a74cf6/libs/langchain_v1/pyproject.toml"
+    },
+    {
+     "entity": "langchain-libs-model-profiles",
+     "predicate": "python-requires",
+     "old": ">=3.10.0,<4.0.0",
+     "new": ">=3.11.0,<4.0.0",
+     "old_url": "https://github.com/langchain-ai/langchain/blob/f070217c3b7630ad47f228abd39e8886d289af83/libs/model-profiles/pyproject.toml",
+     "new_url": "https://github.com/langchain-ai/langchain/blob/4af34be7bee448ef32ea4f100b61e6df09a74cf6/libs/model-profiles/pyproject.toml"
+    },
+    {
+     "entity": "langchain-libs-partners-anthropic",
+     "predicate": "python-requires",
+     "old": ">=3.10.0,<4.0.0",
+     "new": ">=3.11.0,<4.0.0",
+     "old_url": "https://github.com/langchain-ai/langchain/blob/f070217c3b7630ad47f228abd39e8886d289af83/libs/partners/anthropic/pyproject.toml",
+     "new_url": "https://github.com/langchain-ai/langchain/blob/4af34be7bee448ef32ea4f100b61e6df09a74cf6/libs/partners/anthropic/pyproject.toml"
+    },
+    {
+     "entity": "langchain-libs-partners-chroma",
+     "predicate": "python-requires",
+     "old": ">=3.10.0,<4.0.0",
+     "new": ">=3.11.0,<4.0.0",
+     "old_url": "https://github.com/langchain-ai/langchain/blob/f070217c3b7630ad47f228abd39e8886d289af83/libs/partners/chroma/pyproject.toml",
+     "new_url": "https://github.com/langchain-ai/langchain/blob/4af34be7bee448ef32ea4f100b61e6df09a74cf6/libs/partners/chroma/pyproject.toml"
+    },
+    {
+     "entity": "langchain-libs-partners-deepseek",
+     "predicate": "python-requires",
+     "old": ">=3.10.0,<4.0.0",
+     "new": ">=3.11.0,<4.0.0",
+     "old_url": "https://github.com/langchain-ai/langchain/blob/f070217c3b7630ad47f228abd39e8886d289af83/libs/partners/deepseek/pyproject.toml",
+     "new_url": "https://github.com/langchain-ai/langchain/blob/4af34be7bee448ef32ea4f100b61e6df09a74cf6/libs/partners/deepseek/pyproject.toml"
+    },
+    {
+     "entity": "langchain-libs-partners-exa",
+     "predicate": "python-requires",
+     "old": ">=3.10.0,<4.0.0",
+     "new": ">=3.11.0,<4.0.0",
+     "old_url": "https://github.com/langchain-ai/langchain/blob/f070217c3b7630ad47f228abd39e8886d289af83/libs/partners/exa/pyproject.toml",
+     "new_url": "https://github.com/langchain-ai/langchain/blob/4af34be7bee448ef32ea4f100b61e6df09a74cf6/libs/partners/exa/pyproject.toml"
+    },
+    {
+     "entity": "langchain-libs-partners-fireworks",
+     "predicate": "python-requires",
+     "old": ">=3.10.0,<4.0.0",
+     "new": ">=3.11.0,<4.0.0",
+     "old_url": "https://github.com/langchain-ai/langchain/blob/f070217c3b7630ad47f228abd39e8886d289af83/libs/partners/fireworks/pyproject.toml",
+     "new_url": "https://github.com/langchain-ai/langchain/blob/4af34be7bee448ef32ea4f100b61e6df09a74cf6/libs/partners/fireworks/pyproject.toml"
+    },
+    {
+     "entity": "langchain-libs-partners-groq",
+     "predicate": "python-requires",
+     "old": ">=3.10.0,<4.0.0",
+     "new": ">=3.11.0,<4.0.0",
+     "old_url": "https://github.com/langchain-ai/langchain/blob/f070217c3b7630ad47f228abd39e8886d289af83/libs/partners/groq/pyproject.toml",
+     "new_url": "https://github.com/langchain-ai/langchain/blob/4af34be7bee448ef32ea4f100b61e6df09a74cf6/libs/partners/groq/pyproject.toml"
+    },
+    {
+     "entity": "langchain-libs-partners-huggingface",
+     "predicate": "python-requires",
+     "old": ">=3.10.0,<4.0.0",
+     "new": ">=3.11.0,<4.0.0",
+     "old_url": "https://github.com/langchain-ai/langchain/blob/f070217c3b7630ad47f228abd39e8886d289af83/libs/partners/huggingface/pyproject.toml",
+     "new_url": "https://github.com/langchain-ai/langchain/blob/4af34be7bee448ef32ea4f100b61e6df09a74cf6/libs/partners/huggingface/pyproject.toml"
+    },
+    {
+     "entity": "langchain-libs-partners-mistralai",
+     "predicate": "python-requires",
+     "old": ">=3.10.0,<4.0.0",
+     "new": ">=3.11.0,<4.0.0",
+     "old_url": "https://github.com/langchain-ai/langchain/blob/f070217c3b7630ad47f228abd39e8886d289af83/libs/partners/mistralai/pyproject.toml",
+     "new_url": "https://github.com/langchain-ai/langchain/blob/4af34be7bee448ef32ea4f100b61e6df09a74cf6/libs/partners/mistralai/pyproject.toml"
+    },
+    {
+     "entity": "langchain-libs-partners-nomic",
+     "predicate": "python-requires",
+     "old": ">=3.10.0,<4.0.0",
+     "new": ">=3.11.0,<4.0.0",
+     "old_url": "https://github.com/langchain-ai/langchain/blob/f070217c3b7630ad47f228abd39e8886d289af83/libs/partners/nomic/pyproject.toml",
+     "new_url": "https://github.com/langchain-ai/langchain/blob/4af34be7bee448ef32ea4f100b61e6df09a74cf6/libs/partners/nomic/pyproject.toml"
+    },
+    {
+     "entity": "langchain-libs-partners-ollama",
+     "predicate": "python-requires",
+     "old": ">=3.10.0,<4.0.0",
+     "new": ">=3.11.0,<4.0.0",
+     "old_url": "https://github.com/langchain-ai/langchain/blob/f070217c3b7630ad47f228abd39e8886d289af83/libs/partners/ollama/pyproject.toml",
+     "new_url": "https://github.com/langchain-ai/langchain/blob/4af34be7bee448ef32ea4f100b61e6df09a74cf6/libs/partners/ollama/pyproject.toml"
+    },
+    {
+     "entity": "langchain-libs-partners-openai",
+     "predicate": "python-requires",
+     "old": ">=3.10.0,<4.0.0",
+     "new": ">=3.11.0,<4.0.0",
+     "old_url": "https://github.com/langchain-ai/langchain/blob/f070217c3b7630ad47f228abd39e8886d289af83/libs/partners/openai/pyproject.toml",
+     "new_url": "https://github.com/langchain-ai/langchain/blob/4af34be7bee448ef32ea4f100b61e6df09a74cf6/libs/partners/openai/pyproject.toml"
+    },
+    {
+     "entity": "langchain-libs-partners-perplexity",
+     "predicate": "python-requires",
+     "old": ">=3.10.0,<4.0.0",
+     "new": ">=3.11.0,<4.0.0",
+     "old_url": "https://github.com/langchain-ai/langchain/blob/f070217c3b7630ad47f228abd39e8886d289af83/libs/partners/perplexity/pyproject.toml",
+     "new_url": "https://github.com/langchain-ai/langchain/blob/4af34be7bee448ef32ea4f100b61e6df09a74cf6/libs/partners/perplexity/pyproject.toml"
+    },
+    {
+     "entity": "langchain-libs-partners-qdrant",
+     "predicate": "python-requires",
+     "old": ">=3.10.0,<4.0.0",
+     "new": ">=3.11.0,<4.0.0",
+     "old_url": "https://github.com/langchain-ai/langchain/blob/f070217c3b7630ad47f228abd39e8886d289af83/libs/partners/qdrant/pyproject.toml",
+     "new_url": "https://github.com/langchain-ai/langchain/blob/4af34be7bee448ef32ea4f100b61e6df09a74cf6/libs/partners/qdrant/pyproject.toml"
+    },
+    {
+     "entity": "langchain-libs-partners-xai",
+     "predicate": "python-requires",
+     "old": ">=3.10.0,<4.0.0",
+     "new": ">=3.11.0,<4.0.0",
+     "old_url": "https://github.com/langchain-ai/langchain/blob/f070217c3b7630ad47f228abd39e8886d289af83/libs/partners/xai/pyproject.toml",
+     "new_url": "https://github.com/langchain-ai/langchain/blob/4af34be7bee448ef32ea4f100b61e6df09a74cf6/libs/partners/xai/pyproject.toml"
+    },
+    {
+     "entity": "langchain-libs-standard-tests",
+     "predicate": "python-requires",
+     "old": ">=3.10.0,<4.0.0",
+     "new": ">=3.11.0,<4.0.0",
+     "old_url": "https://github.com/langchain-ai/langchain/blob/f070217c3b7630ad47f228abd39e8886d289af83/libs/standard-tests/pyproject.toml",
+     "new_url": "https://github.com/langchain-ai/langchain/blob/4af34be7bee448ef32ea4f100b61e6df09a74cf6/libs/standard-tests/pyproject.toml"
+    },
+    {
+     "entity": "langchain-libs-text-splitters",
+     "predicate": "python-requires",
+     "old": ">=3.10.0,<4.0.0",
+     "new": ">=3.11.0,<4.0.0",
+     "old_url": "https://github.com/langchain-ai/langchain/blob/f070217c3b7630ad47f228abd39e8886d289af83/libs/text-splitters/pyproject.toml",
+     "new_url": "https://github.com/langchain-ai/langchain/blob/4af34be7bee448ef32ea4f100b61e6df09a74cf6/libs/text-splitters/pyproject.toml"
+    }
+   ]
+  },
+  {
+   "repo": "meilisearch/meilisearch",
+   "old": {
+    "sha": "d5a5372aba2772b4db7f5aeaf506d7166c152802",
+    "date": "2025-11-20T11:02:29Z",
+    "url": "https://github.com/meilisearch/meilisearch/commit/d5a5372aba2772b4db7f5aeaf506d7166c152802"
+   },
+   "head": {
+    "sha": "9a44a8e825f20a028f80d1c7f76ff2a146e743e7",
+    "date": "2026-11-19T10:52:31Z",
+    "url": "https://github.com/meilisearch/meilisearch/commit/9a44a8e825f20a028f80d1c7f76ff2a146e743e7"
+   },
+   "learned": 8,
+   "proposed": 4,
+   "blocked": false,
+   "fixed_blocked": false,
+   "changed": []
+  },
+  {
+   "repo": "minio/minio",
+   "old": {
+    "sha": "58659f26f45f2c189f5fd1c7267da60c10024daa",
+    "date": "2025-11-06T10:38:16Z",
+    "url": "https://github.com/minio/minio/commit/58659f26f45f2c189f5fd1c7267da60c10024daa"
+   },
+   "head": {
+    "sha": "7aac2a2c5b7c882e68c1ce017d8256be2feea27f",
+    "date": "2026-02-12T20:18:48Z",
+    "url": "https://github.com/minio/minio/commit/7aac2a2c5b7c882e68c1ce017d8256be2feea27f"
+   },
+   "learned": 12,
+   "proposed": 0,
+   "blocked": false,
+   "fixed_blocked": false,
+   "changed": []
+  },
+  {
+   "repo": "n8n-io/n8n",
+   "old": {
+    "sha": "e203b0ad8178ad5ff658418af3ab112ff8ee1ac8",
+    "date": "2025-11-21T23:03:07Z",
+    "url": "https://github.com/n8n-io/n8n/commit/e203b0ad8178ad5ff658418af3ab112ff8ee1ac8"
+   },
+   "head": {
+    "sha": "327518f80bea779625523fcdb9562308680e3ae4",
+    "date": "2026-11-23T02:31:38Z",
+    "url": "https://github.com/n8n-io/n8n/commit/327518f80bea779625523fcdb9562308680e3ae4"
+   },
+   "learned": 7,
+   "proposed": 4,
+   "blocked": true,
+   "fixed_blocked": false,
+   "changed": [
+    {
+     "entity": "n8n",
+     "predicate": "node-engine",
+     "old": ">=22.16",
+     "new": ">=24.0.0",
+     "old_url": "https://github.com/n8n-io/n8n/blob/e203b0ad8178ad5ff658418af3ab112ff8ee1ac8/package.json",
+     "new_url": "https://github.com/n8n-io/n8n/blob/327518f80bea779625523fcdb9562308680e3ae4/package.json"
+    },
+    {
+     "entity": "n8n",
+     "predicate": "package-manager",
+     "old": "pnpm@10.22.0",
+     "new": "pnpm@12.4.2",
+     "old_url": "https://github.com/n8n-io/n8n/blob/e203b0ad8178ad5ff658418af3ab112ff8ee1ac8/package.json",
+     "new_url": "https://github.com/n8n-io/n8n/blob/327518f80bea779625523fcdb9562308680e3ae4/package.json"
+    },
+    {
+     "entity": "n8n-packages-cli",
+     "predicate": "node-engine",
+     "old": ">=20.19 <= 24.x",
+     "new": ">=24.0.0",
+     "old_url": "https://github.com/n8n-io/n8n/blob/e203b0ad8178ad5ff658418af3ab112ff8ee1ac8/packages/cli/package.json",
+     "new_url": "https://github.com/n8n-io/n8n/blob/327518f80bea779625523fcdb9562308680e3ae4/packages/cli/package.json"
+    }
+   ]
+  },
+  {
+   "repo": "nats-io/nats-server",
+   "old": {
+    "sha": "b3f0c26582f0d6f927ff9efd6233e178e96fac07",
+    "date": "2025-11-20T17:46:23Z",
+    "url": "https://github.com/nats-io/nats-server/commit/b3f0c26582f0d6f927ff9efd6233e178e96fac07"
+   },
+   "head": {
+    "sha": "a0385c9af342ffae6df28999b77a85de5423d3d6",
+    "date": "2026-11-20T17:04:23Z",
+    "url": "https://github.com/nats-io/nats-server/commit/a0385c9af342ffae6df28999b77a85de5423d3d6"
+   },
+   "learned": 2,
+   "proposed": 1,
+   "blocked": true,
+   "fixed_blocked": false,
+   "changed": [
+    {
+     "entity": "nats-server",
+     "predicate": "go-version",
+     "old": "1.24.0",
+     "new": "1.26.0",
+     "old_url": "https://github.com/nats-io/nats-server/blob/b3f0c26582f0d6f927ff9efd6233e178e96fac07/go.mod",
+     "new_url": "https://github.com/nats-io/nats-server/blob/a0385c9af342ffae6df28999b77a85de5423d3d6/go.mod"
+    }
+   ]
+  },
+  {
+   "repo": "nestjs/nest",
+   "old": {
+    "sha": "8f3d51f8d50e0edaaa85ea036172da0c6b3792dc",
+    "date": "2025-11-21T07:37:01Z",
+    "url": "https://github.com/nestjs/nest/commit/8f3d51f8d50e0edaaa85ea036172da0c6b3792dc"
+   },
+   "head": {
+    "sha": "94df49d7898df2009fc6dd4900ed77847eb8aaab",
+    "date": "2026-11-22T08:41:01Z",
+    "url": "https://github.com/nestjs/nest/commit/94df49d7898df2009fc6dd4900ed77847eb8aaab"
+   },
+   "learned": 2,
+   "proposed": 0,
+   "blocked": false,
+   "fixed_blocked": false,
+   "changed": []
+  },
+  {
+   "repo": "open-telemetry/opentelemetry-demo",
+   "old": {
+    "sha": "8b8f7a387876ae83382bae1315e588c9770192b4",
+    "date": "2025-11-22T05:43:06Z",
+    "url": "https://github.com/open-telemetry/opentelemetry-demo/commit/8b8f7a387876ae83382bae1315e588c9770192b4"
+   },
+   "head": {
+    "sha": "fc7f2a68dcf925178773243aefe9904ab711c178",
+    "date": "2026-11-21T22:02:21Z",
+    "url": "https://github.com/open-telemetry/opentelemetry-demo/commit/fc7f2a68dcf925178773243aefe9904ab711c178"
+   },
+   "learned": 31,
+   "proposed": 31,
+   "blocked": true,
+   "fixed_blocked": false,
+   "changed": [
+    {
+     "entity": "opentelemetry-demo-src-accounting",
+     "predicate": "base-image",
+     "old": "mcr.microsoft.com/dotnet/aspnet:8.0",
+     "new": "mcr.microsoft.com/dotnet/aspnet:11.0.0@sha256:bc0d6653979e",
+     "old_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/8b8f7a387876ae83382bae1315e588c9770192b4/src/accounting/Dockerfile",
+     "new_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/fc7f2a68dcf925178773243aefe9904ab711c178/src/accounting/Dockerfile"
+    },
+    {
+     "entity": "opentelemetry-demo-src-ad",
+     "predicate": "base-image",
+     "old": "eclipse-temurin:21-jre",
+     "new": "docker.io/library/eclipse-temurin:24.0.2_12-jre@sha256:8cb2387a28af",
+     "old_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/8b8f7a387876ae83382bae1315e588c9770192b4/src/ad/Dockerfile",
+     "new_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/fc7f2a68dcf925178773243aefe9904ab711c178/src/ad/Dockerfile"
+    },
+    {
+     "entity": "opentelemetry-demo-src-cart-src",
+     "predicate": "base-image",
+     "old": "mcr.microsoft.com/dotnet/runtime-deps:10.0-alpine3.22",
+     "new": "mcr.microsoft.com/dotnet/runtime-deps:11.0.0-alpine3.24@sha256:5597d4a0c9ea",
+     "old_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/8b8f7a387876ae83382bae1315e588c9770192b4/src/cart/src/Dockerfile",
+     "new_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/fc7f2a68dcf925178773243aefe9904ab711c178/src/cart/src/Dockerfile"
+    },
+    {
+     "entity": "opentelemetry-demo-src-checkout",
+     "predicate": "base-image",
+     "old": "gcr.io/distroless/static-debian12:nonroot",
+     "new": "gcr.io/distroless/static-debian12:nonroot@sha256:afa5c872c891",
+     "old_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/8b8f7a387876ae83382bae1315e588c9770192b4/src/checkout/Dockerfile",
+     "new_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/fc7f2a68dcf925178773243aefe9904ab711c178/src/checkout/Dockerfile"
+    },
+    {
+     "entity": "opentelemetry-demo-src-checkout-genproto",
+     "predicate": "base-image",
+     "old": "golang:1.24-alpine",
+     "new": "docker.io/library/golang:1.27.3-alpine@sha256:fa3d596898d9",
+     "old_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/8b8f7a387876ae83382bae1315e588c9770192b4/src/checkout/genproto/Dockerfile",
+     "new_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/fc7f2a68dcf925178773243aefe9904ab711c178/src/checkout/genproto/Dockerfile"
+    },
+    {
+     "entity": "opentelemetry-demo-src-checkout",
+     "predicate": "go-version",
+     "old": "1.24.2",
+     "new": "1.26.0",
+     "old_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/8b8f7a387876ae83382bae1315e588c9770192b4/src/checkout/go.mod",
+     "new_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/fc7f2a68dcf925178773243aefe9904ab711c178/src/checkout/go.mod"
+    },
+    {
+     "entity": "opentelemetry-demo-src-currency-genproto",
+     "predicate": "base-image",
+     "old": "docker.io/library/alpine:3.21",
+     "new": "docker.io/library/alpine:3.24.4@sha256:f59abe656b69",
+     "old_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/8b8f7a387876ae83382bae1315e588c9770192b4/src/currency/genproto/Dockerfile",
+     "new_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/fc7f2a68dcf925178773243aefe9904ab711c178/src/currency/genproto/Dockerfile"
+    },
+    {
+     "entity": "opentelemetry-demo-src-email",
+     "predicate": "base-image",
+     "old": "docker.io/library/ruby:3.4.7-alpine3.22",
+     "new": "docker.io/library/ruby:4.0.5-alpine3.22@sha256:fae3127404cb",
+     "old_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/8b8f7a387876ae83382bae1315e588c9770192b4/src/email/Dockerfile",
+     "new_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/fc7f2a68dcf925178773243aefe9904ab711c178/src/email/Dockerfile"
+    },
+    {
+     "entity": "opentelemetry-demo-src-fraud-detection",
+     "predicate": "base-image",
+     "old": "gcr.io/distroless/java17-debian12:nonroot",
+     "new": "gcr.io/distroless/java17-debian12:nonroot@sha256:06484c2a9dcc",
+     "old_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/8b8f7a387876ae83382bae1315e588c9770192b4/src/fraud-detection/Dockerfile",
+     "new_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/fc7f2a68dcf925178773243aefe9904ab711c178/src/fraud-detection/Dockerfile"
+    },
+    {
+     "entity": "opentelemetry-demo-src-frontend-proxy",
+     "predicate": "base-image",
+     "old": "envoyproxy/envoy:v1.34-latest",
+     "new": "envoyproxy/envoy:v1.40.2@sha256:8de97e654644",
+     "old_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/8b8f7a387876ae83382bae1315e588c9770192b4/src/frontend-proxy/Dockerfile",
+     "new_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/fc7f2a68dcf925178773243aefe9904ab711c178/src/frontend-proxy/Dockerfile"
+    },
+    {
+     "entity": "opentelemetry-demo-src-frontend",
+     "predicate": "base-image",
+     "old": "gcr.io/distroless/nodejs22-debian12:nonroot",
+     "new": "gcr.io/distroless/nodejs24-debian13:nonroot@sha256:6abfcb367ebc",
+     "old_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/8b8f7a387876ae83382bae1315e588c9770192b4/src/frontend/Dockerfile",
+     "new_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/fc7f2a68dcf925178773243aefe9904ab711c178/src/frontend/Dockerfile"
+    },
+    {
+     "entity": "opentelemetry-demo-src-frontend",
+     "predicate": "base-image-cypress",
+     "old": "cypress/included:14.5.0",
+     "new": "cypress/included:16.3.0@sha256:3efa8d156a09",
+     "old_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/8b8f7a387876ae83382bae1315e588c9770192b4/src/frontend/Dockerfile.cypress",
+     "new_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/fc7f2a68dcf925178773243aefe9904ab711c178/src/frontend/Dockerfile.cypress"
+    },
+    {
+     "entity": "opentelemetry-demo-src-frontend-genproto",
+     "predicate": "base-image",
+     "old": "node:22-alpine",
+     "new": "docker.io/library/node:26.12.1-alpine@sha256:40cd011b5541",
+     "old_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/8b8f7a387876ae83382bae1315e588c9770192b4/src/frontend/genproto/Dockerfile",
+     "new_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/fc7f2a68dcf925178773243aefe9904ab711c178/src/frontend/genproto/Dockerfile"
+    },
+    {
+     "entity": "opentelemetry-demo-src-image-provider",
+     "predicate": "base-image",
+     "old": "nginxinc/nginx-unprivileged:1.29.0-alpine3.22-otel",
+     "new": "docker.io/nginxinc/nginx-unprivileged:1.29.3-alpine3.22-otel@sha256:208c0b691a67",
+     "old_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/8b8f7a387876ae83382bae1315e588c9770192b4/src/image-provider/Dockerfile",
+     "new_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/fc7f2a68dcf925178773243aefe9904ab711c178/src/image-provider/Dockerfile"
+    },
+    {
+     "entity": "opentelemetry-demo-src-kafka",
+     "predicate": "base-image",
+     "old": "apache/kafka:3.9.1",
+     "new": "apache/kafka:4.3.1@sha256:77e3df905404",
+     "old_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/8b8f7a387876ae83382bae1315e588c9770192b4/src/kafka/Dockerfile",
+     "new_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/fc7f2a68dcf925178773243aefe9904ab711c178/src/kafka/Dockerfile"
+    },
+    {
+     "entity": "opentelemetry-demo-src-opensearch",
+     "predicate": "base-image",
+     "old": "opensearchproject/opensearch:3.2.0",
+     "new": "docker.io/opensearchproject/opensearch:3.9.0@sha256:3b55f6b6249c",
+     "old_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/8b8f7a387876ae83382bae1315e588c9770192b4/src/opensearch/Dockerfile",
+     "new_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/fc7f2a68dcf925178773243aefe9904ab711c178/src/opensearch/Dockerfile"
+    },
+    {
+     "entity": "opentelemetry-demo-src-payment",
+     "predicate": "base-image",
+     "old": "gcr.io/distroless/nodejs22-debian12:nonroot",
+     "new": "gcr.io/distroless/nodejs24-debian13:nonroot@sha256:b8cec4b2f212",
+     "old_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/8b8f7a387876ae83382bae1315e588c9770192b4/src/payment/Dockerfile",
+     "new_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/fc7f2a68dcf925178773243aefe9904ab711c178/src/payment/Dockerfile"
+    },
+    {
+     "entity": "opentelemetry-demo-src-product-catalog",
+     "predicate": "base-image",
+     "old": "gcr.io/distroless/static-debian12:nonroot",
+     "new": "gcr.io/distroless/static-debian12:nonroot@sha256:afa5c872c891",
+     "old_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/8b8f7a387876ae83382bae1315e588c9770192b4/src/product-catalog/Dockerfile",
+     "new_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/fc7f2a68dcf925178773243aefe9904ab711c178/src/product-catalog/Dockerfile"
+    },
+    {
+     "entity": "opentelemetry-demo-src-product-catalog-genproto",
+     "predicate": "base-image",
+     "old": "golang:1.24-alpine",
+     "new": "docker.io/library/golang:1.27.3-alpine@sha256:fa3d596898d9",
+     "old_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/8b8f7a387876ae83382bae1315e588c9770192b4/src/product-catalog/genproto/Dockerfile",
+     "new_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/fc7f2a68dcf925178773243aefe9904ab711c178/src/product-catalog/genproto/Dockerfile"
+    },
+    {
+     "entity": "opentelemetry-demo-src-product-catalog",
+     "predicate": "go-version",
+     "old": "1.24.2",
+     "new": "1.26.0",
+     "old_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/8b8f7a387876ae83382bae1315e588c9770192b4/src/product-catalog/go.mod",
+     "new_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/fc7f2a68dcf925178773243aefe9904ab711c178/src/product-catalog/go.mod"
+    },
+    {
+     "entity": "opentelemetry-demo-src-quote",
+     "predicate": "base-image",
+     "old": "docker.io/library/php:8.4-cli-alpine3.22",
+     "new": "docker.io/library/php:8.5.12-cli-alpine3.24@sha256:1ff5b45922ab",
+     "old_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/8b8f7a387876ae83382bae1315e588c9770192b4/src/quote/Dockerfile",
+     "new_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/fc7f2a68dcf925178773243aefe9904ab711c178/src/quote/Dockerfile"
+    },
+    {
+     "entity": "opentelemetry-demo-src-recommendation",
+     "predicate": "base-image",
+     "old": "docker.io/library/python:3.12-alpine3.22",
+     "new": "docker.io/library/eclipse-temurin:24.0.2_12-jre@sha256:8cb2387a28af",
+     "old_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/8b8f7a387876ae83382bae1315e588c9770192b4/src/recommendation/Dockerfile",
+     "new_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/fc7f2a68dcf925178773243aefe9904ab711c178/src/recommendation/Dockerfile"
+    },
+    {
+     "entity": "opentelemetry-demo-src-shipping",
+     "predicate": "base-image",
+     "old": "gcr.io/distroless/cc-debian13:nonroot",
+     "new": "gcr.io/distroless/cc-debian13:nonroot@sha256:cb87acc574ab",
+     "old_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/8b8f7a387876ae83382bae1315e588c9770192b4/src/shipping/Dockerfile",
+     "new_url": "https://github.com/open-telemetry/opentelemetry-demo/blob/fc7f2a68dcf925178773243aefe9904ab711c178/src/shipping/Dockerfile"
+    }
+   ]
+  },
+  {
+   "repo": "pallets/flask",
+   "old": {
+    "sha": "2579ce9f18e67ec3213c6eceb5240310ccd46af8",
+    "date": "2025-11-17T18:05:51Z",
+    "url": "https://github.com/pallets/flask/commit/2579ce9f18e67ec3213c6eceb5240310ccd46af8"
+   },
+   "head": {
+    "sha": "49943b5a94413a530761350f04e896f76e8d620e",
+    "date": "2026-10-30T15:05:20Z",
+    "url": "https://github.com/pallets/flask/commit/49943b5a94413a530761350f04e896f76e8d620e"
+   },
+   "learned": 1,
+   "proposed": 1,
+   "blocked": true,
+   "fixed_blocked": false,
+   "changed": [
+    {
+     "entity": "flask",
+     "predicate": "python-requires",
+     "old": ">=3.10",
+     "new": ">=3.11",
+     "old_url": "https://github.com/pallets/flask/blob/2579ce9f18e67ec3213c6eceb5240310ccd46af8/pyproject.toml",
+     "new_url": "https://github.com/pallets/flask/blob/49943b5a94413a530761350f04e896f76e8d620e/pyproject.toml"
+    }
+   ]
+  },
+  {
+   "repo": "prisma/orm",
+   "old": {
+    "sha": "185c404f8c3a9965c0ef79d860b72bb513c5db8f",
+    "date": "2025-11-19T09:57:26Z",
+    "url": "https://github.com/prisma/orm/commit/185c404f8c3a9965c0ef79d860b72bb513c5db8f"
+   },
+   "head": {
+    "sha": "748ff35fb0e9f55529c5c08c79d90963f8f04fce",
+    "date": "2026-11-22T20:06:08Z",
+    "url": "https://github.com/prisma/orm/commit/748ff35fb0e9f55529c5c08c79d90963f8f04fce"
+   },
+   "learned": 2,
+   "proposed": 32,
+   "blocked": true,
+   "fixed_blocked": false,
+   "changed": [
+    {
+     "entity": "orm",
+     "predicate": "node-engine",
+     "old": ">=20",
+     "new": ">=24",
+     "old_url": "https://github.com/prisma/orm/blob/185c404f8c3a9965c0ef79d860b72bb513c5db8f/package.json",
+     "new_url": "https://github.com/prisma/orm/blob/748ff35fb0e9f55529c5c08c79d90963f8f04fce/package.json"
+    },
+    {
+     "entity": "orm",
+     "predicate": "package-manager",
+     "old": "pnpm@10.22.0",
+     "new": "pnpm@10.27.0",
+     "old_url": "https://github.com/prisma/orm/blob/185c404f8c3a9965c0ef79d860b72bb513c5db8f/package.json",
+     "new_url": "https://github.com/prisma/orm/blob/748ff35fb0e9f55529c5c08c79d90963f8f04fce/package.json"
+    }
+   ]
+  },
+  {
+   "repo": "prometheus/prometheus",
+   "old": {
+    "sha": "6800783fa0aa7607c5b7b81000e51394cbd51b03",
+    "date": "2025-11-21T19:47:43Z",
+    "url": "https://github.com/prometheus/prometheus/commit/6800783fa0aa7607c5b7b81000e51394cbd51b03"
+   },
+   "head": {
+    "sha": "06170caaea449ce139982c9ca9ddb5bf499ad488",
+    "date": "2026-11-20T15:56:48Z",
+    "url": "https://github.com/prometheus/prometheus/commit/06170caaea449ce139982c9ca9ddb5bf499ad488"
+   },
+   "learned": 3,
+   "proposed": 5,
+   "blocked": true,
+   "fixed_blocked": false,
+   "changed": [
+    {
+     "entity": "prometheus-documentation-examples-remote-storage",
+     "predicate": "go-version",
+     "old": "1.22.7",
+     "new": "1.26.10",
+     "old_url": "https://github.com/prometheus/prometheus/blob/6800783fa0aa7607c5b7b81000e51394cbd51b03/documentation/examples/remote_storage/go.mod",
+     "new_url": "https://github.com/prometheus/prometheus/blob/06170caaea449ce139982c9ca9ddb5bf499ad488/documentation/examples/remote_storage/go.mod"
+    },
+    {
+     "entity": "prometheus",
+     "predicate": "go-version",
+     "old": "1.22.7",
+     "new": "1.26.10",
+     "old_url": "https://github.com/prometheus/prometheus/blob/6800783fa0aa7607c5b7b81000e51394cbd51b03/go.mod",
+     "new_url": "https://github.com/prometheus/prometheus/blob/06170caaea449ce139982c9ca9ddb5bf499ad488/go.mod"
+    },
+    {
+     "entity": "prometheus-web-ui",
+     "predicate": "node-version",
+     "old": "v20.5.1",
+     "new": "24.21.0",
+     "old_url": "https://github.com/prometheus/prometheus/blob/6800783fa0aa7607c5b7b81000e51394cbd51b03/web/ui/.nvmrc",
+     "new_url": "https://github.com/prometheus/prometheus/blob/06170caaea449ce139982c9ca9ddb5bf499ad488/web/ui/.nvmrc"
+    }
+   ]
+  },
+  {
+   "repo": "psf/requests",
+   "old": {
+    "sha": "70298332899f25826e35e42f8d83425124f755a5",
+    "date": "2025-10-15T11:45:42Z",
+    "url": "https://github.com/psf/requests/commit/70298332899f25826e35e42f8d83425124f755a5"
+   },
+   "head": {
+    "sha": "3c7baaa05ab4aa49cc819ce3a819d260de19c157",
+    "date": "2026-10-26T17:14:41Z",
+    "url": "https://github.com/psf/requests/commit/3c7baaa05ab4aa49cc819ce3a819d260de19c157"
+   },
+   "learned": 0,
+   "proposed": 1,
+   "blocked": false,
+   "fixed_blocked": false,
+   "changed": []
+  },
+  {
+   "repo": "pydantic/pydantic",
+   "old": {
+    "sha": "b834e9845de3fadc59a21fd226fd7695f03020c6",
+    "date": "2025-11-21T14:32:18Z",
+    "url": "https://github.com/pydantic/pydantic/commit/b834e9845de3fadc59a21fd226fd7695f03020c6"
+   },
+   "head": {
+    "sha": "1aaef01805ae0bc436954a4e863cc0b64a827193",
+    "date": "2026-11-21T11:47:40Z",
+    "url": "https://github.com/pydantic/pydantic/commit/1aaef01805ae0bc436954a4e863cc0b64a827193"
+   },
+   "learned": 5,
+   "proposed": 4,
+   "blocked": true,
+   "fixed_blocked": false,
+   "changed": [
+    {
+     "entity": "pydantic-pydantic-core",
+     "predicate": "rust-version",
+     "old": "1.85",
+     "new": "1.88",
+     "old_url": "https://github.com/pydantic/pydantic/blob/b834e9845de3fadc59a21fd226fd7695f03020c6/pydantic-core/Cargo.toml",
+     "new_url": "https://github.com/pydantic/pydantic/blob/1aaef01805ae0bc436954a4e863cc0b64a827193/pydantic-core/Cargo.toml"
+    },
+    {
+     "entity": "pydantic-pydantic-core",
+     "predicate": "python-requires",
+     "old": ">=3.9",
+     "new": ">=3.11",
+     "old_url": "https://github.com/pydantic/pydantic/blob/b834e9845de3fadc59a21fd226fd7695f03020c6/pydantic-core/pyproject.toml",
+     "new_url": "https://github.com/pydantic/pydantic/blob/1aaef01805ae0bc436954a4e863cc0b64a827193/pydantic-core/pyproject.toml"
+    },
+    {
+     "entity": "pydantic",
+     "predicate": "python-requires",
+     "old": ">=3.9",
+     "new": ">=3.11",
+     "old_url": "https://github.com/pydantic/pydantic/blob/b834e9845de3fadc59a21fd226fd7695f03020c6/pyproject.toml",
+     "new_url": "https://github.com/pydantic/pydantic/blob/1aaef01805ae0bc436954a4e863cc0b64a827193/pyproject.toml"
+    },
+    {
+     "entity": "pydantic-tests-plugin",
+     "predicate": "python-requires",
+     "old": ">=3.9",
+     "new": ">=3.11",
+     "old_url": "https://github.com/pydantic/pydantic/blob/b834e9845de3fadc59a21fd226fd7695f03020c6/tests/plugin/pyproject.toml",
+     "new_url": "https://github.com/pydantic/pydantic/blob/1aaef01805ae0bc436954a4e863cc0b64a827193/tests/plugin/pyproject.toml"
+    }
+   ]
+  },
+  {
+   "repo": "qdrant/qdrant",
+   "old": {
+    "sha": "0d79528705f04def1b52842f747e5a00ab1e338a",
+    "date": "2025-11-17T11:10:37Z",
+    "url": "https://github.com/qdrant/qdrant/commit/0d79528705f04def1b52842f747e5a00ab1e338a"
+   },
+   "head": {
+    "sha": "23065a0bf6857c3e5da45f6c8939cc746cc0580e",
+    "date": "2026-11-16T09:12:16Z",
+    "url": "https://github.com/qdrant/qdrant/commit/23065a0bf6857c3e5da45f6c8939cc746cc0580e"
+   },
+   "learned": 22,
+   "proposed": 12,
+   "blocked": true,
+   "fixed_blocked": false,
+   "changed": [
+    {
+     "entity": "qdrant",
+     "predicate": "rust-version",
+     "old": "1.89",
+     "new": "1.98",
+     "old_url": "https://github.com/qdrant/qdrant/blob/0d79528705f04def1b52842f747e5a00ab1e338a/Cargo.toml",
+     "new_url": "https://github.com/qdrant/qdrant/blob/23065a0bf6857c3e5da45f6c8939cc746cc0580e/Cargo.toml"
+    }
+   ]
+  },
+  {
+   "repo": "remix-run/react-router",
+   "old": {
+    "sha": "a947b0346eba3abd0ca771bc19640ef1f20e271e",
+    "date": "2025-11-22T00:58:18Z",
+    "url": "https://github.com/remix-run/react-router/commit/a947b0346eba3abd0ca771bc19640ef1f20e271e"
+   },
+   "head": {
+    "sha": "9916920a490c018eb78d7cc8c55a0efd6e9feac9",
+    "date": "2026-11-20T21:20:01Z",
+    "url": "https://github.com/remix-run/react-router/commit/9916920a490c018eb78d7cc8c55a0efd6e9feac9"
+   },
+   "learned": 18,
+   "proposed": 27,
+   "blocked": true,
+   "fixed_blocked": false,
+   "changed": [
+    {
+     "entity": "react-router",
+     "predicate": "node-version",
+     "old": "22",
+     "new": "24",
+     "old_url": "https://github.com/remix-run/react-router/blob/a947b0346eba3abd0ca771bc19640ef1f20e271e/.nvmrc",
+     "new_url": "https://github.com/remix-run/react-router/blob/9916920a490c018eb78d7cc8c55a0efd6e9feac9/.nvmrc"
+    },
+    {
+     "entity": "react-router",
+     "predicate": "node-engine",
+     "old": ">=20.0.0",
+     "new": ">=22.22.0",
+     "old_url": "https://github.com/remix-run/react-router/blob/a947b0346eba3abd0ca771bc19640ef1f20e271e/package.json",
+     "new_url": "https://github.com/remix-run/react-router/blob/9916920a490c018eb78d7cc8c55a0efd6e9feac9/package.json"
+    },
+    {
+     "entity": "react-router",
+     "predicate": "package-manager",
+     "old": "pnpm@9.10.0",
+     "new": "pnpm@11.7.0",
+     "old_url": "https://github.com/remix-run/react-router/blob/a947b0346eba3abd0ca771bc19640ef1f20e271e/package.json",
+     "new_url": "https://github.com/remix-run/react-router/blob/9916920a490c018eb78d7cc8c55a0efd6e9feac9/package.json"
+    },
+    {
+     "entity": "react-router-packages-create-react-router",
+     "predicate": "node-engine",
+     "old": ">=18.0.0",
+     "new": ">=22.22.0",
+     "old_url": "https://github.com/remix-run/react-router/blob/a947b0346eba3abd0ca771bc19640ef1f20e271e/packages/create-react-router/package.json",
+     "new_url": "https://github.com/remix-run/react-router/blob/9916920a490c018eb78d7cc8c55a0efd6e9feac9/packages/create-react-router/package.json"
+    },
+    {
+     "entity": "react-router-packages-react-router-architect",
+     "predicate": "node-engine",
+     "old": ">=20.0.0",
+     "new": ">=22.22.0",
+     "old_url": "https://github.com/remix-run/react-router/blob/a947b0346eba3abd0ca771bc19640ef1f20e271e/packages/react-router-architect/package.json",
+     "new_url": "https://github.com/remix-run/react-router/blob/9916920a490c018eb78d7cc8c55a0efd6e9feac9/packages/react-router-architect/package.json"
+    },
+    {
+     "entity": "react-router-packages-react-router-cloudflare",
+     "predicate": "node-engine",
+     "old": ">=20.0.0",
+     "new": ">=22.22.0",
+     "old_url": "https://github.com/remix-run/react-router/blob/a947b0346eba3abd0ca771bc19640ef1f20e271e/packages/react-router-cloudflare/package.json",
+     "new_url": "https://github.com/remix-run/react-router/blob/9916920a490c018eb78d7cc8c55a0efd6e9feac9/packages/react-router-cloudflare/package.json"
+    },
+    {
+     "entity": "react-router-packages-react-router-dev",
+     "predicate": "node-engine",
+     "old": ">=20.0.0",
+     "new": ">=22.22.0",
+     "old_url": "https://github.com/remix-run/react-router/blob/a947b0346eba3abd0ca771bc19640ef1f20e271e/packages/react-router-dev/package.json",
+     "new_url": "https://github.com/remix-run/react-router/blob/9916920a490c018eb78d7cc8c55a0efd6e9feac9/packages/react-router-dev/package.json"
+    },
+    {
+     "entity": "react-router-packages-react-router-express",
+     "predicate": "node-engine",
+     "old": ">=20.0.0",
+     "new": ">=22.22.0",
+     "old_url": "https://github.com/remix-run/react-router/blob/a947b0346eba3abd0ca771bc19640ef1f20e271e/packages/react-router-express/package.json",
+     "new_url": "https://github.com/remix-run/react-router/blob/9916920a490c018eb78d7cc8c55a0efd6e9feac9/packages/react-router-express/package.json"
+    },
+    {
+     "entity": "react-router-packages-react-router-fs-routes",
+     "predicate": "node-engine",
+     "old": ">=20.0.0",
+     "new": ">=22.22.0",
+     "old_url": "https://github.com/remix-run/react-router/blob/a947b0346eba3abd0ca771bc19640ef1f20e271e/packages/react-router-fs-routes/package.json",
+     "new_url": "https://github.com/remix-run/react-router/blob/9916920a490c018eb78d7cc8c55a0efd6e9feac9/packages/react-router-fs-routes/package.json"
+    },
+    {
+     "entity": "react-router-packages-react-router-node",
+     "predicate": "node-engine",
+     "old": ">=20.0.0",
+     "new": ">=22.22.0",
+     "old_url": "https://github.com/remix-run/react-router/blob/a947b0346eba3abd0ca771bc19640ef1f20e271e/packages/react-router-node/package.json",
+     "new_url": "https://github.com/remix-run/react-router/blob/9916920a490c018eb78d7cc8c55a0efd6e9feac9/packages/react-router-node/package.json"
+    },
+    {
+     "entity": "react-router-packages-react-router-remix-routes-option-adapter",
+     "predicate": "node-engine",
+     "old": ">=20.0.0",
+     "new": ">=22.22.0",
+     "old_url": "https://github.com/remix-run/react-router/blob/a947b0346eba3abd0ca771bc19640ef1f20e271e/packages/react-router-remix-routes-option-adapter/package.json",
+     "new_url": "https://github.com/remix-run/react-router/blob/9916920a490c018eb78d7cc8c55a0efd6e9feac9/packages/react-router-remix-routes-option-adapter/package.json"
+    },
+    {
+     "entity": "react-router-packages-react-router-serve",
+     "predicate": "node-engine",
+     "old": ">=20.0.0",
+     "new": ">=22.22.0",
+     "old_url": "https://github.com/remix-run/react-router/blob/a947b0346eba3abd0ca771bc19640ef1f20e271e/packages/react-router-serve/package.json",
+     "new_url": "https://github.com/remix-run/react-router/blob/9916920a490c018eb78d7cc8c55a0efd6e9feac9/packages/react-router-serve/package.json"
+    },
+    {
+     "entity": "react-router-packages-react-router",
+     "predicate": "node-engine",
+     "old": ">=20.0.0",
+     "new": ">=22.22.0",
+     "old_url": "https://github.com/remix-run/react-router/blob/a947b0346eba3abd0ca771bc19640ef1f20e271e/packages/react-router/package.json",
+     "new_url": "https://github.com/remix-run/react-router/blob/9916920a490c018eb78d7cc8c55a0efd6e9feac9/packages/react-router/package.json"
+    },
+    {
+     "entity": "react-router-playground-framework-express",
+     "predicate": "node-engine",
+     "old": ">=20.0.0",
+     "new": ">=22.22.0",
+     "old_url": "https://github.com/remix-run/react-router/blob/a947b0346eba3abd0ca771bc19640ef1f20e271e/playground/framework-express/package.json",
+     "new_url": "https://github.com/remix-run/react-router/blob/9916920a490c018eb78d7cc8c55a0efd6e9feac9/playground/framework-express/package.json"
+    },
+    {
+     "entity": "react-router-playground-framework-spa",
+     "predicate": "node-engine",
+     "old": ">=20.0.0",
+     "new": ">=22.22.0",
+     "old_url": "https://github.com/remix-run/react-router/blob/a947b0346eba3abd0ca771bc19640ef1f20e271e/playground/framework-spa/package.json",
+     "new_url": "https://github.com/remix-run/react-router/blob/9916920a490c018eb78d7cc8c55a0efd6e9feac9/playground/framework-spa/package.json"
+    }
+   ]
+  },
+  {
+   "repo": "rust-lang/rustlings",
+   "old": {
+    "sha": "b5d440fdc3a1fadad6dc6196dad2acddabdc671f",
+    "date": "2025-11-20T11:49:27Z",
+    "url": "https://github.com/rust-lang/rustlings/commit/b5d440fdc3a1fadad6dc6196dad2acddabdc671f"
+   },
+   "head": {
+    "sha": "f7b9b3c5882a1a43275130b95142d94f847526f5",
+    "date": "2026-10-26T17:14:40Z",
+    "url": "https://github.com/rust-lang/rustlings/commit/f7b9b3c5882a1a43275130b95142d94f847526f5"
+   },
+   "learned": 4,
+   "proposed": 0,
+   "blocked": false,
+   "fixed_blocked": false,
+   "changed": []
+  },
+  {
+   "repo": "serde-rs/serde",
+   "old": {
+    "sha": "f7fc3e0d676486236edf3bc3ebe0b9e9a552f81a",
+    "date": "2025-11-20T18:19:51Z",
+    "url": "https://github.com/serde-rs/serde/commit/f7fc3e0d676486236edf3bc3ebe0b9e9a552f81a"
+   },
+   "head": {
+    "sha": "5dfc8b0089fb17aa43bf51182ab36cffee453a3c",
+    "date": "2026-11-23T03:48:14Z",
+    "url": "https://github.com/serde-rs/serde/commit/5dfc8b0089fb17aa43bf51182ab36cffee453a3c"
+   },
+   "learned": 10,
+   "proposed": 2,
+   "blocked": true,
+   "fixed_blocked": false,
+   "changed": [
+    {
+     "entity": "serde-serde-derive",
+     "predicate": "rust-version",
+     "old": "1.68",
+     "new": "1.71",
+     "old_url": "https://github.com/serde-rs/serde/blob/f7fc3e0d676486236edf3bc3ebe0b9e9a552f81a/serde_derive/Cargo.toml",
+     "new_url": "https://github.com/serde-rs/serde/blob/5dfc8b0089fb17aa43bf51182ab36cffee453a3c/serde_derive/Cargo.toml"
+    },
+    {
+     "entity": "serde-serde-derive-internals",
+     "predicate": "rust-version",
+     "old": "1.68",
+     "new": "1.71",
+     "old_url": "https://github.com/serde-rs/serde/blob/f7fc3e0d676486236edf3bc3ebe0b9e9a552f81a/serde_derive_internals/Cargo.toml",
+     "new_url": "https://github.com/serde-rs/serde/blob/5dfc8b0089fb17aa43bf51182ab36cffee453a3c/serde_derive_internals/Cargo.toml"
+    }
+   ]
+  },
+  {
+   "repo": "sharkdp/bat",
+   "old": {
+    "sha": "1e4a4b765f4a1cad74f3a4204112268f3b303f2f",
+    "date": "2025-11-15T13:49:40Z",
+    "url": "https://github.com/sharkdp/bat/commit/1e4a4b765f4a1cad74f3a4204112268f3b303f2f"
+   },
+   "head": {
+    "sha": "4bd5c5b602950ea8fe62ea16d851d6a26eccfb76",
+    "date": "2026-11-22T20:49:47Z",
+    "url": "https://github.com/sharkdp/bat/commit/4bd5c5b602950ea8fe62ea16d851d6a26eccfb76"
+   },
+   "learned": 2,
+   "proposed": 1,
+   "blocked": true,
+   "fixed_blocked": false,
+   "changed": [
+    {
+     "entity": "bat",
+     "predicate": "rust-version",
+     "old": "1.87",
+     "new": "1.88",
+     "old_url": "https://github.com/sharkdp/bat/blob/1e4a4b765f4a1cad74f3a4204112268f3b303f2f/Cargo.toml",
+     "new_url": "https://github.com/sharkdp/bat/blob/4bd5c5b602950ea8fe62ea16d851d6a26eccfb76/Cargo.toml"
+    }
+   ]
+  },
+  {
+   "repo": "spf13/cobra",
+   "old": {
+    "sha": "fc81d2003469e2a5c440306d04a6d82a54065979",
+    "date": "2025-11-18T03:33:27Z",
+    "url": "https://github.com/spf13/cobra/commit/fc81d2003469e2a5c440306d04a6d82a54065979"
+   },
+   "head": {
+    "sha": "adbc8813901bba65827259daa8e22ff94ec1f30e",
+    "date": "2026-07-11T00:43:07Z",
+    "url": "https://github.com/spf13/cobra/commit/adbc8813901bba65827259daa8e22ff94ec1f30e"
+   },
+   "learned": 1,
+   "proposed": 0,
+   "blocked": false,
+   "fixed_blocked": false,
+   "changed": []
+  },
+  {
+   "repo": "sveltejs/kit",
+   "old": {
+    "sha": "ab3784911accefd8d3bc292a80d8e3b825528fd3",
+    "date": "2025-11-20T22:17:35Z",
+    "url": "https://github.com/sveltejs/kit/commit/ab3784911accefd8d3bc292a80d8e3b825528fd3"
+   },
+   "head": {
+    "sha": "accf16ca32fb042222a0a922c554ee8563038e3d",
+    "date": "2026-11-22T23:12:54Z",
+    "url": "https://github.com/sveltejs/kit/commit/accf16ca32fb042222a0a922c554ee8563038e3d"
+   },
+   "learned": 4,
+   "proposed": 4,
+   "blocked": true,
+   "fixed_blocked": false,
+   "changed": [
+    {
+     "entity": "kit",
+     "predicate": "package-manager",
+     "old": "pnpm@10.23.0",
+     "new": "pnpm@12.21.0",
+     "old_url": "https://github.com/sveltejs/kit/blob/ab3784911accefd8d3bc292a80d8e3b825528fd3/package.json",
+     "new_url": "https://github.com/sveltejs/kit/blob/accf16ca32fb042222a0a922c554ee8563038e3d/package.json"
+    },
+    {
+     "entity": "kit-packages-kit",
+     "predicate": "node-engine",
+     "old": ">=18.13",
+     "new": ">=22.17",
+     "old_url": "https://github.com/sveltejs/kit/blob/ab3784911accefd8d3bc292a80d8e3b825528fd3/packages/kit/package.json",
+     "new_url": "https://github.com/sveltejs/kit/blob/accf16ca32fb042222a0a922c554ee8563038e3d/packages/kit/package.json"
+    },
+    {
+     "entity": "kit-packages-package",
+     "predicate": "node-engine",
+     "old": "^16.14 || >=18",
+     "new": ">=22",
+     "old_url": "https://github.com/sveltejs/kit/blob/ab3784911accefd8d3bc292a80d8e3b825528fd3/packages/package/package.json",
+     "new_url": "https://github.com/sveltejs/kit/blob/accf16ca32fb042222a0a922c554ee8563038e3d/packages/package/package.json"
+    }
+   ]
+  },
+  {
+   "repo": "tokio-rs/tokio",
+   "old": {
+    "sha": "4714ca168d6bd97193625657b0381e9b65a9ceff",
+    "date": "2025-11-16T10:44:35Z",
+    "url": "https://github.com/tokio-rs/tokio/commit/4714ca168d6bd97193625657b0381e9b65a9ceff"
+   },
+   "head": {
+    "sha": "675ba8164071a6eee3dd1f3cb4fbdc1d3664396e",
+    "date": "2026-11-21T23:44:33Z",
+    "url": "https://github.com/tokio-rs/tokio/commit/675ba8164071a6eee3dd1f3cb4fbdc1d3664396e"
+   },
+   "learned": 17,
+   "proposed": 5,
+   "blocked": true,
+   "fixed_blocked": false,
+   "changed": [
+    {
+     "entity": "tokio-tokio-macros",
+     "predicate": "rust-version",
+     "old": "1.71",
+     "new": "1.85",
+     "old_url": "https://github.com/tokio-rs/tokio/blob/4714ca168d6bd97193625657b0381e9b65a9ceff/tokio-macros/Cargo.toml",
+     "new_url": "https://github.com/tokio-rs/tokio/blob/675ba8164071a6eee3dd1f3cb4fbdc1d3664396e/tokio-macros/Cargo.toml"
+    },
+    {
+     "entity": "tokio-tokio-stream",
+     "predicate": "rust-version",
+     "old": "1.71",
+     "new": "1.85",
+     "old_url": "https://github.com/tokio-rs/tokio/blob/4714ca168d6bd97193625657b0381e9b65a9ceff/tokio-stream/Cargo.toml",
+     "new_url": "https://github.com/tokio-rs/tokio/blob/675ba8164071a6eee3dd1f3cb4fbdc1d3664396e/tokio-stream/Cargo.toml"
+    },
+    {
+     "entity": "tokio-tokio-test",
+     "predicate": "rust-version",
+     "old": "1.71",
+     "new": "1.85",
+     "old_url": "https://github.com/tokio-rs/tokio/blob/4714ca168d6bd97193625657b0381e9b65a9ceff/tokio-test/Cargo.toml",
+     "new_url": "https://github.com/tokio-rs/tokio/blob/675ba8164071a6eee3dd1f3cb4fbdc1d3664396e/tokio-test/Cargo.toml"
+    },
+    {
+     "entity": "tokio-tokio-util",
+     "predicate": "rust-version",
+     "old": "1.71",
+     "new": "1.85",
+     "old_url": "https://github.com/tokio-rs/tokio/blob/4714ca168d6bd97193625657b0381e9b65a9ceff/tokio-util/Cargo.toml",
+     "new_url": "https://github.com/tokio-rs/tokio/blob/675ba8164071a6eee3dd1f3cb4fbdc1d3664396e/tokio-util/Cargo.toml"
+    },
+    {
+     "entity": "tokio-tokio",
+     "predicate": "rust-version",
+     "old": "1.71",
+     "new": "1.85",
+     "old_url": "https://github.com/tokio-rs/tokio/blob/4714ca168d6bd97193625657b0381e9b65a9ceff/tokio/Cargo.toml",
+     "new_url": "https://github.com/tokio-rs/tokio/blob/675ba8164071a6eee3dd1f3cb4fbdc1d3664396e/tokio/Cargo.toml"
+    }
+   ]
+  },
+  {
+   "repo": "traefik/traefik",
+   "old": {
+    "sha": "ae86cb7d11508636d09dec19aa77fd4d447ffeed",
+    "date": "2025-11-21T16:48:04Z",
+    "url": "https://github.com/traefik/traefik/commit/ae86cb7d11508636d09dec19aa77fd4d447ffeed"
+   },
+   "head": {
+    "sha": "6f79f8c03bf3ab14442c433f194caadd26aed05c",
+    "date": "2026-11-20T13:45:48Z",
+    "url": "https://github.com/traefik/traefik/commit/6f79f8c03bf3ab14442c433f194caadd26aed05c"
+   },
+   "learned": 4,
+   "proposed": 4,
+   "blocked": true,
+   "fixed_blocked": false,
+   "changed": [
+    {
+     "entity": "traefik",
+     "predicate": "base-image",
+     "old": "alpine:3.22",
+     "new": "alpine:3.24",
+     "old_url": "https://github.com/traefik/traefik/blob/ae86cb7d11508636d09dec19aa77fd4d447ffeed/Dockerfile",
+     "new_url": "https://github.com/traefik/traefik/blob/6f79f8c03bf3ab14442c433f194caadd26aed05c/Dockerfile"
+    },
+    {
+     "entity": "traefik",
+     "predicate": "go-version",
+     "old": "1.24.0",
+     "new": "1.27.0",
+     "old_url": "https://github.com/traefik/traefik/blob/ae86cb7d11508636d09dec19aa77fd4d447ffeed/go.mod",
+     "new_url": "https://github.com/traefik/traefik/blob/6f79f8c03bf3ab14442c433f194caadd26aed05c/go.mod"
+    },
+    {
+     "entity": "traefik-webui",
+     "predicate": "node-version",
+     "old": "v22.15.1",
+     "new": "26.13.0",
+     "old_url": "https://github.com/traefik/traefik/blob/ae86cb7d11508636d09dec19aa77fd4d447ffeed/webui/.nvmrc",
+     "new_url": "https://github.com/traefik/traefik/blob/6f79f8c03bf3ab14442c433f194caadd26aed05c/webui/.nvmrc"
+    },
+    {
+     "entity": "traefik-webui",
+     "predicate": "package-manager",
+     "old": "yarn@4.9.1",
+     "new": "yarn@4.18.1",
+     "old_url": "https://github.com/traefik/traefik/blob/ae86cb7d11508636d09dec19aa77fd4d447ffeed/webui/package.json",
+     "new_url": "https://github.com/traefik/traefik/blob/6f79f8c03bf3ab14442c433f194caadd26aed05c/webui/package.json"
+    }
+   ]
+  },
+  {
+   "repo": "trpc/trpc",
+   "old": {
+    "sha": "ffa88b0f3e2e7215f967a223287541cf2425c65c",
+    "date": "2025-11-21T16:49:25Z",
+    "url": "https://github.com/trpc/trpc/commit/ffa88b0f3e2e7215f967a223287541cf2425c65c"
+   },
+   "head": {
+    "sha": "0813cebf5c04e692e93f9cbc01b7f8678faa53b3",
+    "date": "2026-11-21T16:32:32Z",
+    "url": "https://github.com/trpc/trpc/commit/0813cebf5c04e692e93f9cbc01b7f8678faa53b3"
+   },
+   "learned": 5,
+   "proposed": 8,
+   "blocked": true,
+   "fixed_blocked": false,
+   "changed": [
+    {
+     "entity": "trpc",
+     "predicate": "node-version",
+     "old": "22.18.0",
+     "new": "24.22.2",
+     "old_url": "https://github.com/trpc/trpc/blob/ffa88b0f3e2e7215f967a223287541cf2425c65c/.nvmrc",
+     "new_url": "https://github.com/trpc/trpc/blob/0813cebf5c04e692e93f9cbc01b7f8678faa53b3/.nvmrc"
+    },
+    {
+     "entity": "trpc-examples-next-prisma-websockets-starter",
+     "predicate": "node-engine",
+     "old": ">=18.15.0",
+     "new": ">=20",
+     "old_url": "https://github.com/trpc/trpc/blob/ffa88b0f3e2e7215f967a223287541cf2425c65c/examples/next-prisma-websockets-starter/package.json",
+     "new_url": "https://github.com/trpc/trpc/blob/0813cebf5c04e692e93f9cbc01b7f8678faa53b3/examples/next-prisma-websockets-starter/package.json"
+    },
+    {
+     "entity": "trpc-examples-next-prisma-websockets-starter",
+     "predicate": "package-manager",
+     "old": "pnpm@9.12.2",
+     "new": "pnpm@10.33.1",
+     "old_url": "https://github.com/trpc/trpc/blob/ffa88b0f3e2e7215f967a223287541cf2425c65c/examples/next-prisma-websockets-starter/package.json",
+     "new_url": "https://github.com/trpc/trpc/blob/0813cebf5c04e692e93f9cbc01b7f8678faa53b3/examples/next-prisma-websockets-starter/package.json"
+    },
+    {
+     "entity": "trpc",
+     "predicate": "node-engine",
+     "old": "^22.18.0",
+     "new": "^24.0.0",
+     "old_url": "https://github.com/trpc/trpc/blob/ffa88b0f3e2e7215f967a223287541cf2425c65c/package.json",
+     "new_url": "https://github.com/trpc/trpc/blob/0813cebf5c04e692e93f9cbc01b7f8678faa53b3/package.json"
+    },
+    {
+     "entity": "trpc",
+     "predicate": "package-manager",
+     "old": "pnpm@9.12.2",
+     "new": "pnpm@12.4.1",
+     "old_url": "https://github.com/trpc/trpc/blob/ffa88b0f3e2e7215f967a223287541cf2425c65c/package.json",
+     "new_url": "https://github.com/trpc/trpc/blob/0813cebf5c04e692e93f9cbc01b7f8678faa53b3/package.json"
+    }
+   ]
+  },
+  {
+   "repo": "umami-software/umami",
+   "old": {
+    "sha": "d51f0641a687c8f37e15ee706da47b4264a5e362",
+    "date": "2025-11-23T00:40:42Z",
+    "url": "https://github.com/umami-software/umami/commit/d51f0641a687c8f37e15ee706da47b4264a5e362"
+   },
+   "head": {
+    "sha": "aad2c4cedd5c0b3bc4d361843830a0bb47cf79c4",
+    "date": "2026-11-17T20:20:23Z",
+    "url": "https://github.com/umami-software/umami/commit/aad2c4cedd5c0b3bc4d361843830a0bb47cf79c4"
+   },
+   "learned": 1,
+   "proposed": 1,
+   "blocked": false,
+   "fixed_blocked": false,
+   "changed": []
+  },
+  {
+   "repo": "vitejs/vite",
+   "old": {
+    "sha": "abc49a3e45e08ecfc8c282eb907ee468b4a9e7d4",
+    "date": "2025-11-20T07:51:15Z",
+    "url": "https://github.com/vitejs/vite/commit/abc49a3e45e08ecfc8c282eb907ee468b4a9e7d4"
+   },
+   "head": {
+    "sha": "3567471998e3da315675086f44368e266c9c0e33",
+    "date": "2026-11-20T11:05:06Z",
+    "url": "https://github.com/vitejs/vite/commit/3567471998e3da315675086f44368e266c9c0e33"
+   },
+   "learned": 5,
+   "proposed": 1,
+   "blocked": true,
+   "fixed_blocked": false,
+   "changed": [
+    {
+     "entity": "vite",
+     "predicate": "package-manager",
+     "old": "pnpm@10.22.0",
+     "new": "pnpm@12.21.0",
+     "old_url": "https://github.com/vitejs/vite/blob/abc49a3e45e08ecfc8c282eb907ee468b4a9e7d4/package.json",
+     "new_url": "https://github.com/vitejs/vite/blob/3567471998e3da315675086f44368e266c9c0e33/package.json"
+    }
+   ]
+  }
+ ]
+}
