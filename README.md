@@ -22,7 +22,7 @@ Built for the [Relate by Neo4j hackathon](https://relate.devpost.com/).
 | Criterion | Where to see it |
 | --- | --- |
 | Relate and connected context (30) | The store is the Markdown vault [`memory/`](memory/), opened by Relate in `directory` mode; facts link to the entity they are `ABOUT`, the agent they are `ASSERTED_BY`, their `SOURCE`, and the facts they `SUPERSEDES` or are `DERIVED_FROM`. Every review rule is Cypher ([`default_rules.yaml`](src/mempr/default_rules.yaml)), run by Relate in CI, on the server and in the page (WebAssembly). [`bench/real-memory/`](bench/real-memory/) is a second store: 590 real facts from 50 public repositories. |
-| Functionality and completeness (25) | A required GitHub check ([`action.yml`](action.yml)) that blocks pull requests [#15](https://github.com/himanshu748/memory-pr/pull/15) and passes [#6](https://github.com/himanshu748/memory-pr/pull/6); an [MCP server](#use-it-from-an-agent); a [backend](#backend); the [live page](https://memory-pr.vercel.app/), which reviews any public GitHub repository and can open a real pull request here. 240 tests run in CI. |
+| Functionality and completeness (25) | A required GitHub check ([`action.yml`](action.yml)) that blocks pull requests [#15](https://github.com/himanshu748/memory-pr/pull/15) and passes [#6](https://github.com/himanshu748/memory-pr/pull/6); an [MCP server](#use-it-from-an-agent); a [backend](#backend); the [live page](https://memory-pr.vercel.app/), which reviews any public GitHub repository and can open a real pull request here. 245 tests run in CI. |
 | Usefulness (20) | [On 50 popular public repositories](#measured-on-50-real-repositories), 154 of the 328 facts an agent would have learned a year ago are wrong today; the check blocks all 154 until the new fact replaces the old one. On [300 simulated pull requests](#measured-result) it cuts wrong facts left in memory from 21 to 1. |
 | Documentation and reproducibility (15) | [Try it in two minutes](#try-it-in-two-minutes) (nothing to install, or `pip install -e ".[dev]" && pytest -q`); both measurements are rerun by one command each, and their raw numbers are committed in [`docs/`](docs/). |
 | Creativity (10) | Agent memory reviewed the way code is: each change is a pull request, and the check reads it as a graph, so it catches damage git calls a clean merge ([why a text diff is not enough](#why-a-text-diff-is-not-enough)). |
@@ -268,6 +268,23 @@ it is reviewed with.
 | `unattributed-fact` | no | a fact with no author |
 
 ## Use it from an agent
+
+One command, run in the repository that holds `memory/`:
+
+```bash
+mempr setup            # or: --agent claude / cursor / codex
+```
+
+It adds the MCP server below to `.mcp.json` (Claude Code) and `.cursor/mcp.json` (Cursor),
+copies the [skill](#a-skill-for-coding-agents) into `.claude/skills/`, prints the
+`codex mcp add` line for Codex, and adds a Claude Code `PreToolUse` hook: before an agent
+edits a file, `mempr hook` recalls what the memory knows about the entity the file belongs
+to (`services/payments-api/db.go` gets the `payments-api` facts, each with its source) and
+hands it to the agent as context. The hook never blocks an edit, and says nothing when
+nothing is known. Existing entries in those files are kept; running it twice changes
+nothing.
+
+To configure it by hand instead:
 
 `mempr mcp` is an [MCP](https://modelcontextprotocol.io) server over stdio, so Claude Code,
 Cursor, Devin or any other MCP client can use the memory while it works. Add it to the
