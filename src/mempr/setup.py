@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import shlex
 import shutil
-from pathlib import Path, PurePosixPath
+from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Any
 
 from . import memory
@@ -40,7 +40,7 @@ def _ours(handler: dict) -> bool:
         words = shlex.split(handler.get("command", ""))
     except ValueError:
         return False
-    named = any(Path(w).name == "mempr" for w in words)
+    named = any(PureWindowsPath(w).stem.lower() == "mempr" for w in words)
     return named and words[-1:] == ["hook"] and "--repo" in words
 
 

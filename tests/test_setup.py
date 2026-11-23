@@ -71,3 +71,12 @@ def test_paths_with_spaces_stay_one_argument(tmp_path):
     assert str(repo.resolve()) in shlex.split(hooks["PreToolUse"][0]["hooks"][0]["command"])
     codex = next(line for line in done if "codex mcp add" in line)
     assert str(repo.resolve()) in shlex.split(codex.split("`")[1])
+
+
+def test_rerun_with_a_windows_executable_keeps_one_hook(tmp_path):
+    exe = ["C:\\Tools\\mempr.exe"]
+    setup(tmp_path, "memory", ["claude"], exe)
+    setup(tmp_path, "other", ["claude"], exe)
+    hooks = json.loads((tmp_path / ".claude" / "settings.json").read_text())["hooks"]
+    assert len(hooks["PreToolUse"]) == 1
+    assert shlex.split(hooks["PreToolUse"][0]["hooks"][0]["command"])[0] == exe[0]
