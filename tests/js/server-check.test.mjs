@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { apiBase, compare, serverLine, serverRequest } from '../../site/server-check.js';
+import { apiBase, compare, MAX_MERGED, serverLine, serverRequest } from '../../site/server-check.js';
 
 const draft = (value) => ({ agent: 'visitor', entity: 'payments-api', predicate: 'database', value, source: 'docs/design.md' });
 
@@ -27,6 +27,18 @@ test('a merge that was changed in the Cypher console cannot be replayed, so noth
   assert.match(line.text, /^Server check skipped\./);
   assert.match(line.text, /Reset memory/);
   assert.doesNotMatch(line.text, /agrees|differs/);
+});
+
+test('more merged drafts than the server replays is skipped, not sent to a refusal', () => {
+  const landed = Array.from({ length: MAX_MERGED + 1 }, () => ({ draft: draft('x'), edited: false }));
+  const request = serverRequest(landed, draft('c'));
+  assert.deepEqual(request, { skip: 'too-many-merges' });
+  const line = serverLine({ state: 'skipped', why: request.skip }, false);
+  assert.match(line.text, /^Server check skipped\./);
+  assert.match(line.text, /more than 12 pull requests/);
+  assert.match(line.text, /Reset memory/);
+  // At the cap the request still goes out: the cutoff is exactly one merge later.
+  assert.equal(serverRequest(landed.slice(0, MAX_MERGED), draft('c')).skip, undefined);
 });
 
 test('the answer is compared on the verdict and the set of blocking rules', () => {

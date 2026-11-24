@@ -1085,7 +1085,7 @@ function serverCheck(v) {
   if (API === null) return;
   const request = serverRequest(play.landed, v.draft);
   if (request.skip) {
-    v.server = { state: 'skipped' };
+    v.server = { state: 'skipped', why: request.skip };
     return;
   }
   const mine = verdict(v);
