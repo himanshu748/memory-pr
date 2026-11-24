@@ -280,7 +280,10 @@ def learn(
             ) from error
 
     meta = api(f"/repos/{repo}")
-    repo, branch = meta["full_name"], meta["default_branch"]
+    repo, branch = meta.get("full_name", repo), meta.get("default_branch")
+    if not isinstance(branch, str) or not branch:
+        # An empty repository has no default branch and no commits to compare.
+        raise RepoError(422, f"{repo} has no commits yet; there is nothing to compare")
     head = _commit(api, repo, f"sha={urllib.parse.quote(branch)}")
     until = datetime.now(timezone.utc) - timedelta(days=round(months * 30.44))
     old = _commit(

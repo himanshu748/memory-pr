@@ -208,6 +208,21 @@ def test_one_pull_request_is_opened_at_a_time():
     assert open_request({"draft": MYSQL}, MEMORY, RULES, ON, github)["state"] == "queued"
 
 
+def test_a_stuck_workflow_run_cannot_keep_visitors_out():
+    # A run that never completes is ignored once it is older than RUN_WAIT; only a fresh
+    # unfinished run means a pull request is really being opened.
+    old = (datetime.now(timezone.utc) - timedelta(minutes=16)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    stuck = {"workflow_runs": [{"status": "in_progress", "created_at": old}]}
+    github = GitHub(**{"/pulls": (200, []), "/runs": (200, stuck), "/dispatches": (204, None)})
+    assert open_request({"draft": MYSQL}, MEMORY, RULES, ON, github)["state"] == "queued"
+    fresh = (datetime.now(timezone.utc) - timedelta(minutes=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    busy = {"workflow_runs": [{"status": "in_progress", "created_at": fresh}]}
+    github = GitHub(**{"/pulls": (200, []), "/runs": (200, busy)})
+    with pytest.raises(Refused) as refused:
+        open_request({"draft": MYSQL}, MEMORY, RULES, ON, github)
+    assert refused.value.status == 429
+
+
 def test_when_github_will_not_count_the_workflow_still_decides():
     github = GitHub(**{"/pulls": (403, None), "/dispatches": (204, None)})
     assert open_request({"draft": MYSQL}, MEMORY, RULES, ON, github)["state"] == "queued"
