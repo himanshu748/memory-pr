@@ -248,7 +248,7 @@ function union(v) {
   for (const n of nodes.values()) {
     n.replacedBy = replacedBy.get(n.id);
     n.empty = n.label === 'Fact' && !n.stub && n.props.predicate === undefined;
-    n.old = n.label === 'Fact' && (n.replacedBy || n.props.status === 'retracted');
+    n.old = n.label === 'Fact' && (n.replacedBy || ['retracted', 'unconfirmed'].includes(n.props.status));
   }
   return { nodes, rels };
 }
@@ -528,11 +528,15 @@ function fixesFor(p) {
   return [];
 }
 
+const reviewState = (blocked, unconfirmed) => blocked ? 'blocked' : unconfirmed ? 'unconfirmed' : 'passed';
+const REVIEW_CHIP = { blocked: 'Blocked', unconfirmed: 'Needs verification', passed: 'Passes' };
+
 function renderViews() {
   $('views').innerHTML = views
     .map((v, i) => {
-      const state = !v.pull ? '' : verdict(v).blocked ? 'blocked' : 'passed';
-      const chip = v.pull ? `<span class="chip-state ${state}">${state === 'blocked' ? 'Blocked' : 'Passes'}</span>` : '<span class="chip-state base">main</span>';
+      const state = v.pull ? reviewState(verdict(v).blocked, v.unconfirmed?.length) : '';
+      const tone = state === 'unconfirmed' ? 'base' : state;
+      const chip = v.pull ? `<span class="chip-state ${tone}">${REVIEW_CHIP[state]}</span>` : '<span class="chip-state base">main</span>';
       const name = v.mine ? 'Your pull request' : v.pull ? `${esc(v.pull.author)}` : 'Shared memory';
       const sub = v.pull ? esc(v.pull.description) : 'What every agent reads today';
       return `<button type="button" data-view="${i}" class="${v === view ? 'on' : ''} ${state}">${chip}<strong>${name}</strong><small>${sub}</small></button>`;
@@ -591,9 +595,11 @@ function renderReview() {
       '<h3>What a pull request does to it</h3><div class="pulls">',
       ...views.filter((x) => x.pull).map((x) => {
         const s = verdict(x);
+        const state = reviewState(s.blocked, x.unconfirmed?.length);
+        const label = s.blocked ? `blocked: ${plural(s.blocking, 'problem', 'problems')}` : REVIEW_CHIP[state];
         return (
           `<button type="button" class="pull" data-view="${views.indexOf(x)}">` +
-          `<span class="tag ${s.blocked ? 'blocked' : 'passed'}">${s.blocked ? `blocked: ${plural(s.blocking, 'problem', 'problems')}` : 'passes'}</span>` +
+          `<span class="tag ${state}">${label}</span>` +
           `<strong>${esc(x.title)}</strong><span>${esc(x.pull.author)} ${esc(x.pull.description)}</span></button>`
         );
       }),
@@ -601,16 +607,19 @@ function renderReview() {
     );
   } else {
     const r = v.pull.review || delta(v);
+    const unconfirmed = v.unconfirmed?.length || 0;
+    const state = reviewState(blocked, unconfirmed);
     parts.push(
-      `<div class="verdict ${blocked ? 'blocked' : 'passed'}">${
-        blocked ? `Merge blocked: ${plural(blocking, 'problem', 'problems')}` : 'Review passed: safe to merge'
+      `<div class="verdict ${state}">${
+        blocked ? `Merge blocked: ${plural(blocking, 'problem', 'problems')}` : unconfirmed ? 'Needs verification' : 'Review passed: safe to merge'
       }</div>`,
       `<h2>${esc(v.title)}</h2>`,
       `<p class="meta"><strong>${esc(v.pull.author)}</strong> ${esc(v.pull.description)}. Branch <code>${esc(v.pull.id)}</code>.</p>`,
       `<p class="delta"><span class="plus">+ ${count(r.added)}</span><span class="minus">− ${count(r.removed)}</span></p>`,
     );
     if (list.length) parts.push(problemList(list));
-    else parts.push('<p class="ok">Nothing contradicts, nothing is lost, every fact has a source.</p>');
+    if (unconfirmed) parts.push(`<p><a href="#real-out">${plural(unconfirmed, 'older fact needs', 'older facts need')} verification.</a></p>`);
+    else if (!list.length) parts.push('<p class="ok">Nothing contradicts, nothing is lost, every fact has a source.</p>');
     if (v.mine && !v.edited) parts.push(`<p class="live">Relate reviewed your pull request in this page with the ${rulesOf(v).length} rules <code>mempr check</code> runs. <a href="#write">Change it</a>.</p>`);
     else if (v.live) parts.push(liveLine(v, list));
     if (v.pull.comment) parts.push(
@@ -690,10 +699,17 @@ function renderDetail() {
       tags.push(
         n.props.status === 'retracted'
           ? '<span class="state old">retracted</span>'
-          : n.replacedBy
-            ? '<span class="state old">replaced</span>'
-            : '<span class="state current">current</span>',
+          : n.props.status === 'unconfirmed'
+            ? '<span class="state old">unconfirmed</span>'
+            : n.replacedBy
+              ? '<span class="state old">replaced</span>'
+              : '<span class="state current">current</span>',
       );
+    }
+    const evidence = view.unconfirmed?.find((fact) => `Fact/${fact.fact}` === n.id);
+    if (evidence) {
+      row('Latest scan', esc(UNCONFIRMED_REASON[evidence.reason]));
+      row('Historical source', `<a href="${esc(evidence.old_url)}" target="_blank" rel="noopener">${esc(evidence.path)}</a>`);
     }
     row('Statement', n.props.body ? esc(n.props.body) : '');
     row('About', list(out('ABOUT'), 'target'));
@@ -1682,6 +1698,11 @@ const REAL_PICKS = ['GoogleCloudPlatform/microservices-demo', 'open-telemetry/op
 const real = { body: null, fixed: false, view: null, busy: false, error: '' };
 const short7 = (sha) => esc(String(sha).slice(0, 7));
 const day = (iso) => esc(String(iso).slice(0, 10));
+const UNCONFIRMED_REASON = {
+  'source-removed': 'Source file removed',
+  'source-unread': 'Source file outside the scan limits',
+  'fact-not-found': 'Source file read, value no longer found',
+};
 
 function realView(b, fixed) {
   const side = fixed ? b.fixed : b;
@@ -1700,6 +1721,7 @@ function realView(b, fixed) {
     before: b.before,
     after: fixed ? b.fixed_after : b.after,
     real: true,
+    unconfirmed: b.unconfirmed || [],
   };
 }
 
@@ -1737,18 +1759,28 @@ function renderReal() {
   }
   const side = real.fixed ? b.fixed : b;
   const n = b.changed.length;
+  const unconfirmed = b.unconfirmed || [];
+  const state = reviewState(side.blocked, unconfirmed.length);
   const summary = side.blocked
     ? `${plural(side.review.problems, 'problem', 'problems')}: ${side.rules.join(', ')}`
-    : n ? 'every change says what it replaces' : 'no existing values changed';
+    : unconfirmed.length ? plural(unconfirmed.length, 'unconfirmed fact', 'unconfirmed facts')
+      : n ? 'every change says what it replaces' : 'no existing values changed';
   const rows = b.changed.map(
     (c, i) =>
       `<tr style="--i:${i}" class="${real.fixed ? 'fixed' : ''}"><td><code>${esc(c.entity)}</code><small class="what">${esc(c.predicate)}</small></td><td><code>${esc(c.predicate)}</code></td>` +
       `<td class="was"><a href="${esc(c.old_url)}" target="_blank" rel="noopener"><code>${esc(c.old)}</code></a></td>` +
       `<td class="now"><a href="${esc(c.new_url)}" target="_blank" rel="noopener"><code>${esc(c.new)}</code></a></td></tr>`,
   );
+  for (const c of unconfirmed) {
+    rows.push(
+      `<tr style="--i:${rows.length}"><td><code>${esc(c.entity)}</code><small class="what">${esc(c.predicate)}</small></td><td><code>${esc(c.predicate)}</code></td>` +
+      `<td><a href="${esc(c.old_url)}" title="${esc(c.path)}" target="_blank" rel="noopener"><code>${esc(c.old)}</code></a></td>` +
+      `<td>${esc(UNCONFIRMED_REASON[c.reason])}</td></tr>`,
+    );
+  }
   out.innerHTML =
     '<div class="real-side">' +
-    `<div class="stampbox ${side.blocked ? 'blocked' : 'passed'}"><strong>${side.blocked ? 'Merge blocked' : 'Review passed'}</strong>` +
+    `<div class="stampbox ${state}"><strong>${side.blocked ? 'Merge blocked' : unconfirmed.length ? 'Needs verification' : 'Review passed'}</strong>` +
     `<span>${esc(summary)}</span></div>` +
     `<p><strong>scout</strong> read <a href="${esc(b.url)}" target="_blank" rel="noopener">${esc(b.repo)}</a> at ` +
     `<a href="${esc(b.old.url)}" target="_blank" rel="noopener"><code>${short7(b.old.sha)}</code></a> on ${day(b.old.date)} and wrote ${plural(b.learned, 'fact', 'facts')}. ` +
@@ -1762,7 +1794,7 @@ function renderReal() {
     '<div class="outcome-actions">' +
     (n ? `<button type="button" class="btn" id="real-fix">${real.fixed ? 'Undo' : 'Mark them as replacing the old facts'}</button>` : '') +
     '<button type="button" class="btn primary" id="real-explore">Explore the graph</button></div></div>' +
-    (n
+    (rows.length
       ? `<table class="moved"><thead><tr><th>About</th><th>What</th><th>${day(b.old.date)}</th><th>${day(b.head.date)}</th></tr></thead><tbody>${rows.join('')}</tbody></table>`
       : `<p class="outcome-empty">Read ${plural(b.files.head, 'file', 'files')} (Dockerfiles, package.json, go.mod, pyproject.toml, Cargo.toml, .nvmrc). Try more months or another repository.</p>`);
   out.classList.remove('play');

@@ -389,6 +389,9 @@ writes what the files state as notes (the final `FROM` of each Dockerfile, `engi
 every pull request. Every value that moved is a `contradiction`, with both files linked,
 until the new fact says it `SUPERSEDES` the old one; the page shows both reviews and opens
 either in the graph explorer, where Relate in the page reruns the rules.
+Older facts with no value in the latest scan are marked `unconfirmed` in both proposed
+graphs. The result keeps the original source link and says whether the file was removed,
+outside the scan limits, or read without finding the value.
 
 On `GoogleCloudPlatform/microservices-demo` a year back it finds about a dozen moved values, such as
 the checkout service going from Go 1.23.0 to 1.25.0. The same works from Python:
