@@ -44,21 +44,30 @@ so judges can replay it.
 ## 2. Produce the reviewed memory on camera (60 seconds)
 
 In a scratch clone of the fixture repo, copy `memory-stale/` in as `memory/`,
-commit it, then run the two commands a conscientious agent would after noticing
-the source file is gone:
+commit it, pin that commit, then run the two commands a conscientious agent
+would after noticing the source file is gone:
 
 ```bash
+git init -b main && cp -r ../memory-stale memory && git add -A \
+  && git commit -m "seed shared memory"
+STALE_SHA=$(git rev-parse HEAD)     # pin BEFORE the fix — main moves
 mempr retract payments-api--database--postgres-15
 mempr add-fact --entity payments-api --predicate database --value mongodb-8 \
   --agent reviewer --source docker-compose.yml \
   --supersedes payments-api--database--postgres-15
 git add memory && git commit -m "retract stale database fact, record mongodb-8"
-mempr check --base main --head HEAD   # passes: the correction is accepted
+FIX_SHA=$(git rev-parse HEAD)
+mempr check --base $STALE_SHA --head $FIX_SHA   # passes: correction accepted
 ```
+
+Do not use `main` as the base — after the fix commit, `main` and `HEAD` point
+at the same revision and the check reports no changes. The pinned stale SHA
+is the only base that shows the retraction and the superseding fact.
 
 Capture the `mempr check` output passing — that is the proof the reviewed
 memory is a legitimate review result. `memory-reviewed/` in this directory is
-the expected end state; diff it against what the commands produced.
+a reference copy of the expected end state; diff it against what the commands
+produced.
 
 ## 3. The two runs
 
@@ -67,7 +76,8 @@ e.g. Claude Code, Codex or Devin), `memory/` seeded per run and committed on a
 working branch so the agent trusts it:
 
 - Run A: `memory-stale/` → `memory/`
-- Run B: `memory-reviewed/` → `memory/`
+- Run B: the corrected `memory/` the scratch clone holds at `$FIX_SHA` — the
+  exact vault `mempr check` accepted, not the prewritten `memory-reviewed/`
 
 Both sessions install `mempr` (pip or the composite Action's tooling) and run
 the identical prompt:
@@ -88,7 +98,7 @@ Do not hint at MongoDB or Postgres. If the agent asks to clarify, answer
 | Shot | From |
 | --- | --- |
 | `mempr check --base --head` passing the correction | step 2 |
-| `mempr recall payments-api` output | both sessions (A shows postgres-15 active; B shows mongodb-8 active, postgres-15 retracted) |
+| `mempr recall payments-api` output | both sessions (A shows postgres-15; B shows mongodb-8 — recall prints only current facts; the retraction shows in the graph) |
 | `git show` of the agent's commit — compose + .env diff and the citation line | both sessions (the agent commits, so `git diff` is empty) |
 | `curl localhost:8080/db` after `docker compose up --build` | both sessions — whether the chosen database actually answers |
 | The `SUPERSEDES`/`SOURCE` path in the graph | run B memory in the playground or `mempr export` |
@@ -98,9 +108,10 @@ Do not hint at MongoDB or Postgres. If the agent asks to clarify, answer
 - **A** adds `postgres:15` + `DATABASE_URL=postgresql://…`, citing
   `memory/Fact/payments-api--database--postgres-15.md`. The edit is wrong — the
   code uses MongoDB — and `/db` cannot answer (no postgres driver, no server).
-- **B** adds `mongo:8` + `DATABASE_URL=mongodb://…`, citing `src/db.py` or the
-  reviewed fact's SOURCE link, because `mempr recall` returns the retraction
-  and the superseding fact. `/db` pings MongoDB.
+- **B** adds `mongo:8` + `DATABASE_URL=mongodb://…`, citing `src/db.py` (the
+  `pymongo` import — the starting compose file leaves the database a TODO) or
+  the reviewed fact's SOURCE link, because `mempr recall` returns `mongodb-8`
+  as the current value. `/db` pings MongoDB.
 
 If A lands on MongoDB anyway, publish that — "the model recovered without
 reviewed memory in this run" is honest and still shows B's provenance.

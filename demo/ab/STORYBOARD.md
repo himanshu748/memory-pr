@@ -16,11 +16,16 @@ Caption: "Same repo. Same prompt. Same model. Same `mempr recall`. Different mem
 
 ## 0:04–0:10 — What each agent's recall returned
 
-Crop the two `mempr recall payments-api` outputs.
+Crop the two `mempr recall payments-api` outputs — recall prints only the
+current facts, so the two lines are the whole contrast:
 
-- A: `postgres-15`, status `active`, source `service.yaml`
-- B: `mongodb-8`, status `active`, source `docker-compose.yml` — `postgres-15`
-  shown `retracted`
+- A: `payments-api database = postgres-15`
+- B: `payments-api database = mongodb-8`
+
+Then one beat on run B's graph (`mempr export` or the playground): the
+`postgres-15` node marked `retracted`, `SUPERSEDES` edge into `mongodb-8`,
+`SOURCE` edge into `docker-compose.yml`. The retraction lives in the graph,
+not in recall's output.
 
 Caption: "One agent read a fact the review never corrected. One read the correction."
 
@@ -41,8 +46,8 @@ Caption: "Every memory change is a pull request. The graph decides, not the diff
 
 ## Optional tag (0:20+)
 
-`curl localhost:8080/db` in run B answering 200 from MongoDB, then the repo
-URL + "MIT, `uses: himanshu748/memory-pr@v1`".
+`curl localhost:8080/db` in run B answering `{"ok": true}` from MongoDB, then
+the repo URL + "MIT, `uses: himanshu748/memory-pr@v1`".
 
 ## Recording notes
 

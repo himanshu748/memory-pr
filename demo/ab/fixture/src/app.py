@@ -18,7 +18,7 @@ class Handler(BaseHTTPRequestHandler):
             return
         try:
             db.connect().command("ping")
-            self._send(200, {"ok": True, "database_url": url})
+            self._send(200, {"ok": True})
         except Exception as exc:  # noqa: BLE001 - a demo, report whatever failed
             self._send(503, {"ok": False, "error": str(exc)})
 
