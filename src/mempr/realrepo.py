@@ -320,6 +320,9 @@ def learn(
 
     then = _snapshot(repo, old, texts[old["sha"]], qualify)
     now = _snapshot(repo, head, texts[head["sha"]], qualify)
+    if not then and not now:
+        raise RepoError(422, "No supported facts found in either commit. Try another repository.")
+
     held = {fact_name(f["entity"], f["predicate"], f["value"]): f["value"] for f in then}
     for f in then:
         f["name"] = fact_name(f["entity"], f["predicate"], f["value"])
