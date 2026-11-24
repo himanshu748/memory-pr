@@ -556,19 +556,44 @@ function renderViews() {
 }
 let markAt = '';
 
-/** The first screen's proof: the same contradiction the review finds, read from the data. */
+/** The first screen's proof: the same finding the review reports, read from the data. */
 function renderProof(v) {
-  const p = v.pull && problemsOf(v).find((x) => x.rule === 'contradiction' && x.row);
-  if (!p) return;
-  const { entity, predicate, fact, other, value, other_value: otherValue } = p.row;
-  if (![entity, predicate, value, otherValue].every((x) => typeof x === 'string')) return;
-  const inMemory = (name) => data.memory.nodes.some((n) => n.id === `Fact/${name}`);
-  const [fresh, old] = inMemory(fact) && !inMemory(other) ? [otherValue, value] : [value, otherValue];
-  $('proof-old').textContent = old;
-  $('proof-new').textContent = fresh;
-  $('proof-entity').textContent = entity;
-  document.querySelectorAll('.proof-pred').forEach((el) => (el.textContent = predicate));
+  if (!v.pull) return;
+  const list = problemsOf(v);
+  const c = list.find((x) => x.rule === 'contradiction' && x.row);
   $('proof-who').textContent = v.pull.id;
+  if (c) {
+    const { entity, predicate, fact, other, value, other_value: otherValue } = c.row;
+    if (![entity, predicate, value, otherValue].every((x) => typeof x === 'string')) return;
+    const inMemory = (name) => data.memory.nodes.some((n) => n.id === `Fact/${name}`);
+    const [fresh, old] = inMemory(fact) && !inMemory(other) ? [otherValue, value] : [value, otherValue];
+    $('proof-new').textContent = fresh;
+    $('proof-entity').textContent = entity;
+    $('proof-old').textContent = old;
+    $('proof-top-note').textContent = `${predicate}, added by this pull request`;
+    $('proof-edge-a').textContent = 'about';
+    $('proof-edge-b').textContent = 'about';
+    $('proof-bot-note').textContent = `${predicate}, already in memory`;
+    $('proof-stamp').textContent = 'Blocked. Two facts contradict.';
+    $('proof-foot').textContent = 'One service, two active databases. The path is the proof. Open it in the graph.';
+    return;
+  }
+  // A clean merge that drops a fact and its links: show the path that disappears.
+  const d = list.find((x) => x.kind === 'dropped');
+  if (!d) return;
+  const name = (prefix) => d.nodes.find((n) => n.startsWith(prefix));
+  const fact = data.memory.nodes.find((n) => n.id === name('Fact/'));
+  const source = data.memory.nodes.find((n) => n.id === name('Source/'));
+  const uri = source?.props?.uri || '';
+  $('proof-new').textContent = uri.split('/').slice(-2).join('/') || 'the evidence';
+  $('proof-entity').textContent = fact?.props?.value || 'the fact';
+  $('proof-old').textContent = (name('Entity/') || '').split('/').pop() || 'the entity';
+  $('proof-top-note').textContent = 'the file the fact cites';
+  $('proof-edge-a').textContent = 'source';
+  $('proof-edge-b').textContent = 'about';
+  $('proof-bot-note').textContent = 'the entity it describes, already in memory';
+  $('proof-stamp').textContent = `Blocked. ${d.title}.`;
+  $('proof-foot').textContent = 'Git calls this merge clean. The fact and the links to its evidence disappear anyway.';
 }
 
 function verdict(v) {
@@ -1874,8 +1899,11 @@ async function main() {
   view = views[0];
   draw(); // lay out the memory first, so its notes keep their place in every view
   const wanted = decodeURIComponent((location.hash.match(/pr=([^&]+)/) || [])[1] || '');
-  // Open on the proof: a blocked pull request with the contradiction drawn as a path.
-  const first = views.find((v) => v.pull && verdict(v).blocked) || views[0];
+  // Open on the proof: the clean merge that silently drops links, else any blocked pull.
+  const first =
+    views.find((v) => v.pull && problemsOf(v).some((x) => x.kind === 'dropped')) ||
+    views.find((v) => v.pull && verdict(v).blocked) ||
+    views[0];
   show(views.find((v) => (v.pull ? v.short : 'main') === wanted) || first, { keepHash: true });
   renderProof(first);
   new ResizeObserver(() => {
