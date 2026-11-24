@@ -268,6 +268,9 @@ def learn(
         status, body = get("https://api.github.com" + path)
         if status == 404:
             raise RepoError(404, f"GitHub has no public repository {repo}")
+        if status == 409:
+            # An empty repository can still name a default branch; its commits list 409s.
+            raise RepoError(422, f"{repo} has no commits yet; there is nothing to compare")
         if status in (403, 429):
             raise RepoError(503, "GitHub's rate limit was reached; try again in a few minutes")
         if status != 200:

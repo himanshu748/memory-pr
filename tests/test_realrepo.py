@@ -70,6 +70,21 @@ def test_an_empty_repository_is_a_clear_error_not_a_500():
     assert error.value.status == 422 and "no commits" in str(error.value)
 
 
+def test_an_empty_repository_can_still_name_a_default_branch():
+    def fake(url):
+        if url == "https://api.github.com/repos/acme/empty":
+            return 200, json.dumps(
+                {"full_name": "acme/empty", "default_branch": "master", "html_url": "x"}
+            ).encode()
+        if "/commits?" in url:
+            return 409, b'{"message": "Git Repository is empty."}'
+        return 404, b""
+
+    with pytest.raises(RepoError) as error:
+        learn("acme/empty", 6, load_rules(None), fetch=fake)
+    assert error.value.status == 422 and "no commits" in str(error.value)
+
+
 def test_extract_reads_only_what_a_file_states():
     assert extract("Dockerfile", FILES[NEW]["Dockerfile"]) == [
         ("base-image", "gcr.io/distroless/static:nonroot")
