@@ -220,14 +220,29 @@ def open_request(
     }
 
 
+RUN_WAIT = timedelta(minutes=15)  # a run open longer than this is stuck, not working
+
+
 def _waiting(token: str, github) -> bool:
-    """True when a run of the workflow has not finished. False when GitHub would not say."""
+    """True when a run of the workflow is unfinished and fresh. False when GitHub would
+    not say. A run that never completes cannot keep visitors out past RUN_WAIT."""
     status, found = github(
         "GET", f"/repos/{REPO}/actions/workflows/{WORKFLOW}/runs?per_page=10", token
     )
     if status != 200 or not isinstance(found, dict):
         return False
-    return any(run.get("status") != "completed" for run in found.get("workflow_runs", []))
+    now = datetime.now(timezone.utc)
+    for run in found.get("workflow_runs", []):
+        if run.get("status") == "completed":
+            continue
+        made = run.get("created_at")
+        try:
+            started = datetime.fromisoformat(made.replace("Z", "+00:00"))
+        except (AttributeError, ValueError):
+            return True  # GitHub would not say when it began: assume it is working
+        if now - started <= RUN_WAIT:
+            return True
+    return False
 
 
 def _run(ident: str, token: str | None, github) -> dict[str, Any] | None:

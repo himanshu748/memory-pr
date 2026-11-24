@@ -301,6 +301,9 @@ def learn(
         status, body = get("https://api.github.com" + path)
         if status == 404:
             raise RepoError(404, f"GitHub has no public repository {repo}")
+        if status == 409:
+            # An empty repository can still name a default branch; its commits list 409s.
+            raise RepoError(422, f"{repo} has no commits yet; there is nothing to compare")
         if status in (403, 429):
             raise RepoError(503, "GitHub's rate limit was reached; try again in a few minutes")
         if status != 200:
@@ -313,7 +316,10 @@ def learn(
             ) from error
 
     meta = api(f"/repos/{repo}")
-    repo, branch = meta["full_name"], meta["default_branch"]
+    repo, branch = meta.get("full_name", repo), meta.get("default_branch")
+    if not isinstance(branch, str) or not branch:
+        # An empty repository has no default branch and no commits to compare.
+        raise RepoError(422, f"{repo} has no commits yet; there is nothing to compare")
     head = _commit(api, repo, f"sha={urllib.parse.quote(branch)}")
     until = datetime.now(timezone.utc) - timedelta(days=round(months * 30.44))
     old = _commit(
