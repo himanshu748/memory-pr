@@ -1737,6 +1737,9 @@ function renderReal() {
   }
   const side = real.fixed ? b.fixed : b;
   const n = b.changed.length;
+  const summary = side.blocked
+    ? `${plural(side.review.problems, 'problem', 'problems')}: ${side.rules.join(', ')}`
+    : n ? 'every change says what it replaces' : 'no existing values changed';
   const rows = b.changed.map(
     (c, i) =>
       `<tr style="--i:${i}" class="${real.fixed ? 'fixed' : ''}"><td><code>${esc(c.entity)}</code><small class="what">${esc(c.predicate)}</small></td><td><code>${esc(c.predicate)}</code></td>` +
@@ -1746,7 +1749,7 @@ function renderReal() {
   out.innerHTML =
     '<div class="real-side">' +
     `<div class="stampbox ${side.blocked ? 'blocked' : 'passed'}"><strong>${side.blocked ? 'Merge blocked' : 'Review passed'}</strong>` +
-    `<span>${side.blocked ? `${plural(side.review.problems, 'problem', 'problems')}: ${esc(side.rules.join(', '))}` : 'every change says what it replaces'}</span></div>` +
+    `<span>${esc(summary)}</span></div>` +
     `<p><strong>scout</strong> read <a href="${esc(b.url)}" target="_blank" rel="noopener">${esc(b.repo)}</a> at ` +
     `<a href="${esc(b.old.url)}" target="_blank" rel="noopener"><code>${short7(b.old.sha)}</code></a> on ${day(b.old.date)} and wrote ${plural(b.learned, 'fact', 'facts')}. ` +
     `<strong>builder</strong> read <a href="${esc(b.head.url)}" target="_blank" rel="noopener"><code>${short7(b.head.sha)}</code></a>, its latest commit (${day(b.head.date)}), and proposed ${plural(b.proposed, 'fact', 'facts')}. ` +

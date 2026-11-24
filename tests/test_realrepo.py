@@ -154,6 +154,17 @@ def test_a_tree_github_cut_short_is_refused():
     assert error.value.status == 422
 
 
+def test_snapshots_without_supported_facts_are_not_reviewed_as_passing():
+    def fetch(url):
+        if "/git/trees/" in url:
+            return 200, b'{"tree":[{"path":"README.md","type":"blob"}]}'
+        return fake(url)
+
+    with pytest.raises(RepoError, match="No supported facts found in either commit") as error:
+        learn("acme/shop", 12, load_rules(None), fetch=fetch)
+    assert error.value.status == 422
+
+
 def test_long_values_that_differ_late_stay_distinct():
     long = "registry.example.com/" + "a" * 120
     first = extract("Dockerfile", f"FROM {long}:1\n")[0][1]
