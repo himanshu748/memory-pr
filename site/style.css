@@ -66,8 +66,9 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 .check.mempr strong { color: var(--bad); }
 .path { display: flex; flex-direction: column; align-items: center; }
 .path .fact { width: 100%; background: var(--surface); border: 1.5px solid var(--ink); border-radius: 4px; padding: 10px 14px; position: relative; }
-.path .fact.new { background: var(--bad-wash); border-color: var(--bad); }
-.path .fact.new::after { content: "New"; position: absolute; top: 10px; right: 12px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; color: var(--surface); background: var(--bad); padding: 2px 8px; border-radius: 999px; }
+.path .fact.new, .path .fact.lost { background: var(--bad-wash); border-color: var(--bad); }
+.path .fact.new::after, .path .fact.lost::after { content: "New"; position: absolute; top: 10px; right: 12px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; color: var(--surface); background: var(--bad); padding: 2px 8px; border-radius: 999px; }
+.path .fact.lost::after { content: "Link lost"; }
 .path .fact small { display: block; color: var(--muted); font-size: 13px; }
 .path .fact b { font-size: 21px; font-family: var(--mono); font-weight: 600; letter-spacing: -0.02em; }
 .edge { height: 30px; width: 4px; position: relative; }
@@ -231,9 +232,9 @@ td { font-family: var(--mono); font-size: 13px; }
   .proof { animation: rise 0.7s 0.25s cubic-bezier(0.16, 1, 0.3, 1) both; }
   .proof .check.git strong { animation: fade 0.4s 0.8s both; }
   .proof .tick path { animation: draw 0.45s 0.95s ease-out both; }
-  .proof .fact.new { animation: rise 0.5s 1.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
-  .proof .fact.new::after { animation: pop 0.35s 1.85s cubic-bezier(0.3, 1.6, 0.5, 1) both; }
-  .proof .fact:not(.new) { animation: rise 0.5s 1.7s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  .proof .fact.new, .proof .fact.lost { animation: rise 0.5s 1.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  .proof .fact.new::after, .proof .fact.lost::after { animation: pop 0.35s 1.85s cubic-bezier(0.3, 1.6, 0.5, 1) both; }
+  .proof .fact:not(.new):not(.lost) { animation: rise 0.5s 1.7s cubic-bezier(0.16, 1, 0.3, 1) both; }
   .proof .edge:nth-of-type(2) line { animation: draw 0.4s 2.2s ease-in both; }
   .proof .edge i { animation: fade 0.3s 2.5s both; }
   .proof .entity { animation: pop 0.4s 2.55s cubic-bezier(0.3, 1.6, 0.5, 1) both; }

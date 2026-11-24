@@ -570,6 +570,7 @@ function renderProof(v) {
     $('proof-new').textContent = fresh;
     $('proof-entity').textContent = entity;
     $('proof-old').textContent = old;
+    $('proof-top-card').className = 'fact new';
     $('proof-top-note').textContent = `${predicate}, added by this pull request`;
     $('proof-edge-a').textContent = 'about';
     $('proof-edge-b').textContent = 'about';
@@ -588,6 +589,7 @@ function renderProof(v) {
   $('proof-new').textContent = uri.split('/').slice(-2).join('/') || 'the evidence';
   $('proof-entity').textContent = fact?.props?.value || 'the fact';
   $('proof-old').textContent = (name('Entity/') || '').split('/').pop() || 'the entity';
+  $('proof-top-card').className = 'fact lost';
   $('proof-top-note').textContent = 'the file the fact cites';
   $('proof-edge-a').textContent = 'source';
   $('proof-edge-b').textContent = 'about';

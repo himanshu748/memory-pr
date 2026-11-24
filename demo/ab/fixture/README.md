@@ -8,5 +8,6 @@ Toy service used to demonstrate agent memory drift.
 Run locally:
 
 ```bash
-docker compose up
+docker compose up --build
+curl localhost:8080/db   # 503 until DATABASE_URL is set in .env
 ```
