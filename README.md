@@ -22,7 +22,7 @@ Built for the [Relate by Neo4j hackathon](https://relate.devpost.com/).
 | Criterion | Where to see it |
 | --- | --- |
 | Relate and connected context (30) | The store is the Markdown vault [`memory/`](memory/), opened by Relate in `directory` mode; facts link to the entity they are `ABOUT`, the agent they are `ASSERTED_BY`, their `SOURCE`, and the facts they `SUPERSEDES` or are `DERIVED_FROM`. Every review rule is Cypher ([`default_rules.yaml`](src/mempr/default_rules.yaml)), run by Relate in CI, on the server and in the page (WebAssembly). [`bench/real-memory/`](bench/real-memory/) is a second store: 590 real facts from 50 public repositories. |
-| Functionality and completeness (25) | A required GitHub check ([`action.yml`](action.yml)) that blocks pull requests [#15](https://github.com/himanshu748/memory-pr/pull/15) and passes [#6](https://github.com/himanshu748/memory-pr/pull/6); an [MCP server](#use-it-from-an-agent); a [backend](#backend); the [live page](https://memory-pr.vercel.app/), which reviews any public GitHub repository and can open a real pull request here. 245 tests run in CI. |
+| Functionality and completeness (25) | A required GitHub check ([`action.yml`](action.yml)) that blocks pull requests [#15](https://github.com/himanshu748/memory-pr/pull/15) and passes [#6](https://github.com/himanshu748/memory-pr/pull/6); an [MCP server](#use-it-from-an-agent); a [backend](#backend); the [live page](https://memory-pr.vercel.app/), which reviews any public GitHub repository and can open a real pull request here. 253 tests run in CI. |
 | Usefulness (20) | [On 50 popular public repositories](#measured-on-50-real-repositories), 154 of the 328 facts an agent would have learned a year ago are wrong today; the check blocks all 154 until the new fact replaces the old one. On [300 simulated pull requests](#measured-result) it cuts wrong facts left in memory from 21 to 1. |
 | Documentation and reproducibility (15) | [Try it in two minutes](#try-it-in-two-minutes) (nothing to install, or `pip install -e ".[dev]" && pytest -q`); both measurements are rerun by one command each, and their raw numbers are committed in [`docs/`](docs/). |
 | Creativity (10) | Agent memory reviewed the way code is: each change is a pull request, and the check reads it as a graph, so it catches damage git calls a clean merge ([why a text diff is not enough](#why-a-text-diff-is-not-enough)). |
@@ -538,6 +538,8 @@ it from a browser, apart from this project's GitHub Pages mirror.
   and fictional. "Point it at a real repository" reads real public files from GitHub when
   you ask it to, and stores nothing. Nothing was recorded; there is no voice or video.
 - The demo agents are scripted and call no model.
+- Everything in this repository was written during the contest window (first commit 20 Nov
+  2026). Pre-existing code: only the vendored libraries below and Relate itself.
 - Built with AI assistance (Devin). Third-party: Relate (`relate-db`, `@relate/relate-wasm`),
   PyYAML, the MCP Python SDK, Cytoscape.js (graph drawing in the browser view), the Geist and
   Geist Mono fonts (self-hosted, SIL Open Font License), pytest, ruff. The browser view is a
