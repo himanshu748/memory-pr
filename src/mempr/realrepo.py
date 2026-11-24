@@ -170,7 +170,7 @@ def _snapshot(
                     "predicate": predicate,
                     "value": value,
                     "path": path,
-                    "url": f"https://github.com/{repo}/blob/{commit['sha']}/{path}",
+                    "url": f"https://github.com/{repo}/blob/{commit['sha']}/{urllib.parse.quote(path)}",
                 }
             )
     # One value per entity and predicate: the first file wins, so a fact is never doubled.
@@ -178,6 +178,39 @@ def _snapshot(
     for f in facts:
         seen.setdefault((f["entity"], f["predicate"]), f)
     return list(seen.values())
+
+
+def _unconfirmed(
+    then: list[dict[str, str]],
+    now: list[dict[str, str]],
+    head_paths: set[str],
+    head_texts: dict[str, str],
+) -> list[dict[str, str]]:
+    """Explain why each older fact has no matching evidence in the latest scan."""
+    checked = {(f["entity"], f["predicate"]) for f in now}
+    missing = []
+    for fact in then:
+        if (fact["entity"], fact["predicate"]) in checked:
+            continue
+        path = fact["path"]
+        if path not in head_paths:
+            reason = "source-removed"
+        elif path not in head_texts:
+            reason = "source-unread"
+        else:
+            reason = "fact-not-found"
+        missing.append(
+            {
+                "fact": fact["name"],
+                "entity": fact["entity"],
+                "predicate": fact["predicate"],
+                "old": fact["value"],
+                "old_url": fact["url"],
+                "path": path,
+                "reason": reason,
+            }
+        )
+    return missing
 
 
 def _note(
@@ -212,7 +245,7 @@ def _write(
             vault,
             "Fact",
             name,
-            {"predicate": f["predicate"], "status": "active", "value": f["value"]},
+            {"predicate": f["predicate"], "status": f.get("status", "active"), "value": f["value"]},
             {
                 "ABOUT": [f"Entity/{slug(f['entity'])}"],
                 "ASSERTED_BY": [f"Agent/{agent}"],
@@ -347,6 +380,10 @@ def learn(
         if (k := (f["entity"], f["predicate"])) in known
     ]
     replaces = dict(c.pop("replaces") for c in changed)
+    head_paths = {i["path"] for i in trees[head["sha"]].get("tree", []) if i.get("type") == "blob"}
+    unconfirmed = _unconfirmed(then, now, head_paths, texts[head["sha"]])
+    unconfirmed_names = {f["fact"] for f in unconfirmed}
+    carried = [f | {"status": "unconfirmed"} if f["name"] in unconfirmed_names else f for f in then]
 
     with tempfile.TemporaryDirectory(prefix="mempr-learn-") as tmp:
         root = Path(tmp)
@@ -356,7 +393,7 @@ def learn(
         results = {}
         for kind, links in (("stale", {}), ("fixed", replaces)):
             after = root / kind
-            _write(after, then, OLD_AGENT, old["sha"], {})
+            _write(after, carried, OLD_AGENT, old["sha"], {})
             _write(after, proposed, NEW_AGENT, head["sha"], links)
             review = review_vaults(before, after, rules, base="memory", head=f"agent/{NEW_AGENT}")
             results[kind] = (review, after)
@@ -377,6 +414,7 @@ def learn(
             "learned": len(then),
             "proposed": len(proposed),
             "changed": changed,
+            "unconfirmed": unconfirmed,
             "before": before_graph,
             "after": after_graph,
             "fixed_after": fixed_graph,

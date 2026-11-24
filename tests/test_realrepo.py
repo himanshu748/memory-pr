@@ -25,7 +25,7 @@ FILES = {
 }
 
 
-def fake(url):
+def fake(url, *, files=FILES):
     api = "https://api.github.com/repos/acme/shop"
 
     def commit(sha):
@@ -49,11 +49,11 @@ def fake(url):
         return 200, json.dumps(commit(OLD if "until=" in url else NEW)).encode()
     if url.startswith(api + "/git/trees/"):
         sha = url.split("/trees/")[1].split("?")[0]
-        return 200, json.dumps({"tree": [{"path": p, "type": "blob"} for p in FILES[sha]]}).encode()
+        return 200, json.dumps({"tree": [{"path": p, "type": "blob"} for p in files[sha]]}).encode()
     prefix = "https://raw.githubusercontent.com/acme/shop/"
     if url.startswith(prefix):
         sha, path = url[len(prefix) :].split("/", 1)
-        return 200, FILES[sha][path].encode()
+        return 200, files[sha][path].encode()
     return 404, b""
 
 
@@ -90,6 +90,7 @@ def test_learn_blocks_values_that_moved_and_passes_once_they_replace_the_old():
         ("web", "node-engine"): (">=18", ">=20"),
     }
     assert out["learned"] == 3 and out["proposed"] == 3  # the go version did not move; pnpm is new
+    assert out["unconfirmed"] == []
     assert out["blocked"] and out["rules"] == ["contradiction"] and len(out["problems"]) == 2
     assert not out["fixed"]["blocked"]
     ids = {n["id"] for n in out["after"]["nodes"]}
@@ -114,21 +115,51 @@ def test_a_value_whose_slug_matches_the_old_one_is_still_a_change():
         NEW: {"pyproject.toml": '[project]\nrequires-python = "~=3.10"\n'},
     }
 
-    def fetch(url):
-        prefix = "https://raw.githubusercontent.com/acme/shop/"
-        if url.startswith(prefix):
-            sha, path = url[len(prefix) :].split("/", 1)
-            return 200, files[sha][path].encode()
-        if "/git/trees/" in url:
-            sha = url.split("/trees/")[1].split("?")[0]
-            return 200, json.dumps(
-                {"tree": [{"path": p, "type": "blob"} for p in files[sha]]}
-            ).encode()
-        return fake(url)
-
-    out = learn("acme/shop", 12, load_rules(None), fetch=fetch)
+    out = learn("acme/shop", 12, load_rules(None), fetch=lambda url: fake(url, files=files))
     assert [(c["old"], c["new"]) for c in out["changed"]] == [(">=3.10", "~=3.10")]
     assert out["blocked"] and not out["fixed"]["blocked"]
+
+
+@pytest.mark.parametrize(
+    ("head_files", "reason"),
+    [
+        ({"go.mod": "module root\n\ngo 1.23\n"}, "source-removed"),
+        ({"go.mod": "module root\n\ngo 1.23\n", "api/go.mod": "go 1.22\n"}, "source-unread"),
+        ({"api/go.mod": "module api\n"}, "fact-not-found"),
+    ],
+)
+def test_unconfirmed_facts_keep_their_provenance_without_staying_active(
+    head_files, reason, monkeypatch
+):
+    monkeypatch.setattr("mempr.realrepo.MAX_FILES", 1)
+    files = {OLD: {"api/go.mod": "module api\n\ngo 1.22\n"}, NEW: head_files}
+    out = learn("acme/shop", 12, load_rules(None), fetch=lambda url: fake(url, files=files))
+    fact_id = "Fact/api--go-version--1-22"
+    old_url = f"https://github.com/acme/shop/blob/{OLD}/api/go.mod"
+    assert out["changed"] == []
+    assert out["unconfirmed"] == [
+        {
+            "fact": fact_id.removeprefix("Fact/"),
+            "entity": "api",
+            "predicate": "go-version",
+            "old": "1.22",
+            "old_url": old_url,
+            "path": "api/go.mod",
+            "reason": reason,
+        }
+    ]
+    assert not out["blocked"] and not out["fixed"]["blocked"]
+    for graph, status in (
+        (out["before"], "active"),
+        (out["after"], "unconfirmed"),
+        (out["fixed_after"], "unconfirmed"),
+    ):
+        nodes = {n["id"]: n for n in graph["nodes"]}
+        assert nodes[fact_id]["props"]["status"] == status
+        source = next(
+            r["target"] for r in graph["rels"] if r["source"] == fact_id and r["type"] == "SOURCE"
+        )
+        assert nodes[source]["props"]["uri"] == old_url
 
 
 def test_a_file_github_does_not_send_fails_the_reading_instead_of_passing():
