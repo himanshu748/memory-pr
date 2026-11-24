@@ -23,15 +23,15 @@ current facts, so the two lines are the whole contrast:
 - B: `payments-api database = mongodb-8`
 
 Then one beat on run B's graph (`mempr export` or the playground): the
-`postgres-15` node marked `retracted`, `SUPERSEDES` edge into `mongodb-8`,
-`SOURCE` edge into `docker-compose.yml`. The retraction lives in the graph,
-not in recall's output.
+`postgres-15` node marked `retracted`, a `SUPERSEDES` edge from `mongodb-8`
+to `postgres-15`, and a `SOURCE` edge from `mongodb-8` to the pinned
+`src/db.py`. The graph shows the retraction.
 
 Caption: "One agent read a fact the review never corrected. One read the correction."
 
 ## 0:10–0:15 — The correction was accepted
 
-The `mempr check --base --head` output from step 2 of the runbook: the
+The `mempr check --base "$STALE_SHA" --head "$FIX_SHA"` output from step 2 of the runbook: the
 retraction + superseding fact passes review.
 
 Caption: "memory-pr didn't write anything. It reviewed the correction — and passed it."

@@ -5,82 +5,86 @@ The only variable is the memory the agent reads — and each session gets it the
 same way, through `mempr recall`.
 
 - **Run A — stale memory.** `memory-stale/` says `payments-api database = postgres-15`,
-  status `active`, sourced to an old `service.yaml` deleted from the repo since.
+  status `active`, sourced to a historical sample manifest outside the current fixture.
 - **Run B — reviewed memory.** The same fact marked `retracted`, superseded by
-  `database = mongodb-8` whose SOURCE points at the current `docker-compose.yml`.
-  The runbook derives this state with `mempr` commands, and `mempr check` passes
-  it — the reviewed memory is what a real accepted review produces, not a
-  hand-written fixture.
+  `database = mongodb-8` whose SOURCE points at the pinned `src/db.py`.
+  The runbook builds this vault with `mempr` commands and checks the correction
+  before the agent reads it.
 
-## 1. Publish the fixture repo once
+## 1. Set up the published fixture
 
-`fixture/` is a runnable service whose current code already uses MongoDB
-(`src/db.py` imports `pymongo`; `docker compose up --build` works as shipped —
-`/db` answers 503 until a database service and `DATABASE_URL` exist, which is
-exactly what the agent is asked to add).
+The fixture is published under `demo/ab/fixture/` in the public memory-pr
+repository. Both runs copy the same pinned snapshot into an isolated Git
+repository. `src/db.py` uses PyMongo, and the fixture README records MongoDB 8
+as the target. `/db` answers 503 until the agent supplies a database and
+`DATABASE_URL`.
 
-Build the repo with two commits so the evidence links can be pinned:
+From the root of a memory-pr clone, run these commands in the same shell.
+Install the CLI with `python -m pip install -e .` first.
 
 ```bash
-cd demo/ab
-mkdir -p fixture/services/payments-api
-cp old-evidence/services/payments-api/service.yaml fixture/services/payments-api/
-cd fixture
-git init -b main && git add -A && git commit -m "initial deploy (postgres)"
-git rm -r services && git commit -m "migrate payments-api to mongodb"
-OLD_SHA=$(git rev-parse HEAD~1); HEAD_SHA=$(git rev-parse HEAD)
-# create github.com/himanshu748/memory-pr-ab-fixture (public), push, then:
-cd ..
-sed -i "s/OLD_SHA/$OLD_SHA/; s/HEAD_SHA/$HEAD_SHA/" \
-  memory-stale/Source/*.md memory-reviewed/Source/*.md
-git -C fixture status   # tree is clean — the sed touched the vaults, not the repo
+DEMO_DIR="$(pwd)/demo/ab"
+FIXTURE_REV=0a0bc4f875446efa487193b84a905d8c6687fc7f
+WORK_DIR=$(mktemp -d)
+FIXTURE_DIR="$WORK_DIR/demo/ab/fixture"
+MONGO_SOURCE="https://github.com/himanshu748/memory-pr/blob/$FIXTURE_REV/demo/ab/fixture/src/db.py"
+
+git cat-file -e "$FIXTURE_REV^{commit}" 2>/dev/null || git fetch origin "$FIXTURE_REV"
+git archive "$FIXTURE_REV" demo/ab/fixture | tar -x -C "$WORK_DIR"
+git -C "$FIXTURE_DIR" init -b main
+git -C "$FIXTURE_DIR" add -A
+git -C "$FIXTURE_DIR" commit -m "Seed payments-api demo fixture"
 ```
 
-`OLD_SHA`'s `service.yaml` resolves only at the pinned commit (it was deleted
-after) — the stale link is a real 404 on `main`, a real page at the pin.
-`HEAD_SHA`'s `docker-compose.yml` resolves at both. A public repo is required
-so judges can replay it.
+The two source links point to the [historical sample manifest](https://github.com/himanshu748/memory-pr/blob/0a0bc4f875446efa487193b84a905d8c6687fc7f/demo/ab/old-evidence/services/payments-api/service.yaml)
+and the [current fixture's database code](https://github.com/himanshu748/memory-pr/blob/0a0bc4f875446efa487193b84a905d8c6687fc7f/demo/ab/fixture/src/db.py).
+The agent checkouts contain the current fixture only.
 
 ## 2. Produce the reviewed memory on camera (60 seconds)
 
-In a scratch clone of the fixture repo, copy `memory-stale/` in as `memory/`,
-commit it, pin that commit, then run the two commands a conscientious agent
-would after noticing the source file is gone:
+In a scratch clone, commit the stale memory, pin that commit, and review the
+correction against it.
 
 ```bash
-git init -b main && cp -r ../memory-stale memory && git add -A \
-  && git commit -m "seed shared memory"
-STALE_SHA=$(git rev-parse HEAD)     # pin BEFORE the fix — main moves
-mempr retract payments-api--database--postgres-15
-mempr add-fact --entity payments-api --predicate database --value mongodb-8 \
-  --agent reviewer --source docker-compose.yml \
+REVIEW_DIR="$WORK_DIR/review"
+git clone "$FIXTURE_DIR" "$REVIEW_DIR"
+printf '/memory/.relate/\n/memory/.cypherlite.*\n' >> "$REVIEW_DIR/.git/info/exclude"
+cp -R "$DEMO_DIR/memory-stale" "$REVIEW_DIR/memory"
+git -C "$REVIEW_DIR" add memory
+git -C "$REVIEW_DIR" commit -m "Seed shared memory"
+STALE_SHA=$(git -C "$REVIEW_DIR" rev-parse HEAD)
+mempr --repo "$REVIEW_DIR" retract payments-api--database--postgres-15
+mempr --repo "$REVIEW_DIR" add-fact --entity payments-api \
+  --predicate database --value mongodb-8 --agent reviewer --source "$MONGO_SOURCE" \
   --supersedes payments-api--database--postgres-15
-git add memory && git commit -m "retract stale database fact, record mongodb-8"
-FIX_SHA=$(git rev-parse HEAD)
-mempr check --base $STALE_SHA --head $FIX_SHA   # passes: correction accepted
+git -C "$REVIEW_DIR" add memory
+git -C "$REVIEW_DIR" commit -m "Retract stale fact and record MongoDB"
+FIX_SHA=$(git -C "$REVIEW_DIR" rev-parse HEAD)
+mempr --repo "$REVIEW_DIR" check --base "$STALE_SHA" --head "$FIX_SHA"
 ```
 
-Do not use `main` as the base — after the fix commit, `main` and `HEAD` point
-at the same revision and the check reports no changes. The pinned stale SHA
-is the only base that shows the retraction and the superseding fact.
-
-Capture the `mempr check` output passing — that is the proof the reviewed
-memory is a legitimate review result. `memory-reviewed/` in this directory is
-a reference copy of the expected end state; diff it against what the commands
-produced.
+Capture the passing `mempr check` output with its nonzero graph changes.
+`memory-reviewed/` is a reference for the expected facts. The next step uses
+the exact vault at `FIX_SHA`.
 
 ## 3. The two runs
 
-Fresh clone at `HEAD_SHA`, fresh agent session (same harness, same model —
-e.g. Claude Code, Codex or Devin), `memory/` seeded per run and committed on a
-working branch so the agent trusts it:
+Create both checkouts from the same fixture commit. Export the memory from the
+two commits the check compared.
 
-- Run A: `memory-stale/` → `memory/`
-- Run B: the corrected `memory/` the scratch clone holds at `$FIX_SHA` — the
-  exact vault `mempr check` accepted, not the prewritten `memory-reviewed/`
+```bash
+git clone "$FIXTURE_DIR" "$WORK_DIR/run-a"
+git clone "$FIXTURE_DIR" "$WORK_DIR/run-b"
+git -C "$REVIEW_DIR" archive "$STALE_SHA" memory | tar -x -C "$WORK_DIR/run-a"
+git -C "$REVIEW_DIR" archive "$FIX_SHA" memory | tar -x -C "$WORK_DIR/run-b"
+git -C "$WORK_DIR/run-a" add memory
+git -C "$WORK_DIR/run-a" commit -m "Seed shared memory"
+git -C "$WORK_DIR/run-b" add memory
+git -C "$WORK_DIR/run-b" commit -m "Seed shared memory"
+```
 
-Both sessions install `mempr` (pip or the composite Action's tooling) and run
-the identical prompt:
+Open a fresh agent session in each checkout with the same harness, model, and
+`mempr` installation on `PATH`. Give both sessions the same prompt.
 
 ```
 The payments-api service in this repo needs a database for local development.
@@ -97,10 +101,10 @@ Do not hint at MongoDB or Postgres. If the agent asks to clarify, answer
 
 | Shot | From |
 | --- | --- |
-| `mempr check --base --head` passing the correction | step 2 |
+| `mempr check` passing the correction | step 2 |
 | `mempr recall payments-api` output | both sessions (A shows postgres-15; B shows mongodb-8 — recall prints only current facts; the retraction shows in the graph) |
 | `git show` of the agent's commit — compose + .env diff and the citation line | both sessions (the agent commits, so `git diff` is empty) |
-| `curl localhost:8080/db` after `docker compose up --build` | both sessions — whether the chosen database actually answers |
+| `curl localhost:8080/db` after `docker compose up --build -d` | both sessions, once the service starts. Run `docker compose down` before switching checkouts. |
 | The `SUPERSEDES`/`SOURCE` path in the graph | run B memory in the playground or `mempr export` |
 
 ## 5. Expected outcome

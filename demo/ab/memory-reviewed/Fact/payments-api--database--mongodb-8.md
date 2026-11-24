@@ -9,7 +9,7 @@ ABOUT:
 ASSERTED_BY:
   - "[[Agent/scout]]"
 SOURCE:
-  - "[[Source/payments-api-demo-docker-compose-yml]]"
+  - "[[Source/payments-api-demo-db-py]]"
 SUPERSEDES:
   - "[[Fact/payments-api--database--postgres-15]]"
 ---
