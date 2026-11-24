@@ -8,13 +8,20 @@ export function apiBase(hostname, search = '') {
   return null;
 }
 
+// Mirrored from MAX_MERGED in src/mempr/playground.py: the server replays at
+// most this many merged drafts to rebuild the page's memory.
+export const MAX_MERGED = 12;
+
 /**
  * The request body for a draft, or the reason the server cannot check it. The server rebuilds
  * the page's memory by replaying the merged drafts, so a merge that was changed in the Cypher
- * console (`edited`) has no draft that describes it.
+ * console (`edited`) has no draft that describes it. More merged drafts than the server
+ * replays cannot be sent at all: without the skip the request would come back refused and the
+ * check would stop silently.
  */
 export function serverRequest(landed, draft) {
   if (landed.some((merge) => merge.edited)) return { skip: 'merged-edit' };
+  if (landed.length > MAX_MERGED) return { skip: 'too-many-merges' };
   return { body: { merged: landed.map((merge) => merge.draft), draft } };
 }
 
@@ -27,11 +34,17 @@ export function compare(mine, body) {
   return { state: agrees ? 'agrees' : 'differs', blocked: body.blocked, rules, ms: Number(body.elapsed_ms) || 0 };
 }
 
+const SKIP_LINES = {
+  'merged-edit':
+    'Server check skipped. You merged a pull request you had changed in the Cypher console, so the server cannot rebuild this memory from your drafts. Reset memory to compare again.',
+  'too-many-merges':
+    `Server check skipped. You merged more than ${MAX_MERGED} pull requests, and the server replays at most ${MAX_MERGED} drafts. Reset memory to compare again.`,
+};
+
 /** The line under the verdict as { tone, text }, or null for no line. `edited`: this pull request was changed in the console after the server saw it. */
 export function serverLine(server, edited) {
   if (!server || server.state === 'off') return null;
-  if (server.state === 'skipped')
-    return { tone: '', text: 'Server check skipped. You merged a pull request you had changed in the Cypher console, so the server cannot rebuild this memory from your drafts. Reset memory to compare again.' };
+  if (server.state === 'skipped') return { tone: '', text: SKIP_LINES[server.why] || SKIP_LINES['merged-edit'] };
   if (edited)
     return { tone: '', text: 'Server check not shown. You changed this pull request in the Cypher console, and the server only saw the draft.' };
   if (server.state === 'checking') return { tone: '', text: 'Asking the server to check it too.' };
