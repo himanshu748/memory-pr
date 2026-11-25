@@ -54,12 +54,12 @@ properties (the failure in the GIF);
 
 ## Evidence
 
-- **Real agent run (A/B).** Same fixture, same prompt, same model — only the seeded
-  memory differed. Stale memory → `postgres:15` and a memory proposal the check
-  blocked ([PR #1](https://github.com/himanshu748/memory-pr-ab-fixture/pull/1));
-  reviewed memory → `mongo:8` and a proposal that passed
-  ([PR #2](https://github.com/himanshu748/memory-pr-ab-fixture/pull/2)). Prompts,
-  diffs, and check output: [docs/EVIDENCE.md](docs/EVIDENCE.md),
+- **Agent A/B on a public fixture.** Devin ran the same prompt in separate
+  checkouts. With stale memory it chose `postgres:15`; the local `mempr check`
+  blocked its proposal ([PR #1](https://github.com/himanshu748/memory-pr-ab-fixture/pull/1)).
+  With reviewed memory it chose `mongo:8`; its proposal passed the local check
+  ([PR #2](https://github.com/himanshu748/memory-pr-ab-fixture/pull/2)). See the
+  [check transcripts](docs/EVIDENCE.md#real-agent-run-ab) and
   [demo/ab/RUNBOOK.md](demo/ab/RUNBOOK.md).
 - **50 real repositories:** 154 of the 328 facts learned a year ago are wrong today;
   the check blocks all 154 until superseded —
@@ -73,9 +73,8 @@ properties (the failure in the GIF);
 - **300-PR replay (simulated):** wrong facts left in memory 21 → 1, zero correct PRs
   blocked — [docs/benchmark.json](docs/benchmark.json), details in
   [docs/benchmarks.md](docs/benchmarks.md).
-- **274 tests** pass on `pytest -q` (run 25 Nov 2026); that run includes the 13
-  JavaScript tests, which also run with `node --test tests/js/*.test.mjs` and no
-  `npm install`.
+- **277 pytest cases and 13 standalone JavaScript tests passed** on 25 Nov 2026.
+  See the [test output](docs/EVIDENCE.md#test-count).
 
 ## Docs
 

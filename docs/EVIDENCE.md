@@ -48,6 +48,19 @@ visible in the first screen, everything else in the second. Screenshot captured
 
 ## Test count
 
+Main at [`fa507d7`](https://github.com/himanshu748/memory-pr/commit/fa507d741624016f800db53e1d8a6a10fdcb96ad), checked on 25 Nov 2026:
+
+```text
+$ python -m pytest -q -p no:cacheprovider --basetemp <scratch>/boost-memory-pytest
+277 passed in 78.94s (0:01:18)
+$ node --test tests/js/*.test.mjs
+ℹ tests 13
+ℹ pass 13
+ℹ fail 0
+```
+
+Earlier run from the README rework:
+
 ```bash
 $ pytest -q
 ........................................................................ [ 85%]
