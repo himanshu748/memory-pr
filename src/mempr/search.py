@@ -33,7 +33,8 @@ ORDER BY entity, predicate, value
 """.strip()
 
 # Facts derived from a lexical hit, and the facts a hit was itself derived from.
-# $names is the `fact` column of LEXICAL. Hits are left out.
+# $names is the `fact` column of LEXICAL. Hits are left out. Each direction
+# returns one row per fact, with the shortest distance across all matching paths.
 NEIGHBORHOOD = """
 MATCH (hit:Fact) WHERE hit.name IN $names
 MATCH p = (child:Fact)-[:DERIVED_FROM*1..6]->(hit)
@@ -41,8 +42,8 @@ WHERE child.status = 'active'
   AND NOT child.name IN $names
   AND NOT EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(child) WHERE n.status = 'active' }
 OPTIONAL MATCH (child)-[:ABOUT]->(e:Entity)
-RETURN DISTINCT child.name AS fact, e.name AS entity, child.predicate AS predicate,
-       child.value AS value, length(p) AS hops, 'follows' AS via
+RETURN child.name AS fact, min(e.name) AS entity, child.predicate AS predicate,
+       child.value AS value, min(length(p)) AS hops, 'follows' AS via
 UNION
 MATCH (hit:Fact) WHERE hit.name IN $names
 MATCH p = (hit)-[:DERIVED_FROM*1..6]->(root:Fact)
@@ -50,8 +51,8 @@ WHERE root.status = 'active'
   AND NOT root.name IN $names
   AND NOT EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(root) WHERE n.status = 'active' }
 OPTIONAL MATCH (root)-[:ABOUT]->(e:Entity)
-RETURN DISTINCT root.name AS fact, e.name AS entity, root.predicate AS predicate,
-       root.value AS value, length(p) AS hops, 'supports' AS via
+RETURN root.name AS fact, min(e.name) AS entity, root.predicate AS predicate,
+       root.value AS value, min(length(p)) AS hops, 'supports' AS via
 """.strip()
 
 
