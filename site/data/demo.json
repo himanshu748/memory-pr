@@ -1125,7 +1125,7 @@
    },
    "author": "builder-agent",
    "blocked": true,
-   "comment": "<!-- mempr-review -->\n## Memory review: blocked (1 problem)\n\nThis pull request adds **3 notes, 3 links, 5 properties** and removes **nothing** in the memory graph.\n\n### 1. Contradicts a fact already in memory\n`payments-api` has two active values for `database`: `mysql-8` (Fact/payments-api--database--mysql-8) and `postgres-15` (Fact/payments-api--database--postgres-15). Path: (Fact/payments-api--database--mysql-8)-[:ABOUT]->(Entity/payments-api)<-[:ABOUT]-(Fact/payments-api--database--postgres-15)\n\nFix: If the new value replaces the old one, add `SUPERSEDES: - \"[[Fact/<old>]]\"` to the new fact. If the old one is right, drop the new fact.\n\n<details><summary>Cypher for the rules that fired</summary>\n\n### `contradiction`\n\n```cypher\nMATCH (a:Fact)-[:ABOUT]->(e:Entity)<-[:ABOUT]-(b:Fact)\nWHERE a.name < b.name\n  AND a.status = 'active' AND b.status = 'active'\n  AND a.predicate = b.predicate AND a.value <> b.value\n  AND NOT EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(a) WHERE n.status = 'active' }\n  AND NOT EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(b) WHERE n.status = 'active' }\n  AND NOT EXISTS { MATCH (p:Predicate {name: a.predicate}) WHERE p.cardinality = 'many' }\nRETURN a.name AS fact, b.name AS other, e.name AS entity,\n       a.predicate AS predicate, a.value AS value, b.value AS other_value\nORDER BY fact, other\n```\n\n</details>\n\n<details><summary>Graph changes in this pull request</summary>\n\n- added note `Agent/builder`\n- added note `Fact/payments-api--database--mysql-8`\n- added note `Source/demo-project-docs-legacy-payments-api-md`\n- added `Fact/payments-api--database--mysql-8` -[:ABOUT]-> `Entity/payments-api`\n- added `Fact/payments-api--database--mysql-8` -[:ASSERTED_BY]-> `Agent/builder`\n- added `Fact/payments-api--database--mysql-8` -[:SOURCE]-> `Source/demo-project-docs-legacy-payments-api-md`\n- added `Fact/payments-api--database--mysql-8`.body = `payments-api keeps its data in MySQL 8.`\n- added `Fact/payments-api--database--mysql-8`.predicate = `database`\n- added `Fact/payments-api--database--mysql-8`.status = `active`\n- added `Fact/payments-api--database--mysql-8`.value = `mysql-8`\n- added `Source/demo-project-docs-legacy-payments-api-md`.uri = `demo/project/docs/legacy/payments-api.md`\n\n</details>\n\n<sub>Checked by mempr with Relate: base `2361f9a`, head `51e663f`, common ancestor `2361f9a`. Each rule is a Cypher query over the merged graph.</sub>\n",
+   "comment": "<!-- mempr-review -->\n## Memory review: blocked (1 problem)\n\nThis pull request adds **3 notes, 3 links, 5 properties** and removes **nothing** in the memory graph.\n\n### 1. Contradicts a fact already in memory\n`payments-api` has two active values for `database`: `mysql-8` (Fact/payments-api--database--mysql-8) and `postgres-15` (Fact/payments-api--database--postgres-15). Path: (Fact/payments-api--database--mysql-8)-[:ABOUT]->(Entity/payments-api)<-[:ABOUT]-(Fact/payments-api--database--postgres-15)\n\nFix: If the new value replaces the old one, add `SUPERSEDES: - \"[[Fact/<old>]]\"` to the new fact. If the old one is right, drop the new fact.\n\n<details><summary>Cypher for the rules that fired</summary>\n\n### `contradiction`\n\n```cypher\nMATCH (a:Fact)-[:ABOUT]->(e:Entity)<-[:ABOUT]-(b:Fact)\nWHERE a.name < b.name\n  AND a.status = 'active' AND b.status = 'active'\n  AND a.predicate = b.predicate AND a.value <> b.value\n  AND NOT EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(a) WHERE n.status = 'active' }\n  AND NOT EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(b) WHERE n.status = 'active' }\n  AND NOT EXISTS { MATCH (p:Predicate {name: a.predicate}) WHERE p.cardinality = 'many' }\nRETURN a.name AS fact, b.name AS other, e.name AS entity,\n       a.predicate AS predicate, a.value AS value, b.value AS other_value\nORDER BY fact, other\n```\n\n</details>\n\n<details><summary>Graph changes in this pull request</summary>\n\n- added note `Agent/builder`\n- added note `Fact/payments-api--database--mysql-8`\n- added note `Source/demo-project-docs-legacy-payments-api-md`\n- added `Fact/payments-api--database--mysql-8` -[:ABOUT]-> `Entity/payments-api`\n- added `Fact/payments-api--database--mysql-8` -[:ASSERTED_BY]-> `Agent/builder`\n- added `Fact/payments-api--database--mysql-8` -[:SOURCE]-> `Source/demo-project-docs-legacy-payments-api-md`\n- added `Fact/payments-api--database--mysql-8`.body = `payments-api keeps its data in MySQL 8.`\n- added `Fact/payments-api--database--mysql-8`.predicate = `database`\n- added `Fact/payments-api--database--mysql-8`.status = `active`\n- added `Fact/payments-api--database--mysql-8`.value = `mysql-8`\n- added `Source/demo-project-docs-legacy-payments-api-md`.uri = `demo/project/docs/legacy/payments-api.md`\n\n</details>\n\n<sub>Checked by mempr with Relate: base `35ddba2`, head `2b5aa61`, common ancestor `35ddba2`. Each rule is a Cypher query over the merged graph.</sub>\n",
    "description": "trusts an outdated design note and contradicts memory",
    "id": "agent/builder-contradiction",
    "problems": [
@@ -1221,7 +1221,7 @@
       "{}"
      ]
     ],
-    "base": "2361f9a03573d7075c7ca22cf7cfd16589ad1c41",
+    "base": "35ddba271f8aca29a414265124450c737b03e92c",
     "blocked": true,
     "dropped": [],
     "file_issues": [],
@@ -1242,8 +1242,8 @@
      }
     ],
     "git_conflicts": [],
-    "head": "51e663f60b3118d7e34275b767b9a2b395bab601",
-    "merge_base": "2361f9a03573d7075c7ca22cf7cfd16589ad1c41",
+    "head": "2b5aa617b167485e5e64655fd39e58fc2f573a4b",
+    "merge_base": "35ddba271f8aca29a414265124450c737b03e92c",
     "problems": 1,
     "property_conflicts": [],
     "removed": []
@@ -1927,7 +1927,7 @@
    },
    "author": "reasoner-agent",
    "blocked": true,
-   "comment": "<!-- mempr-review -->\n## Memory review: blocked (1 problem)\n\nThis pull request adds **6 notes, 12 links, 13 properties** and removes **nothing** in the memory graph.\n\n### 1. Contradicts a fact it was derived from\nFact/backup-policy--database--mysql-8 says `database` is `mysql-8` for `backup-policy`, but it was derived, 3 step(s) away, from Fact/payments-api--database--postgres-15, which says `postgres-15` for `payments-api`. The two notes are not about the same entity, so a side-by-side diff does not show a clash. Path: Fact/backup-policy--database--mysql-8 -[:DERIVED_FROM]-> Fact/backup-policy--window--sunday -[:DERIVED_FROM]-> Fact/backup-policy--cadence--nightly -[:DERIVED_FROM]-> Fact/payments-api--database--postgres-15\n\nFix: If the derived value is wrong, drop it or point `DERIVED_FROM` at the fact that states the value you actually used. If the old fact is wrong, supersede it and retract or replace the facts that were derived from it.\n\n<details><summary>Cypher for the rules that fired</summary>\n\n### `multi-hop-contradiction`\n\n```cypher\nMATCH p = (f:Fact)-[:DERIVED_FROM*1..6]->(root:Fact)\nWHERE f.status = 'active' AND root.status = 'active'\n  AND f.predicate = root.predicate AND f.value <> root.value\n  AND NOT EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(f) WHERE n.status = 'active' }\n  AND NOT EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(root) WHERE n.status = 'active' }\nOPTIONAL MATCH (f)-[:ABOUT]->(e:Entity)\nOPTIONAL MATCH (root)-[:ABOUT]->(re:Entity)\nRETURN f.name AS fact, root.name AS root, f.predicate AS predicate,\n       f.value AS value, root.value AS other_value, length(p) AS hops,\n       coalesce(e.name, '(no entity)') AS entity,\n       coalesce(re.name, '(no entity)') AS root_entity,\n       reduce(s = '', n IN nodes(p) |\n              s + CASE WHEN s = '' THEN '' ELSE ' -[:DERIVED_FROM]-> ' END + 'Fact/' + n.name)\n         AS path\nORDER BY fact, hops\n```\n\n</details>\n\n<details><summary>Graph changes in this pull request</summary>\n\n- added note `Agent/reasoner`\n- added note `Entity/backup-policy`\n- added note `Fact/backup-policy--cadence--nightly`\n- added note `Fact/backup-policy--database--mysql-8`\n- added note `Fact/backup-policy--window--sunday`\n- added note `Source/demo-project-docs-legacy-payments-api-md`\n- added `Fact/backup-policy--cadence--nightly` -[:ABOUT]-> `Entity/backup-policy`\n- added `Fact/backup-policy--cadence--nightly` -[:ASSERTED_BY]-> `Agent/reasoner`\n- added `Fact/backup-policy--cadence--nightly` -[:DERIVED_FROM]-> `Fact/payments-api--database--postgres-15`\n- added `Fact/backup-policy--cadence--nightly` -[:SOURCE]-> `Source/demo-project-services-payments-api-service-yaml`\n- added `Fact/backup-policy--database--mysql-8` -[:ABOUT]-> `Entity/backup-policy`\n- added `Fact/backup-policy--database--mysql-8` -[:ASSERTED_BY]-> `Agent/reasoner`\n- added `Fact/backup-policy--database--mysql-8` -[:DERIVED_FROM]-> `Fact/backup-policy--window--sunday`\n- added `Fact/backup-policy--database--mysql-8` -[:SOURCE]-> `Source/demo-project-docs-legacy-payments-api-md`\n- added `Fact/backup-policy--window--sunday` -[:ABOUT]-> `Entity/backup-policy`\n- added `Fact/backup-policy--window--sunday` -[:ASSERTED_BY]-> `Agent/reasoner`\n- added `Fact/backup-policy--window--sunday` -[:DERIVED_FROM]-> `Fact/backup-policy--cadence--nightly`\n- added `Fact/backup-policy--window--sunday` -[:SOURCE]-> `Source/demo-project-services-payments-api-service-yaml`\n- added `Fact/backup-policy--cadence--nightly`.body = `backup-policy cadence: nightly`\n- added `Fact/backup-policy--cadence--nightly`.predicate = `cadence`\n- added `Fact/backup-policy--cadence--nightly`.status = `active`\n- added `Fact/backup-policy--cadence--nightly`.value = `nightly`\n- added `Fact/backup-policy--database--mysql-8`.body = `backup-policy database: mysql-8, derived from the payments-api database.`\n- added `Fact/backup-policy--database--mysql-8`.predicate = `database`\n- added `Fact/backup-policy--database--mysql-8`.status = `active`\n- ... and 6 more\n\n</details>\n\n<sub>Checked by mempr with Relate: base `2361f9a`, head `72de7ae`, common ancestor `2361f9a`. Each rule is a Cypher query over the merged graph.</sub>\n",
+   "comment": "<!-- mempr-review -->\n## Memory review: blocked (1 problem)\n\nThis pull request adds **6 notes, 12 links, 13 properties** and removes **nothing** in the memory graph.\n\n### 1. Contradicts a fact it was derived from\nFact/backup-policy--database--mysql-8 says `database` is `mysql-8` for `backup-policy`, but it was derived, 3 step(s) away, from Fact/payments-api--database--postgres-15, which says `postgres-15` for `payments-api`. The two notes are not about the same entity, so a side-by-side diff does not show a clash. Path: Fact/backup-policy--database--mysql-8 -[:DERIVED_FROM]-> Fact/backup-policy--window--sunday -[:DERIVED_FROM]-> Fact/backup-policy--cadence--nightly -[:DERIVED_FROM]-> Fact/payments-api--database--postgres-15\n\nFix: If the derived value is wrong, drop it or point `DERIVED_FROM` at the fact that states the value you actually used. If the old fact is wrong, supersede it and retract or replace the facts that were derived from it.\n\n<details><summary>Cypher for the rules that fired</summary>\n\n### `multi-hop-contradiction`\n\n```cypher\nMATCH p = (f:Fact)-[:DERIVED_FROM*1..6]->(root:Fact)\nWHERE f.status = 'active' AND root.status = 'active'\n  AND f.predicate = root.predicate AND f.value <> root.value\n  AND NOT EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(f) WHERE n.status = 'active' }\n  AND NOT EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(root) WHERE n.status = 'active' }\nOPTIONAL MATCH (f)-[:ABOUT]->(e:Entity)\nOPTIONAL MATCH (root)-[:ABOUT]->(re:Entity)\nRETURN f.name AS fact, root.name AS root, f.predicate AS predicate,\n       f.value AS value, root.value AS other_value, length(p) AS hops,\n       coalesce(e.name, '(no entity)') AS entity,\n       coalesce(re.name, '(no entity)') AS root_entity,\n       reduce(s = '', n IN nodes(p) |\n              s + CASE WHEN s = '' THEN '' ELSE ' -[:DERIVED_FROM]-> ' END + 'Fact/' + n.name)\n         AS path\nORDER BY fact, hops\n```\n\n</details>\n\n<details><summary>Graph changes in this pull request</summary>\n\n- added note `Agent/reasoner`\n- added note `Entity/backup-policy`\n- added note `Fact/backup-policy--cadence--nightly`\n- added note `Fact/backup-policy--database--mysql-8`\n- added note `Fact/backup-policy--window--sunday`\n- added note `Source/demo-project-docs-legacy-payments-api-md`\n- added `Fact/backup-policy--cadence--nightly` -[:ABOUT]-> `Entity/backup-policy`\n- added `Fact/backup-policy--cadence--nightly` -[:ASSERTED_BY]-> `Agent/reasoner`\n- added `Fact/backup-policy--cadence--nightly` -[:DERIVED_FROM]-> `Fact/payments-api--database--postgres-15`\n- added `Fact/backup-policy--cadence--nightly` -[:SOURCE]-> `Source/demo-project-services-payments-api-service-yaml`\n- added `Fact/backup-policy--database--mysql-8` -[:ABOUT]-> `Entity/backup-policy`\n- added `Fact/backup-policy--database--mysql-8` -[:ASSERTED_BY]-> `Agent/reasoner`\n- added `Fact/backup-policy--database--mysql-8` -[:DERIVED_FROM]-> `Fact/backup-policy--window--sunday`\n- added `Fact/backup-policy--database--mysql-8` -[:SOURCE]-> `Source/demo-project-docs-legacy-payments-api-md`\n- added `Fact/backup-policy--window--sunday` -[:ABOUT]-> `Entity/backup-policy`\n- added `Fact/backup-policy--window--sunday` -[:ASSERTED_BY]-> `Agent/reasoner`\n- added `Fact/backup-policy--window--sunday` -[:DERIVED_FROM]-> `Fact/backup-policy--cadence--nightly`\n- added `Fact/backup-policy--window--sunday` -[:SOURCE]-> `Source/demo-project-services-payments-api-service-yaml`\n- added `Fact/backup-policy--cadence--nightly`.body = `backup-policy cadence: nightly`\n- added `Fact/backup-policy--cadence--nightly`.predicate = `cadence`\n- added `Fact/backup-policy--cadence--nightly`.status = `active`\n- added `Fact/backup-policy--cadence--nightly`.value = `nightly`\n- added `Fact/backup-policy--database--mysql-8`.body = `backup-policy database: mysql-8, derived from the payments-api database.`\n- added `Fact/backup-policy--database--mysql-8`.predicate = `database`\n- added `Fact/backup-policy--database--mysql-8`.status = `active`\n- ... and 6 more\n\n</details>\n\n<sub>Checked by mempr with Relate: base `35ddba2`, head `b73ff93`, common ancestor `35ddba2`. Each rule is a Cypher query over the merged graph.</sub>\n",
    "description": "derives a mysql fact, three hops away, from the postgres fact",
    "id": "agent/reasoner-hop",
    "problems": [
@@ -2174,7 +2174,7 @@
       "{}"
      ]
     ],
-    "base": "2361f9a03573d7075c7ca22cf7cfd16589ad1c41",
+    "base": "35ddba271f8aca29a414265124450c737b03e92c",
     "blocked": true,
     "dropped": [],
     "file_issues": [],
@@ -2198,8 +2198,8 @@
      }
     ],
     "git_conflicts": [],
-    "head": "72de7ae8a3ac92d7b8ffb947403c2bed04ed840b",
-    "merge_base": "2361f9a03573d7075c7ca22cf7cfd16589ad1c41",
+    "head": "b73ff93fea38d348752348414ce2822cfed2154d",
+    "merge_base": "35ddba271f8aca29a414265124450c737b03e92c",
     "problems": 1,
     "property_conflicts": [],
     "removed": []
@@ -2800,7 +2800,7 @@
    },
    "author": "planner-agent",
    "blocked": true,
-   "comment": "<!-- mempr-review -->\n## Memory review: blocked (3 problems)\n\nThis pull request adds **3 notes, 4 links, 5 properties** and removes **nothing** in the memory graph.\n\n### 1. Rests on a fact that was retracted or replaced\nFact/payments-api--backup-job--nightly-pg-dump is current but is derived, 1 step(s) away, from Fact/payments-api--database--postgres-15, which is superseded. Path: Fact/payments-api--backup-job--nightly-pg-dump -[:DERIVED_FROM]-> Fact/payments-api--database--postgres-15\n\nFix: Re-check the derived fact against the current value, then retract it, replace it with a new fact that supersedes it, or point `DERIVED_FROM` at the fact that replaced the old one.\n\n### 2. Rests on a fact that was retracted or replaced\nFact/payments-api--migration-tool--pg-migrate is current but is derived, 1 step(s) away, from Fact/payments-api--database--postgres-15, which is superseded. Path: Fact/payments-api--migration-tool--pg-migrate -[:DERIVED_FROM]-> Fact/payments-api--database--postgres-15\n\nFix: Re-check the derived fact against the current value, then retract it, replace it with a new fact that supersedes it, or point `DERIVED_FROM` at the fact that replaced the old one.\n\n### 3. Rests on a fact that was retracted or replaced\nFact/payments-api--restore-drill--quarterly-pg-restore is current but is derived, 2 step(s) away, from Fact/payments-api--database--postgres-15, which is superseded. Path: Fact/payments-api--restore-drill--quarterly-pg-restore -[:DERIVED_FROM]-> Fact/payments-api--backup-job--nightly-pg-dump -[:DERIVED_FROM]-> Fact/payments-api--database--postgres-15\n\nFix: Re-check the derived fact against the current value, then retract it, replace it with a new fact that supersedes it, or point `DERIVED_FROM` at the fact that replaced the old one.\n\n<details><summary>Cypher for the rules that fired</summary>\n\n### `stale-derivation`\n\n```cypher\nMATCH p = (f:Fact)-[:DERIVED_FROM*1..6]->(root:Fact)\nWHERE f.status = 'active'\n  AND NOT EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(f) WHERE n.status = 'active' }\n  AND (root.status = 'retracted'\n       OR EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(root) WHERE n.status = 'active' })\nRETURN f.name AS fact, root.name AS root, length(p) AS hops,\n       CASE WHEN root.status = 'retracted' THEN 'retracted' ELSE 'superseded' END AS reason,\n       reduce(s = '', n IN nodes(p) |\n              s + CASE WHEN s = '' THEN '' ELSE ' -[:DERIVED_FROM]-> ' END + 'Fact/' + n.name)\n         AS path\nORDER BY fact, hops\n```\n\n</details>\n\n<details><summary>Graph changes in this pull request</summary>\n\n- added note `Agent/planner`\n- added note `Fact/payments-api--database--cockroachdb-24`\n- added note `Source/demo-project-docs-migration-2026-md`\n- added `Fact/payments-api--database--cockroachdb-24` -[:ABOUT]-> `Entity/payments-api`\n- added `Fact/payments-api--database--cockroachdb-24` -[:ASSERTED_BY]-> `Agent/planner`\n- added `Fact/payments-api--database--cockroachdb-24` -[:SOURCE]-> `Source/demo-project-docs-migration-2026-md`\n- added `Fact/payments-api--database--cockroachdb-24` -[:SUPERSEDES]-> `Fact/payments-api--database--postgres-15`\n- added `Fact/payments-api--database--cockroachdb-24`.body = `payments-api moves to CockroachDB 24.`\n- added `Fact/payments-api--database--cockroachdb-24`.predicate = `database`\n- added `Fact/payments-api--database--cockroachdb-24`.status = `active`\n- added `Fact/payments-api--database--cockroachdb-24`.value = `cockroachdb-24`\n- added `Source/demo-project-docs-migration-2026-md`.uri = `demo/project/docs/migration-2026.md`\n\n</details>\n\n<sub>Checked by mempr with Relate: base `2361f9a`, head `8fd511d`, common ancestor `2361f9a`. Each rule is a Cypher query over the merged graph.</sub>\n",
+   "comment": "<!-- mempr-review -->\n## Memory review: blocked (3 problems)\n\nThis pull request adds **3 notes, 4 links, 5 properties** and removes **nothing** in the memory graph.\n\n### 1. Rests on a fact that was retracted or replaced\nFact/payments-api--backup-job--nightly-pg-dump is current but is derived, 1 step(s) away, from Fact/payments-api--database--postgres-15, which is superseded. Path: Fact/payments-api--backup-job--nightly-pg-dump -[:DERIVED_FROM]-> Fact/payments-api--database--postgres-15\n\nFix: Re-check the derived fact against the current value, then retract it, replace it with a new fact that supersedes it, or point `DERIVED_FROM` at the fact that replaced the old one.\n\n### 2. Rests on a fact that was retracted or replaced\nFact/payments-api--migration-tool--pg-migrate is current but is derived, 1 step(s) away, from Fact/payments-api--database--postgres-15, which is superseded. Path: Fact/payments-api--migration-tool--pg-migrate -[:DERIVED_FROM]-> Fact/payments-api--database--postgres-15\n\nFix: Re-check the derived fact against the current value, then retract it, replace it with a new fact that supersedes it, or point `DERIVED_FROM` at the fact that replaced the old one.\n\n### 3. Rests on a fact that was retracted or replaced\nFact/payments-api--restore-drill--quarterly-pg-restore is current but is derived, 2 step(s) away, from Fact/payments-api--database--postgres-15, which is superseded. Path: Fact/payments-api--restore-drill--quarterly-pg-restore -[:DERIVED_FROM]-> Fact/payments-api--backup-job--nightly-pg-dump -[:DERIVED_FROM]-> Fact/payments-api--database--postgres-15\n\nFix: Re-check the derived fact against the current value, then retract it, replace it with a new fact that supersedes it, or point `DERIVED_FROM` at the fact that replaced the old one.\n\n<details><summary>Cypher for the rules that fired</summary>\n\n### `stale-derivation`\n\n```cypher\nMATCH p = (f:Fact)-[:DERIVED_FROM*1..6]->(root:Fact)\nWHERE f.status = 'active'\n  AND NOT EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(f) WHERE n.status = 'active' }\n  AND (root.status = 'retracted'\n       OR EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(root) WHERE n.status = 'active' })\nRETURN f.name AS fact, root.name AS root, length(p) AS hops,\n       CASE WHEN root.status = 'retracted' THEN 'retracted' ELSE 'superseded' END AS reason,\n       reduce(s = '', n IN nodes(p) |\n              s + CASE WHEN s = '' THEN '' ELSE ' -[:DERIVED_FROM]-> ' END + 'Fact/' + n.name)\n         AS path\nORDER BY fact, hops\n```\n\n</details>\n\n<details><summary>Graph changes in this pull request</summary>\n\n- added note `Agent/planner`\n- added note `Fact/payments-api--database--cockroachdb-24`\n- added note `Source/demo-project-docs-migration-2026-md`\n- added `Fact/payments-api--database--cockroachdb-24` -[:ABOUT]-> `Entity/payments-api`\n- added `Fact/payments-api--database--cockroachdb-24` -[:ASSERTED_BY]-> `Agent/planner`\n- added `Fact/payments-api--database--cockroachdb-24` -[:SOURCE]-> `Source/demo-project-docs-migration-2026-md`\n- added `Fact/payments-api--database--cockroachdb-24` -[:SUPERSEDES]-> `Fact/payments-api--database--postgres-15`\n- added `Fact/payments-api--database--cockroachdb-24`.body = `payments-api moves to CockroachDB 24.`\n- added `Fact/payments-api--database--cockroachdb-24`.predicate = `database`\n- added `Fact/payments-api--database--cockroachdb-24`.status = `active`\n- added `Fact/payments-api--database--cockroachdb-24`.value = `cockroachdb-24`\n- added `Source/demo-project-docs-migration-2026-md`.uri = `demo/project/docs/migration-2026.md`\n\n</details>\n\n<sub>Checked by mempr with Relate: base `35ddba2`, head `923ec0f`, common ancestor `35ddba2`. Each rule is a Cypher query over the merged graph.</sub>\n",
    "description": "records a database move but forgets the facts derived from the old one",
    "id": "agent/planner-supersede",
    "problems": [
@@ -2959,7 +2959,7 @@
       "{}"
      ]
     ],
-    "base": "2361f9a03573d7075c7ca22cf7cfd16589ad1c41",
+    "base": "35ddba271f8aca29a414265124450c737b03e92c",
     "blocked": true,
     "dropped": [],
     "file_issues": [],
@@ -3005,8 +3005,8 @@
      }
     ],
     "git_conflicts": [],
-    "head": "8fd511de0a546f810486a18455f85e12bdbd20f2",
-    "merge_base": "2361f9a03573d7075c7ca22cf7cfd16589ad1c41",
+    "head": "923ec0f115eefc4f7c06e4f1c18a1b7b8977537d",
+    "merge_base": "35ddba271f8aca29a414265124450c737b03e92c",
     "problems": 3,
     "property_conflicts": [],
     "removed": []
@@ -3532,7 +3532,7 @@
    },
    "author": "auditor-agent",
    "blocked": true,
-   "comment": "<!-- mempr-review -->\n## Memory review: blocked (2 problems)\n\nThis pull request adds **1 property** and removes **nothing** in the memory graph.\n\n### 1. This merge would silently drop 3 links, 4 properties\nGit reports a clean merge, but these facts exist before the merge and are gone after it, although neither branch removed them:\n- lost `Fact/payments-api--database--postgres-15` -[:ABOUT]-> `Entity/payments-api`\n- lost `Fact/payments-api--database--postgres-15` -[:ASSERTED_BY]-> `Agent/scout`\n- lost `Fact/payments-api--database--postgres-15` -[:SOURCE]-> `Source/demo-project-services-payments-api-service-yaml`\n- lost `Fact/payments-api--database--postgres-15`.predicate = `database`\n- lost `Fact/payments-api--database--postgres-15`.status = `active`\n- lost `Fact/payments-api--database--postgres-15`.value = `postgres-15`\n- lost `Fact/payments-api--database--postgres-15`.verified = `by-auditor`\n\n### 2. Broken note `Fact/payments-api--database--postgres-15.md`\nKey `verified` is set twice (lines 3 and 8); Relate reads this note as empty.\n\n### Warnings\n- Fact has no author: Fact/payments-api--database--postgres-15 has no `ASSERTED_BY` link.\n\n<details><summary>Cypher for the rules that fired</summary>\n\n### `unattributed-fact`\n\n```cypher\nMATCH (f:Fact)\nWHERE NOT (f)-[:ASSERTED_BY]->()\nRETURN f.name AS fact\nORDER BY fact\n```\n\n</details>\n\n<details><summary>Graph changes in this pull request</summary>\n\n- added `Fact/payments-api--database--postgres-15`.verified = `by-auditor`\n\n</details>\n\n<sub>Checked by mempr with Relate: base `2361f9a`, head `787d7ea`, common ancestor `a181694`. Each rule is a Cypher query over the merged graph.</sub>\n",
+   "comment": "<!-- mempr-review -->\n## Memory review: blocked (2 problems)\n\nThis pull request adds **1 property** and removes **nothing** in the memory graph.\n\n### 1. This merge would silently drop 3 links, 4 properties\nGit reports a clean merge, but these facts exist before the merge and are gone after it, although neither branch removed them:\n- lost `Fact/payments-api--database--postgres-15` -[:ABOUT]-> `Entity/payments-api`\n- lost `Fact/payments-api--database--postgres-15` -[:ASSERTED_BY]-> `Agent/scout`\n- lost `Fact/payments-api--database--postgres-15` -[:SOURCE]-> `Source/demo-project-services-payments-api-service-yaml`\n- lost `Fact/payments-api--database--postgres-15`.predicate = `database`\n- lost `Fact/payments-api--database--postgres-15`.status = `active`\n- lost `Fact/payments-api--database--postgres-15`.value = `postgres-15`\n- lost `Fact/payments-api--database--postgres-15`.verified = `by-auditor`\n\n### 2. Broken note `Fact/payments-api--database--postgres-15.md`\nKey `verified` is set twice (lines 3 and 8); Relate reads this note as empty.\n\n### Warnings\n- Fact has no author: Fact/payments-api--database--postgres-15 has no `ASSERTED_BY` link.\n\n<details><summary>Cypher for the rules that fired</summary>\n\n### `unattributed-fact`\n\n```cypher\nMATCH (f:Fact)\nWHERE NOT (f)-[:ASSERTED_BY]->()\nRETURN f.name AS fact\nORDER BY fact\n```\n\n</details>\n\n<details><summary>Graph changes in this pull request</summary>\n\n- added `Fact/payments-api--database--postgres-15`.verified = `by-auditor`\n\n</details>\n\n<sub>Checked by mempr with Relate: base `35ddba2`, head `fe67b2d`, common ancestor `242ea07`. Each rule is a Cypher query over the merged graph.</sub>\n",
    "description": "works from an old clone; git merges cleanly but the graph loses a note",
    "id": "agent/auditor-stale-clone",
    "problems": [
@@ -3597,7 +3597,7 @@
       "\"by-auditor\""
      ]
     ],
-    "base": "2361f9a03573d7075c7ca22cf7cfd16589ad1c41",
+    "base": "35ddba271f8aca29a414265124450c737b03e92c",
     "blocked": true,
     "dropped": [
      [
@@ -3665,8 +3665,8 @@
      }
     ],
     "git_conflicts": [],
-    "head": "787d7ea31280de5848d07d05e0f40750d9de0366",
-    "merge_base": "a181694d56edac8d83d19ad6d8541f483fa6a6ee",
+    "head": "fe67b2dce4fc045f99bb22cdb7b1d346d12388c8",
+    "merge_base": "242ea07ef7270a22775f1a935ffd8310da30d075",
     "problems": 2,
     "property_conflicts": [],
     "removed": []
@@ -4258,7 +4258,7 @@
    },
    "author": "intern-agent",
    "blocked": true,
-   "comment": "<!-- mempr-review -->\n## Memory review: blocked (2 problems)\n\nThis pull request adds **1 note, 3 links, 4 properties** and removes **nothing** in the memory graph.\n\n### 1. Links to a note that does not exist\nFact/ledger-worker--retries--5 -[:ASSERTED_BY]-> Agent/intern, but there is no note `Agent/intern.md`.\n\nFix: Add the missing note or remove the link.\n\n### 2. Links to a note that does not exist\nFact/ledger-worker--retries--5 -[:SOURCE]-> Source/a-chat-i-half-remember, but there is no note `Source/a-chat-i-half-remember.md`.\n\nFix: Add the missing note or remove the link.\n\n<details><summary>Cypher for the rules that fired</summary>\n\n### `dangling-link`\n\n```cypher\nMATCH (a)-[r]->(b)\nWHERE b.stub = true\nRETURN labels(a)[0] + '/' + a.name AS source, type(r) AS type,\n       labels(b)[0] + '/' + b.name AS target\nORDER BY source, type, target\n```\n\n</details>\n\n<details><summary>Graph changes in this pull request</summary>\n\n- added note `Fact/ledger-worker--retries--5`\n- added `Fact/ledger-worker--retries--5` -[:ABOUT]-> `Entity/ledger-worker`\n- added `Fact/ledger-worker--retries--5` -[:ASSERTED_BY]-> `Agent/intern`\n- added `Fact/ledger-worker--retries--5` -[:SOURCE]-> `Source/a-chat-i-half-remember`\n- added `Fact/ledger-worker--retries--5`.body = `ledger-worker retries 5 times.`\n- added `Fact/ledger-worker--retries--5`.predicate = `retries`\n- added `Fact/ledger-worker--retries--5`.status = `active`\n- added `Fact/ledger-worker--retries--5`.value = `5`\n\n</details>\n\n<sub>Checked by mempr with Relate: base `2361f9a`, head `80bbd47`, common ancestor `2361f9a`. Each rule is a Cypher query over the merged graph.</sub>\n",
+   "comment": "<!-- mempr-review -->\n## Memory review: blocked (2 problems)\n\nThis pull request adds **1 note, 3 links, 4 properties** and removes **nothing** in the memory graph.\n\n### 1. Links to a note that does not exist\nFact/ledger-worker--retries--5 -[:ASSERTED_BY]-> Agent/intern, but there is no note `Agent/intern.md`.\n\nFix: Add the missing note or remove the link.\n\n### 2. Links to a note that does not exist\nFact/ledger-worker--retries--5 -[:SOURCE]-> Source/a-chat-i-half-remember, but there is no note `Source/a-chat-i-half-remember.md`.\n\nFix: Add the missing note or remove the link.\n\n<details><summary>Cypher for the rules that fired</summary>\n\n### `dangling-link`\n\n```cypher\nMATCH (a)-[r]->(b)\nWHERE b.stub = true\nRETURN labels(a)[0] + '/' + a.name AS source, type(r) AS type,\n       labels(b)[0] + '/' + b.name AS target\nORDER BY source, type, target\n```\n\n</details>\n\n<details><summary>Graph changes in this pull request</summary>\n\n- added note `Fact/ledger-worker--retries--5`\n- added `Fact/ledger-worker--retries--5` -[:ABOUT]-> `Entity/ledger-worker`\n- added `Fact/ledger-worker--retries--5` -[:ASSERTED_BY]-> `Agent/intern`\n- added `Fact/ledger-worker--retries--5` -[:SOURCE]-> `Source/a-chat-i-half-remember`\n- added `Fact/ledger-worker--retries--5`.body = `ledger-worker retries 5 times.`\n- added `Fact/ledger-worker--retries--5`.predicate = `retries`\n- added `Fact/ledger-worker--retries--5`.status = `active`\n- added `Fact/ledger-worker--retries--5`.value = `5`\n\n</details>\n\n<sub>Checked by mempr with Relate: base `35ddba2`, head `3dd28d9`, common ancestor `35ddba2`. Each rule is a Cypher query over the merged graph.</sub>\n",
    "description": "writes a fact by hand with no source and a link to a missing note",
    "id": "agent/intern-unsourced",
    "problems": [
@@ -4353,7 +4353,7 @@
       "{}"
      ]
     ],
-    "base": "2361f9a03573d7075c7ca22cf7cfd16589ad1c41",
+    "base": "35ddba271f8aca29a414265124450c737b03e92c",
     "blocked": true,
     "dropped": [],
     "file_issues": [],
@@ -4382,8 +4382,8 @@
      }
     ],
     "git_conflicts": [],
-    "head": "80bbd47ff4893c6c2881090a8c95f2cbb9201e04",
-    "merge_base": "2361f9a03573d7075c7ca22cf7cfd16589ad1c41",
+    "head": "3dd28d951798e4194752d7259fa82a51d7c9d3ef",
+    "merge_base": "35ddba271f8aca29a414265124450c737b03e92c",
     "problems": 2,
     "property_conflicts": [],
     "removed": []
@@ -4968,7 +4968,7 @@
    },
    "author": "mapper-agent",
    "blocked": false,
-   "comment": "<!-- mempr-review -->\n## Memory review: passed\n\nThis pull request adds **2 notes, 3 links, 4 properties** and removes **nothing** in the memory graph.\n\n<details><summary>Graph changes in this pull request</summary>\n\n- added note `Agent/mapper`\n- added note `Fact/checkout-web--calls--payments-api`\n- added `Fact/checkout-web--calls--payments-api` -[:ABOUT]-> `Entity/checkout-web`\n- added `Fact/checkout-web--calls--payments-api` -[:ASSERTED_BY]-> `Agent/mapper`\n- added `Fact/checkout-web--calls--payments-api` -[:SOURCE]-> `Source/demo-project-services-checkout-web-service-yaml`\n- added `Fact/checkout-web--calls--payments-api`.body = `checkout-web calls payments-api to take payments.`\n- added `Fact/checkout-web--calls--payments-api`.predicate = `calls`\n- added `Fact/checkout-web--calls--payments-api`.status = `active`\n- added `Fact/checkout-web--calls--payments-api`.value = `payments-api`\n\n</details>\n\n<sub>Checked by mempr with Relate: base `2361f9a`, head `6d357b5`, common ancestor `2361f9a`. Each rule is a Cypher query over the merged graph.</sub>\n",
+   "comment": "<!-- mempr-review -->\n## Memory review: passed\n\nThis pull request adds **2 notes, 3 links, 4 properties** and removes **nothing** in the memory graph.\n\n<details><summary>Graph changes in this pull request</summary>\n\n- added note `Agent/mapper`\n- added note `Fact/checkout-web--calls--payments-api`\n- added `Fact/checkout-web--calls--payments-api` -[:ABOUT]-> `Entity/checkout-web`\n- added `Fact/checkout-web--calls--payments-api` -[:ASSERTED_BY]-> `Agent/mapper`\n- added `Fact/checkout-web--calls--payments-api` -[:SOURCE]-> `Source/demo-project-services-checkout-web-service-yaml`\n- added `Fact/checkout-web--calls--payments-api`.body = `checkout-web calls payments-api to take payments.`\n- added `Fact/checkout-web--calls--payments-api`.predicate = `calls`\n- added `Fact/checkout-web--calls--payments-api`.status = `active`\n- added `Fact/checkout-web--calls--payments-api`.value = `payments-api`\n\n</details>\n\n<sub>Checked by mempr with Relate: base `35ddba2`, head `e0a1805`, common ancestor `35ddba2`. Each rule is a Cypher query over the merged graph.</sub>\n",
    "description": "learns one new, sourced fact; the check passes",
    "id": "agent/mapper-clean",
    "problems": [],
@@ -5028,14 +5028,14 @@
       "{}"
      ]
     ],
-    "base": "2361f9a03573d7075c7ca22cf7cfd16589ad1c41",
+    "base": "35ddba271f8aca29a414265124450c737b03e92c",
     "blocked": false,
     "dropped": [],
     "file_issues": [],
     "findings": [],
     "git_conflicts": [],
-    "head": "6d357b527163a48be32beaadf3538bf31dc07b71",
-    "merge_base": "2361f9a03573d7075c7ca22cf7cfd16589ad1c41",
+    "head": "e0a18051d25925429d7caf9f204cba3cd9ebe559",
+    "merge_base": "35ddba271f8aca29a414265124450c737b03e92c",
     "problems": 0,
     "property_conflicts": [],
     "removed": []
@@ -5043,7 +5043,7 @@
    "title": "memory: Learned that checkout-web calls payments-api."
   }
  ],
- "rev": "2361f9a03573d7075c7ca22cf7cfd16589ad1c41",
+ "rev": "35ddba271f8aca29a414265124450c737b03e92c",
  "rules": [
   {
    "cypher": "MATCH (a:Fact)-[:ABOUT]->(e:Entity)<-[:ABOUT]-(b:Fact)\nWHERE a.name < b.name\n  AND a.status = 'active' AND b.status = 'active'\n  AND a.predicate = b.predicate AND a.value <> b.value\n  AND NOT EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(a) WHERE n.status = 'active' }\n  AND NOT EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(b) WHERE n.status = 'active' }\n  AND NOT EXISTS { MATCH (p:Predicate {name: a.predicate}) WHERE p.cardinality = 'many' }\nRETURN a.name AS fact, b.name AS other, e.name AS entity,\n       a.predicate AS predicate, a.value AS value, b.value AS other_value\nORDER BY fact, other\n",

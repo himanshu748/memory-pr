@@ -57,7 +57,17 @@ def git(repo: Path, *args: str, author: str = "scout") -> None:
 
 def commit(repo: Path, author: str, subject: str, body: str = "") -> None:
     git(repo, "add", "-A")
-    git(repo, "commit", "-q", "-m", subject, *(["-m", body] if body else []), author=author)
+    # --no-gpg-sign: a machine with commit.gpgsign would otherwise change every hash.
+    git(
+        repo,
+        "commit",
+        "-q",
+        "--no-gpg-sign",
+        "-m",
+        subject,
+        *(["-m", body] if body else []),
+        author=author,
+    )
 
 
 def memory_digest(source: Path = ROOT) -> str:
