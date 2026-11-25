@@ -28,10 +28,12 @@ It serves the playground and opens the graph view in your browser: write a memor
 open a pull request, watch the review block it. No credentials, no env vars, no
 install. Verified from a fresh clone — output in [docs/EVIDENCE.md](docs/EVIDENCE.md).
 
-Beside it, on GitHub: a blocked pull request
-[#15](https://github.com/himanshu748/memory-pr/pull/15) (contradiction caught by the
-required `memory-review` check) and a passing one
-[#6](https://github.com/himanshu748/memory-pr/pull/6).
+Beside it, on GitHub: pull request
+[#60](https://github.com/himanshu748/memory-pr/pull/60) — git merges it cleanly and
+the required `memory-review` check blocks it for silently dropping 3 links, 4
+properties (the failure in the GIF);
+[#15](https://github.com/himanshu748/memory-pr/pull/15) blocks on a contradiction and
+[#6](https://github.com/himanshu748/memory-pr/pull/6) passes.
 
 ## What Relate does here
 

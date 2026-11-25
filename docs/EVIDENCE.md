@@ -29,6 +29,23 @@ The page opened in the browser rendered the playground: "Relate is running in th
 page", the five-agent pull-request explorer, and the Cypher console — all driven by
 `site/data/demo.json`, no credentials or environment variables.
 
+Occupied-port behavior (regression check, 25 Nov):
+
+```bash
+$ python3 -m http.server 8619 -d /tmp &   # occupy the port first
+$ ./quickstart.sh 8619
+error: port 8619 is already serving something else.
+retry with a free port, e.g.: ./quickstart.sh 8620
+(exit status 1 — the browser is never opened at the wrong service)
+```
+
+## Rendered README check
+
+The branch README rendered on github.com at a 1024×768 scaled desktop viewport
+(2560×1920 native): the whole file is 90 lines / 4.92 KB; hero + GIF + quickstart
+visible in the first screen, everything else in the second. Screenshot captured
+25 Nov 2026.
+
 ## Test count
 
 ```bash
@@ -57,11 +74,30 @@ carried **stale** shared memory (`demo/run-a` branch, `payments-api database =
 postgres-15` active), run B's carried **reviewed** memory (`demo/run-b`,
 `postgres-15` retracted, `mongodb-8` active and sourced).
 
-Caveat, stated plainly: both runs were executed by one model (Devin) back-to-back in
-isolated checkouts — spawning two independent Devin sessions was impossible because
-the organization was out of quota (HTTP 403 `out_of_quota` on
-`POST /v3/organizations/org_26wI5SzJHOJ806YQ/sessions`, 24-25 Nov). Re-running with two
-separate sessions needs only the commands in the runbook.
+Scope, stated plainly: this A/B evidence shows **reviewed memory changing what an
+agent decides** — nothing more. Both runs were executed by one model (Devin)
+back-to-back in isolated checkouts — spawning two independent Devin sessions was
+impossible because the organization was out of quota (HTTP 403 `out_of_quota` on
+`POST /v3/organizations/org_26wI5SzJHOJ806YQ/sessions`, 24-25 Nov). The fixture
+repository has no `memory-review` workflow, so the checks below were run locally
+with `mempr check` on the exact pushed commits and posted as PR comments; the
+shared-memory workflow on GitHub itself is demonstrated by the independent PRs in
+the next section. Re-running the A/B pair with two separate sessions needs only the
+commands in the runbook.
+
+## The shared-memory workflow on GitHub (independent PRs)
+
+Real pull requests in this repository, each opened independently and each carrying
+the real `memory-review` status check:
+
+- [PR #60](https://github.com/himanshu748/memory-pr/pull/60) — **blocked**:
+  git merges the branch cleanly, and the review shows the merge silently dropping
+  3 links, 4 properties plus the duplicate-key note Relate reads as empty. This is
+  the failure the README GIF opens with.
+- [PR #15](https://github.com/himanshu748/memory-pr/pull/15) — **blocked**:
+  a database contradiction, with the `SUPERSEDES` fix spelled out in the comment.
+- [PR #6](https://github.com/himanshu748/memory-pr/pull/6) — **passes** against
+  current main: the same check green on a correct proposal.
 
 ### What each agent read
 
