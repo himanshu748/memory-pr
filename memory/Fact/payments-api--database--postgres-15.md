@@ -1,5 +1,6 @@
 ---
 type: Fact
+reviewed: manifest-confirms-postgres-15
 name: payments-api--database--postgres-15
 predicate: database
 status: active
