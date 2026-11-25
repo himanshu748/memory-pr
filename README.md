@@ -27,6 +27,12 @@ The local playground lets you propose a fact and see the graph review.
 [Live demo](https://memory-pr.vercel.app/) · [Video](https://youtu.be/z1qjJQhkVJ0) ·
 [Devpost](https://devpost.com/software/memory-pr-pull-requests-for-agent-memory) · [MIT](LICENSE)
 
+In a [public-repo benchmark](docs/benchmarks.md), 154 of the 328 facts changed over the comparison period.
+
+| Scope | Count |
+| --- | --- |
+| Repositories read | 50 |
+
 [Architecture](docs/how-it-works.md) · [Setup and API](docs/usage.md) ·
 [MCP and CI](docs/agents.md) · [Evidence and test results](docs/EVIDENCE.md) ·
 [Benchmarks](docs/benchmarks.md) · [Video script](docs/VIDEO.md) · [Disclosures](docs/disclosures.md)
