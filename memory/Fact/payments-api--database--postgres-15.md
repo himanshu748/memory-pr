@@ -5,6 +5,7 @@ predicate: database
 status: active
 value: postgres-15
 verified: by-auditor
+reviewed: by-fixture-maintainer
 ABOUT:
   - "[[Entity/payments-api]]"
 ASSERTED_BY:
