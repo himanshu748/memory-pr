@@ -43,7 +43,7 @@ def sh(*args: str) -> str:
 def playground_pulls() -> list[dict]:
     """This repository's playground pull requests, open or not, newest first."""
     found = json.loads(
-        sh("gh", "pr", "list", "--state", "all", "--limit", "200", "--json",
+        sh("gh", "pr", "list", "--state", "all", "--limit", "1000", "--json",
            "number,headRefName,createdAt,isCrossRepository,state")
     )  # fmt: skip
     return [

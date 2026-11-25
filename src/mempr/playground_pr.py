@@ -25,6 +25,8 @@ WORKFLOW = "playground-agent.yml"
 BRANCH_PREFIX = "playground/"
 MAX_OPEN = 3
 MAX_DAY = 20  # opened in any 24 hours
+PAGE_SIZE = 100
+MAX_PULL_PAGES = 10  # stop rather than guess after 1,000 pull requests
 KEEP = timedelta(minutes=30)  # then the workflow closes it
 TOKEN_ENV = "GITHUB_DISPATCH_TOKEN"
 API = "https://api.github.com"
@@ -163,17 +165,40 @@ def full(open_now: int, today: int) -> str | None:
 
 
 def counts(github=_github) -> tuple[int, int] | None:
-    """count() from GitHub's public API, or None when GitHub would not say."""
-    status, pulls = github(
-        "GET", f"/repos/{REPO}/pulls?state=all&sort=created&direction=desc&per_page=100"
-    )
-    if status != 200 or not isinstance(pulls, list):
-        return None
-    try:
-        rows = [(str(p["head"]["ref"]), p["state"] == "open", str(p["created_at"])) for p in pulls]
-        return count(rows, datetime.now(timezone.utc))
-    except (KeyError, TypeError, ValueError):
-        return None
+    """count() from GitHub's public API, or None when GitHub would not say.
+
+    Pull requests are newest first. Keep paging until the response is exhausted or
+    reaches the 24-hour boundary, so unrelated repository activity cannot hide an
+    earlier playground pull request from the daily cap.
+    """
+    now = datetime.now(timezone.utc)
+    cutoff = now - timedelta(hours=24)
+    rows: list[tuple[str, bool, str]] = []
+    for page in range(1, MAX_PULL_PAGES + 1):
+        status, pulls = github(
+            "GET",
+            f"/repos/{REPO}/pulls?state=all&sort=created&direction=desc"
+            f"&per_page={PAGE_SIZE}&page={page}",
+        )
+        if status != 200 or not isinstance(pulls, list):
+            return None
+        if not pulls:
+            return count(rows, now)
+        try:
+            batch = [
+                (str(p["head"]["ref"]), p["state"] == "open", str(p["created_at"])) for p in pulls
+            ]
+            oldest = min(
+                datetime.fromisoformat(made.replace("Z", "+00:00")) for _, _, made in batch
+            )
+        except (KeyError, TypeError, ValueError):
+            return None
+        rows.extend(batch)
+        if len(pulls) < PAGE_SIZE or oldest <= cutoff:
+            return count(rows, now)
+    # More than 1,000 pull requests landed inside the window. The workflow performs
+    # the final count; the server must not claim an incomplete count is authoritative.
+    return None
 
 
 def enabled(env: dict[str, str]) -> dict[str, Any]:

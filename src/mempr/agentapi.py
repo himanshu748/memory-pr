@@ -89,7 +89,15 @@ def _answer(vault: Path, cypher: str, params: dict[str, Any]) -> dict[str, Any]:
             cursor.execute(cypher, params)
             found = [dict(row) for row in cursor.fetchmany(MAX_ROWS + 1)]
     except Exception as error:  # a query the engine refuses
-        return {"error": str(error)[:500]}
+        message = str(error)[:500]
+        if (
+            "failed to spawn query worker thread" in message
+            and "Resource temporarily unavailable" in message
+        ):
+            # The child is deliberately memory-capped. Relate reports this when its
+            # query-worker stack cannot fit inside that cap.
+            return {"resource_limited": True}
+        return {"error": message}
     return {"rows": found[:MAX_ROWS], "truncated": len(found) > MAX_ROWS}
 
 
@@ -127,6 +135,12 @@ def run_query(
             422,
         )
     answer = json.loads(output.decode("utf-8"))
+    if answer.get("resource_limited"):
+        raise BadRequest(
+            "the query was stopped: Relate could not start its worker within the memory limit. "
+            "Match less at once.",
+            422,
+        )
     if "error" in answer:
         raise BadRequest(f"Relate refused the query: {answer['error']}", 400)
     return {

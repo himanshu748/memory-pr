@@ -189,6 +189,24 @@ def test_twenty_in_a_day_is_the_limit_whatever_their_state():
     assert open_request({"draft": MYSQL}, MEMORY, RULES, ON, fewer)["state"] == "queued"
 
 
+def test_daily_count_paginates_past_a_busy_first_page():
+    unrelated = [pull(n, f"feature/{n}") for n in range(100)]
+    playground = [pull(n, f"playground/{n:010x}", "closed") for n in range(20)]
+    github = GitHub(**{"&page=1": (200, unrelated), "&page=2": (200, playground)})
+
+    assert playground_pr.counts(github) == (0, 20)
+    assert [path.rsplit("&page=", 1)[-1] for _, path, *_ in github.calls] == ["1", "2"]
+
+
+def test_workflow_fetches_enough_pulls_for_the_daily_count(monkeypatch):
+    agent = load("../demo/playground_agent.py")
+    calls = []
+    monkeypatch.setattr(agent, "sh", lambda *args: calls.append(args) or "[]")
+
+    assert agent.playground_pulls() == []
+    assert calls[0][calls[0].index("--limit") + 1] == "1000"
+
+
 def test_the_workflow_counts_the_same_way():
     agent = load("../demo/playground_agent.py")
     now = datetime(2026, 1, 2, 12, 0, tzinfo=timezone.utc)
