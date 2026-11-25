@@ -99,3 +99,69 @@
     WHERE NOT (f)-[:ASSERTED_BY]->()
     RETURN f.name AS fact
     ORDER BY fact
+
+- id: orphan-fact
+  severity: block
+  title: Fact is not about anything
+  message: >-
+    Fact/{fact} is active but has no `ABOUT` link, so `recall` never returns it.
+    The note can still name an entity in its file name.
+  fix: >-
+    Add an `ABOUT` link to `Entity/<name>` for the entity the fact describes.
+  cypher: |
+    MATCH (f:Fact)
+    WHERE f.status = 'active'
+      AND NOT (f)-[:ABOUT]->(:Entity)
+      AND NOT EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(f) WHERE n.status = 'active' }
+    RETURN f.name AS fact
+    ORDER BY fact
+
+- id: multi-hop-contradiction
+  severity: block
+  title: Contradicts a fact it was derived from
+  message: >-
+    Fact/{fact} says `{predicate}` is `{value}` for `{entity}`, but it was derived,
+    {hops} step(s) away, from Fact/{root}, which says `{other_value}` for `{root_entity}`.
+    The two notes are not about the same entity, so a side-by-side diff does not show a clash.
+    Path: {path}
+  fix: >-
+    If the derived value is wrong, drop it or point `DERIVED_FROM` at the fact that states
+    the value you actually used. If the old fact is wrong, supersede it and retract or
+    replace the facts that were derived from it.
+  cypher: |
+    MATCH p = (f:Fact)-[:DERIVED_FROM*1..6]->(root:Fact)
+    WHERE f.status = 'active' AND root.status = 'active'
+      AND f.predicate = root.predicate AND f.value <> root.value
+      AND NOT EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(f) WHERE n.status = 'active' }
+      AND NOT EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(root) WHERE n.status = 'active' }
+    OPTIONAL MATCH (f)-[:ABOUT]->(e:Entity)
+    OPTIONAL MATCH (root)-[:ABOUT]->(re:Entity)
+    RETURN f.name AS fact, root.name AS root, f.predicate AS predicate,
+           f.value AS value, root.value AS other_value, length(p) AS hops,
+           coalesce(e.name, '(no entity)') AS entity,
+           coalesce(re.name, '(no entity)') AS root_entity,
+           reduce(s = '', n IN nodes(p) |
+                  s + CASE WHEN s = '' THEN '' ELSE ' -[:DERIVED_FROM]-> ' END + 'Fact/' + n.name)
+             AS path
+    ORDER BY fact, hops
+
+- id: broken-provenance
+  severity: block
+  title: Evidence for this fact was retracted
+  message: >-
+    Fact/{fact} is current, but Source/{source} is retracted. The source is {hops}
+    derivation step(s) from Fact/{root} (0 means this fact cites it directly). Path: {path}
+  fix: >-
+    Cite a source that is still current, or retract this fact and the facts derived from it.
+  cypher: |
+    MATCH p = (f:Fact)-[:DERIVED_FROM*0..6]->(root:Fact)-[:SOURCE]->(s:Source)
+    WHERE f.status = 'active'
+      AND NOT EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(f) WHERE n.status = 'active' }
+      AND s.status = 'retracted'
+      AND coalesce(s.stub, false) = false
+    RETURN f.name AS fact, s.name AS source, root.name AS root, length(p) - 1 AS hops,
+           reduce(acc = '', i IN range(0, size(nodes(p)) - 2) |
+                  acc + CASE WHEN acc = '' THEN '' ELSE ' -[:DERIVED_FROM]-> ' END
+                      + 'Fact/' + nodes(p)[i].name)
+             + ' -[:SOURCE]-> Source/' + s.name AS path
+    ORDER BY fact, hops, source

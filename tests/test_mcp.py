@@ -77,6 +77,7 @@ def test_server_lists_its_tools_and_instructions(agent):
     assert "do not guess" in init.instructions
     assert {t.name for t in listed.tools} == {
         "recall",
+        "search",
         "query",
         "propose_fact",
         "retract_fact",
@@ -98,6 +99,16 @@ def test_recall_returns_current_facts_with_sources(agent, repo):
     assert facts["database"]["agents"] == ["scout"]
     assert "payments-api database = postgres-15 [source: docs-payments-api-md" in out["answer"]
     assert state(repo) == before  # reading leaves no Relate files behind
+
+
+def test_search_returns_a_match_and_the_fact_derived_from_it(agent, repo):
+    before = state(repo)
+    out = agent.ok("search", text="Postgres")
+    assert [hit["fact"] for hit in out["hits"]] == [DB]
+    assert out["connected"][0]["fact"] == TOOL
+    assert out["connected"][0]["via"] == "follows"
+    assert "DERIVED_FROM*1..6" in out["cypher"]["neighborhood"]
+    assert state(repo) == before
 
 
 def test_recall_of_an_unknown_entity_says_do_not_guess(agent):
@@ -271,7 +282,9 @@ def test_review_tool_reports_a_branch_made_outside_the_server(agent, repo):
     out = agent.ok("review", head="agent/bad", base="main")
     assert out["blocked"] is True
     assert out["findings"][0]["rule"] == "contradiction"
+    assert "MATCH" in out["findings"][0]["cypher"]
     assert "(Entity/payments-api)<-[:ABOUT]-" in out["report"]
+    assert "```cypher" in out["report"]
 
 
 def test_open_pull_request_pushes_the_branch_and_calls_gh(repo, tmp_path):

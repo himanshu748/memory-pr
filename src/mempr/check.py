@@ -80,7 +80,13 @@ class Review:
             "dropped": [list(t) for t in self.dropped],
             "file_issues": [vars(i) for i in self.file_issues],
             "findings": [
-                {"rule": f.rule.id, "severity": f.rule.severity, "text": f.text, "row": f.row}
+                {
+                    "rule": f.rule.id,
+                    "severity": f.rule.severity,
+                    "text": f.text,
+                    "cypher": f.rule.cypher.strip(),
+                    "row": f.row,
+                }
                 for f in self.findings
             ],
         }

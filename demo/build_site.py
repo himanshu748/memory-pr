@@ -32,6 +32,7 @@ from mempr.vault import note_files  # noqa: E402
 # Scenario -> the agent that opens the pull request.
 PULLS = {
     "contradiction": "builder",
+    "hop": "reasoner",
     "supersede": "planner",
     "stale-clone": "auditor",
     "unsourced": "intern",

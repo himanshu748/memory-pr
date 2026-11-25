@@ -1,5 +1,6 @@
 import { apiBase, compare, serverLine, serverRequest } from './server-check.js';
 import { again, prLine, settled, whyNot } from './github-pr.js';
+import { LEXICAL, NEIGHBORHOOD } from './search.js';
 
 // memory-pr browser view. No build step: plain ES module, Cytoscape for drawing, and
 // Relate (WebAssembly) holding each graph so the visitor's Cypher runs on it live.
@@ -686,6 +687,7 @@ function problemList(list) {
           `<li class="problem ${p.severity} ${p === problem ? 'on' : ''}" data-problem="${i}" tabindex="0">` +
           `<h4>${esc(p.title)}${p.severity === 'warn' ? ' <em>warning</em>' : ''}</h4>` +
           `<p>${md(p.text)}</p>${p.fix ? `<p class="fix">Fix: ${md(p.fix)}</p>` : ''}` +
+          (p.rule ? cypherBlock(p.rule, rulesOf(view)) : '') +
           (actions ? `<div class="actions">${actions}</div>` : '') +
           '</li>'
         );
@@ -693,6 +695,12 @@ function problemList(list) {
       .join('') +
     '</ol>'
   );
+}
+
+function cypherBlock(ruleId, rules) {
+  const rule = (rules || []).find((r) => r.id === ruleId);
+  if (!rule || !rule.cypher) return '';
+  return `<details class="cypher"><summary>Cypher for <code>${esc(ruleId)}</code></summary><pre>${esc(rule.cypher.trim())}</pre></details>`;
 }
 
 function link(id) {
@@ -873,6 +881,51 @@ function runQuery() {
   }, 180);
 }
 
+function runSearch(text) {
+  const result = $('result');
+  const q = text.trim();
+  // Search the shared memory. A pull request's merged graph can be the damaged one,
+  // and that is the wrong place to ask what the agents know.
+  const memoryView = views.find((v) => !v.pull) || view;
+  openView(memoryView);
+  if (!memoryView.db) {
+    result.innerHTML = '<p class="outcome-empty">Relate is still loading. Try the search again in a moment.</p>';
+    return;
+  }
+  if (q.length < 2) {
+    result.innerHTML = '<p class="outcome-empty">Type at least two characters. No model and no key: this is a keyword plus the derivation path.</p>';
+    return;
+  }
+  let hits, connected;
+  try {
+    hits = run(memoryView.db, LEXICAL, { q }).rows;
+    connected = hits.length ? run(memoryView.db, NEIGHBORHOOD, { names: hits.map((hit) => hit.fact) }).rows : [];
+  } catch (err) {
+    result.innerHTML = `<pre class="error">${esc(err.message)}</pre>`;
+    return;
+  }
+  const line = (row, how) => {
+    const entity = row.entity || '(no entity)';
+    const hops = row.hops ? `, ${row.hops} hop${row.hops === 1 ? '' : 's'}` : '';
+    return `<li><code>${esc(entity)}</code> ${esc(row.predicate)} = ${esc(row.value)} <em>${esc(how)}${hops}</em></li>`;
+  };
+  const items = [
+    ...hits.map((row) => line(row, 'match')),
+    ...connected.map((row) => line(row, row.via)),
+  ];
+  cy.nodes().removeClass('hit');
+  for (const row of [...hits, ...connected]) {
+    const node = cy.getElementById(`Fact/${row.fact}`);
+    if (node.length) node.addClass('hit').removeClass('hidden');
+  }
+  $('timing').textContent = `${plural(hits.length, 'match', 'matches')}, ${plural(connected.length, 'connected fact', 'connected facts')}`;
+  result.innerHTML =
+    (items.length ? `<ul class="search-hits">${items.join('')}</ul>` : '<p class="outcome-empty">Nothing matches. Try another word.</p>') +
+    '<details class="cypher" open><summary>Cypher for this search</summary>' +
+    `<pre>${esc(LEXICAL)}</pre><pre>${esc(NEIGHBORHOOD)}</pre></details>`;
+  $('console').scrollIntoView({ behavior: calm.matches ? 'auto' : 'smooth', block: 'nearest' });
+}
+
 function execQuery() {
   const query = $('query').value.trim();
   const result = $('result');
@@ -973,12 +1026,18 @@ const PREDICATES = ['database', 'port', 'owner', 'runtime', 'calls', 'queue', 'r
 
 /** As `slug` in src/mempr/memory.py. */
 const slug = (text) => String(text).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-const blank = (agent = 'visitor') => ({ kind: 'fact', agent, entity: '', predicate: '', value: '', source: '', supersedes: [], retract: [] });
+const blank = (agent = 'visitor') => ({
+  kind: 'fact', agent, entity: '', predicate: '', value: '', source: '',
+  supersedes: [], derived_from: [], retract: [], about: true, source_status: '',
+});
 const clean = (d) => ({
   ...blank(), ...d,
   agent: slug(d.agent || ''), entity: slug(d.entity || ''), predicate: slug(d.predicate || ''),
   value: String(d.value || '').trim(), source: String(d.source || '').trim(),
-  supersedes: [...(d.supersedes || [])], retract: [...(d.retract || [])],
+  supersedes: [...(d.supersedes || [])], derived_from: [...(d.derived_from || [])],
+  retract: [...(d.retract || [])],
+  about: d.about !== false,
+  source_status: d.source_status === 'retracted' ? 'retracted' : '',
 });
 
 function sha1(text) {
@@ -1026,10 +1085,11 @@ function noteOf(d) {
   const links = (key, targets) => (targets.length ? [`${key}:`, ...targets.map((t) => `  - "[[${t}]]"`)] : []);
   const text = [
     '---', 'type: Fact', `name: ${name}`, `predicate: ${d.predicate}`, 'status: active', `value: ${plain ? d.value : JSON.stringify(d.value)}`,
-    ...links('ABOUT', [`Entity/${d.entity}`]),
+    ...links('ABOUT', d.about === false ? [] : [`Entity/${d.entity}`]),
     ...links('ASSERTED_BY', [`Agent/${d.agent}`]),
     ...links('SOURCE', d.source ? [`Source/${slug(d.source)}`] : []),
     ...links('SUPERSEDES', d.supersedes.map((f) => `Fact/${f}`)),
+    ...links('DERIVED_FROM', (d.derived_from || []).map((f) => `Fact/${f}`)),
     '---', '', `${d.entity} ${d.predicate}: ${d.value}`, '',
   ].join('\n');
   return { id: `Fact/${name}`, file, text };
@@ -1042,9 +1102,15 @@ const ADD_FACT =
   'MERGE (e:Entity {name: $entity}) MERGE (a:Agent {name: $agent}) MERGE (f:Fact {name: $name}) ' +
   "SET f.predicate = $predicate, f.value = $value, f.status = 'active', f.body = $statement " +
   'MERGE (f)-[:ABOUT]->(e) MERGE (f)-[:ASSERTED_BY]->(a) RETURN f.name AS fact';
+const ADD_ORPHAN =
+  'MERGE (a:Agent {name: $agent}) MERGE (f:Fact {name: $name}) ' +
+  "SET f.predicate = $predicate, f.value = $value, f.status = 'active', f.body = $statement " +
+  'MERGE (f)-[:ASSERTED_BY]->(a) RETURN f.name AS fact';
 const ADD_SOURCE =
   'MATCH (f:Fact {name: $name}) MERGE (s:Source {name: $source}) SET s.uri = $uri MERGE (f)-[:SOURCE]->(s) RETURN s.name AS source';
+const SOURCE_STATUS = "MATCH (s:Source {name: $source}) SET s.status = $status RETURN s.name AS source";
 const SUPERSEDE = 'MATCH (f:Fact {name: $name}), (o:Fact {name: $other}) MERGE (f)-[:SUPERSEDES]->(o) RETURN o.name AS other';
+const DERIVE = 'MATCH (f:Fact {name: $name}), (o:Fact {name: $other}) MERGE (f)-[:DERIVED_FROM]->(o) RETURN o.name AS other';
 const RETRACT = "MATCH (f:Fact {name: $name}) SET f.status = 'retracted' RETURN f.name AS fact";
 
 function applyDraft(db, d) {
@@ -1055,9 +1121,16 @@ function applyDraft(db, d) {
   }
   // Stating a fact again makes it current: nothing that replaced it still does.
   run(db, 'MATCH (:Fact)-[r:SUPERSEDES]->(:Fact {name: $name}) DELETE r', { name });
-  run(db, ADD_FACT, { name, entity: d.entity, agent: d.agent, predicate: d.predicate, value: d.value, statement: `${d.entity} ${d.predicate}: ${d.value}` });
+  const statement = `${d.entity} ${d.predicate}: ${d.value}`;
+  const params = { name, entity: d.entity, agent: d.agent, predicate: d.predicate, value: d.value, statement };
+  run(db, d.about === false ? ADD_ORPHAN : ADD_FACT, params);
   if (d.source) run(db, ADD_SOURCE, { name, source: slug(d.source), uri: d.source });
+  if (d.source_status) run(db, SOURCE_STATUS, { source: slug(d.source), status: d.source_status });
   for (const other of d.supersedes) run(db, SUPERSEDE, { name, other });
+  for (const other of d.derived_from || []) {
+    const linked = run(db, DERIVE, { name, other });
+    if (!linked.rows.length) throw new Error(`no fact named ${other}`);
+  }
   for (const other of d.retract) run(db, RETRACT, { name: other });
 }
 
@@ -1440,6 +1513,7 @@ function outcomeHtml(c) {
   const problems = list.map((p, i) => {
     const fixes = stale ? [] : draftFixes(p, v.draft);
     return `<li class="problem ${p.severity}"><h4>${esc(p.title)}${p.severity === 'warn' ? ' <em>warning</em>' : ''}</h4><p>${md(p.text)}</p>` +
+      (p.rule ? cypherBlock(p.rule, rulesOf(v)) : '') +
       (fixes.length ? `<div class="actions">${fixes.map(([label], f) => `<button type="button" data-draft-fix="${i}:${f}">${esc(label)}</button>`).join('')}</div>` : '') + '</li>';
   }).join('');
   return (
@@ -1580,7 +1654,7 @@ function wire() {
     } else if (d.close !== undefined) selectNode(null);
     else if (d.example !== undefined) setQuery(EXAMPLES[Number(d.example)][1]);
     else if (playClick(t)) return;
-    else if (d.problem !== undefined) selectProblem(Number(d.problem));
+    else if (d.problem !== undefined && !event.target.closest('details')) selectProblem(Number(d.problem));
   });
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Enter' && event.target.matches?.('[data-problem]')) selectProblem(Number(event.target.dataset.problem));
@@ -1597,6 +1671,11 @@ function wire() {
     if (!section) return;
     event.preventDefault();
     section.scrollIntoView();
+  });
+  const searchForm = $('search-form');
+  if (searchForm) searchForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    runSearch($('search-q').value);
   });
   document.addEventListener('change', (event) => {
     if (event.target.id === 'rules' && event.target.value) {
@@ -1752,6 +1831,15 @@ function realView(b, fixed) {
   };
 }
 
+const COUNT_WORDS = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+
+function pullHeading(andReal) {
+  const n = data.pulls.length;
+  const word = COUNT_WORDS[n] || String(n);
+  const agents = `${word} pull request${n === 1 ? '' : 's'} from ${word.toLowerCase()} agent${n === 1 ? '' : 's'}`;
+  return andReal ? `${agents}, and one real repository` : agents;
+}
+
 function exploreReal() {
   if (!real.body) return;
   const v = realView(real.body, real.fixed);
@@ -1761,7 +1849,7 @@ function exploreReal() {
   }
   views.push(v);
   real.view = v;
-  $('explorer-title').textContent = 'Five pull requests from five agents, and one real repository';
+  $('explorer-title').textContent = pullHeading(true);
   show(v);
   $('explorer').scrollIntoView({ behavior: calm.matches ? 'auto' : 'smooth' });
 }
@@ -1908,6 +1996,7 @@ async function main() {
     views[0];
   show(views.find((v) => (v.pull ? v.short : 'main') === wanted) || first, { keepHash: true });
   renderProof(first);
+  $('explorer-title').textContent = pullHeading(false);
   new ResizeObserver(() => {
     cy.resize();
     paint({ glide: false });

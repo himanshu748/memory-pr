@@ -7,7 +7,7 @@ on:
         description: What the agent does
         type: choice
         default: contradiction
-        options: [contradiction, supersede, stale-clone, unsourced, clean]
+        options: [contradiction, hop, supersede, stale-clone, unsourced, clean]
       agent:
         description: Agent name
         default: builder

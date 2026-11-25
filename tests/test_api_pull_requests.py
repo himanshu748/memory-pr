@@ -61,6 +61,16 @@ def pull(n: int, ref: str, state: str = "open") -> dict:
     }
 
 
+def test_github_refuses_a_draft_the_form_cannot_represent():
+    derived = MYSQL | {"derived_from": ["payments-api--database--postgres-15"]}
+    with pytest.raises(BadDraft, match="derivation"):
+        strict(derived)
+    with pytest.raises(BadDraft, match="ABOUT"):
+        strict(MYSQL | {"about": False})
+    with pytest.raises(BadDraft, match="retracted source"):
+        strict(MYSQL | {"source_status": "retracted"})
+
+
 def test_inputs_are_short_lowercase_words_and_survive_the_round_trip():
     inputs = strict(MYSQL | {"supersedes": ["payments-api--database--postgres-15"]})
     assert inputs == MYSQL | {"supersedes": "payments-api--database--postgres-15", "retract": ""}

@@ -17,6 +17,8 @@ export function whyNot(draft, landed, edited) {
   if (edited) return 'You changed this pull request in the Cypher console. GitHub would get the draft, not your change.';
   if (landed.length) return 'On GitHub the pull request is against the committed memory, without what you merged here. Reset memory to open one.';
   if (draft.kind !== 'fact') return 'Only a new fact can be opened on GitHub, not a retraction.';
+  if ((draft.derived_from || []).length || draft.about === false || draft.source_status)
+    return 'This change uses a graph link the GitHub form does not send. Review it in the page, or with mempr check.';
   for (const key of ['agent', 'entity', 'predicate', 'value'])
     if (!WORD.test(draft[key] || '') || draft[key].length > 60)
       return `For GitHub, ${key} must be lowercase letters, digits, dots and hyphens.`;

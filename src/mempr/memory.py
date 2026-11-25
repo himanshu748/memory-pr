@@ -111,17 +111,30 @@ def add_fact(
     statement: str = "",
     supersedes: list[str] | None = None,
     derived_from: list[str] | None = None,
+    about: bool = True,
+    source_status: str | None = None,
 ) -> str:
     """Write one fact into the working-tree vault. Returns the fact's name.
 
     `source` is the file, commit or document the agent read it from. Without one the fact
-    is still written, and the review blocks it.
+    is still written, and the review blocks it. `about=False` writes the fact with no
+    `ABOUT` link (the review blocks that too). `source_status='retracted'` marks the
+    source note retracted.
     """
     for label, text in (("entity", entity), ("predicate", predicate), ("agent", agent)):
         if slug(text) != text:
             raise ValueError(f"{label} {text!r} must be lowercase letters, digits and hyphens")
+    if source_status not in (None, "retracted"):
+        raise ValueError("source_status must be retracted")
+    if source_status and not source:
+        raise ValueError("source_status needs a source")
     vault.mkdir(parents=True, exist_ok=True)
     supersedes, derived_from = supersedes or [], derived_from or []
+    query = ADD_FACT if source else ADD_UNSOURCED_FACT
+    if not about:
+        query = query.replace("MERGE (e:Entity {name: $entity})\n", "").replace(
+            "MERGE (f)-[:ABOUT]->(e)\n", ""
+        )
     with open_vault(vault, in_place=True) as conn:
         _check_before_write(conn, source, supersedes + derived_from)
         name = _free_name(conn, entity, predicate, value)
@@ -131,7 +144,7 @@ def add_fact(
         rows(conn, "MATCH (:Fact)-[r:SUPERSEDES]->(:Fact {name: $name}) DELETE r", {"name": name})
         rows(
             conn,
-            ADD_FACT if source else ADD_UNSOURCED_FACT,
+            query,
             {
                 "entity": entity,
                 "agent": agent,
@@ -142,6 +155,12 @@ def add_fact(
                 "statement": statement or f"{entity} {predicate}: {value}",
             },
         )
+        if source_status:
+            rows(
+                conn,
+                "MATCH (s:Source {name: $name}) SET s.status = $status RETURN s.name AS name",
+                {"name": slug(source), "status": source_status},
+            )
         for other in supersedes:
             rows(conn, LINK["SUPERSEDES"], {"name": name, "other": other})
         for other in derived_from:

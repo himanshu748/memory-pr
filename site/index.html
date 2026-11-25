@@ -24,7 +24,8 @@
   <p class="eyebrow">Built on Relate by Neo4j</p>
   <h1><span class="line"><span>Pull requests for</span></span> <span class="line"><span>agent memory.</span></span></h1>
   <p class="lede">Git says the merge is clean. <em>The graph is damaged.</em>
-    memory-pr reviews every change to shared agent memory as graph facts, and blocks the ones that break what your agents know.</p>
+    A diff cannot see a dropped link, a fact attached to nothing, or a contradiction six hops back.
+    memory-pr reviews the pull request in Cypher and blocks it.</p>
   <div class="cta">
     <a class="btn primary" href="#explorer" data-open="auditor-stale-clone">See a blocked pull request</a>
     <a class="btn" href="#console">Ask the graph in Cypher</a>
@@ -47,7 +48,7 @@
 </a>
   <ol class="story">
     <li><span>1</span><div><strong>What it is</strong>Agents write what they learn as Markdown notes. Every change arrives as a pull request.</div></li>
-    <li><span>2</span><div><strong>The problem</strong>A text diff looks fine while two facts contradict, or a fact rests on one that was replaced.</div></li>
+    <li><span>2</span><div><strong>The problem</strong>A text diff looks fine while two facts contradict, a conclusion three hops away disagrees with its source, or a merge drops the links.</div></li>
     <li><span>3</span><div><strong>The proof</strong>Below, the review draws the problem on the graph. It runs live in this page.</div></li>
   </ol>
 </section>
@@ -143,7 +144,7 @@
 </section>
 
 <section class="explorer-head" id="explorer" data-reveal>
-  <h2 id="explorer-title">Five pull requests from five agents</h2>
+  <h2 id="explorer-title">Pull requests from the agents</h2>
   <p>Pick one. Green is what it adds, dashed red is what the merge would lose, and solid red marks the problem the review found.</p>
 </section>
 
@@ -173,6 +174,12 @@
       <h2>Ask the graph yourself</h2>
       <p id="target" class="target"></p>
     </div>
+    <form id="search-form" class="search-form" autocomplete="off">
+      <label for="search-q">Search</label>
+      <input id="search-q" placeholder="postgres, kafka, service.yaml" spellcheck="false" aria-label="Search the memory">
+      <button type="submit">Search</button>
+    </form>
+    <p class="hint">Keyword match, then the facts up to six hops along <code>DERIVED_FROM</code>. No model and no key. Searching for <code>postgres</code> also returns the restore drill, which never says that word.</p>
     <p class="hint"><strong>This box can write.</strong> Run a write and the review reruns at once.</p>
     <div id="examples" class="examples"></div>
     <textarea id="query" spellcheck="false" rows="5" aria-label="Cypher query"></textarea>
