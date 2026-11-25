@@ -2,6 +2,24 @@
   "about": "Drafts for the page's Write a memory section. Each is reviewed in the page by Relate and, in tests/test_playground_cases.py, by mempr check; both must reach the verdict written here. A draft with a starter label is offered as a one-click start.",
   "cases": [
     {
+      "id": "multi-hop",
+      "starter": "Derive mysql from the postgres fact",
+      "draft": {
+        "agent": "visitor",
+        "entity": "backup-policy",
+        "predicate": "database",
+        "value": "mysql-8",
+        "source": "demo/project/docs/legacy/payments-api.md",
+        "derived_from": [
+          "payments-api--database--postgres-15"
+        ]
+      },
+      "blocked": true,
+      "rules": [
+        "multi-hop-contradiction"
+      ]
+    },
+    {
       "id": "contradiction",
       "starter": "Say payments-api uses mysql-8",
       "draft": {
@@ -148,6 +166,36 @@
       },
       "blocked": false,
       "rules": []
+    },
+    {
+      "id": "orphan",
+      "draft": {
+        "agent": "visitor",
+        "entity": "payments-api",
+        "predicate": "region",
+        "value": "eu-west",
+        "source": "demo/project/services/payments-api/service.yaml",
+        "about": false
+      },
+      "blocked": true,
+      "rules": [
+        "orphan-fact"
+      ]
+    },
+    {
+      "id": "retracted-source",
+      "draft": {
+        "agent": "visitor",
+        "entity": "ledger-worker",
+        "predicate": "region",
+        "value": "eu-west",
+        "source": "docs/old-runbook.md",
+        "source_status": "retracted"
+      },
+      "blocked": true,
+      "rules": [
+        "broken-provenance"
+      ]
     }
   ]
 }

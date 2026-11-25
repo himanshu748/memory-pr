@@ -139,6 +139,7 @@ def test_site_demo_data_shows_every_scenario_and_matches_memory():
     built = site.build()
     assert {p["id"]: p["blocked"] for p in built["pulls"]} == {
         "agent/builder-contradiction": True,
+        "agent/reasoner-hop": True,
         "agent/planner-supersede": True,
         "agent/auditor-stale-clone": True,
         "agent/intern-unsourced": True,

@@ -107,6 +107,26 @@ def render(review: Review) -> str:
         out += [f"- {f.rule.title}: {f.text}" for f in review.warnings]
         out.append("")
 
+    seen: list[str] = []
+    cypher_rules = []
+    for finding in review.findings:
+        if finding.rule.id in seen:
+            continue
+        seen.append(finding.rule.id)
+        cypher_rules.append(finding.rule)
+    if cypher_rules:
+        out.append("<details><summary>Cypher for the rules that fired</summary>")
+        out.append("")
+        for rule in cypher_rules:
+            out.append(f"### `{rule.id}`")
+            out.append("")
+            out.append("```cypher")
+            out.append(rule.cypher.strip())
+            out.append("```")
+            out.append("")
+        out.append("</details>")
+        out.append("")
+
     if review.added or review.removed:
         out.append("<details><summary>Graph changes in this pull request</summary>")
         out.append("")

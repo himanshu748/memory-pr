@@ -7,7 +7,7 @@ import json
 import sys
 from pathlib import Path
 
-from . import __version__, export, gitutil, memory
+from . import __version__, export, gitutil, memory, search
 from .check import review
 from .report import render
 from .rules import load_rules
@@ -44,6 +44,15 @@ def cmd_query(args: argparse.Namespace) -> int:
     with open_vault(_vault(args)) as conn:
         for row in rows(conn, args.cypher):
             print(json.dumps(row, default=str, ensure_ascii=False))
+    return 0
+
+
+def cmd_search(args: argparse.Namespace) -> int:
+    result = search.search(_vault(args), args.text)
+    if args.as_json:
+        print(json.dumps(result, indent=2, ensure_ascii=False))
+        return 0
+    print(search.format_search(result))
     return 0
 
 
@@ -135,6 +144,14 @@ def build_parser() -> argparse.ArgumentParser:
     query = sub.add_parser("query", help="run a Cypher query on the vault")
     query.add_argument("cypher")
     query.set_defaults(func=cmd_query)
+
+    found = sub.add_parser(
+        "search",
+        help="keyword match plus facts up to 6 hops along DERIVED_FROM (no model, no key)",
+    )
+    found.add_argument("text")
+    found.add_argument("--json", dest="as_json", action="store_true")
+    found.set_defaults(func=cmd_search)
 
     recall = sub.add_parser("recall", help="current facts about an entity, with sources")
     recall.add_argument("entity")

@@ -1,0 +1,9 @@
+{
+  "name": "memory-pr",
+  "private": true,
+  "type": "module",
+  "description": "The page is plain ES modules. The JavaScript tests need Node and nothing else: no npm install.",
+  "scripts": {
+    "test": "node --test tests/js/*.test.mjs"
+  }
+}

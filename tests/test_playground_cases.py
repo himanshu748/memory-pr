@@ -59,8 +59,9 @@ def page_memory(tmp_path_factory) -> Path:
 
 def test_the_starters_are_among_the_cases():
     starters = [case for case in CASES if case.get("starter")]
-    assert len(starters) == 3
-    assert [case["blocked"] for case in starters] == [True, True, False]
+    assert len(starters) == 4
+    assert [case["id"] for case in starters][0] == "multi-hop"
+    assert [case["blocked"] for case in starters] == [True, True, True, False]
 
 
 @pytest.mark.parametrize("case", CASES, ids=[case["id"] for case in CASES])

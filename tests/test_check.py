@@ -213,6 +213,101 @@ def test_facts_that_replace_each_other_in_a_circle_are_blocked(repo):
     assert "supersedes-cycle" in rule_ids(run(repo, head="agent/circle"))
 
 
+def test_a_derived_fact_that_disagrees_with_its_ancestor_is_blocked(repo):
+    repo.branch("agent/hop")
+    repo.add("backup-policy", "cadence", "nightly", derived_from=[DB])
+    repo.add(
+        "backup-policy",
+        "window",
+        "sunday",
+        derived_from=["backup-policy--cadence--nightly"],
+    )
+    repo.add(
+        "backup-policy",
+        "database",
+        "mysql-8",
+        derived_from=["backup-policy--window--sunday"],
+    )
+    repo.commit("three hops")
+    result = run(repo, "agent/hop")
+    assert rule_ids(result) == ["multi-hop-contradiction"]
+    row = result.findings[0].row
+    assert row["hops"] == 3
+    assert row["root"] == DB
+    assert "Fact/backup-policy--database--mysql-8" in row["path"]
+    assert "```cypher" in render(result)
+    assert "DERIVED_FROM*1..6" in render(result)
+
+
+def test_a_many_predicate_may_differ_along_a_derivation(repo):
+    pred = repo.vault / "Predicate"
+    pred.mkdir()
+    (pred / "owner.md").write_text("---\ntype: Predicate\nname: owner\ncardinality: many\n---\n")
+    alice = repo.add("payments-api", "owner", "alice")
+    repo.commit("alice owns it")
+    repo.branch("agent/owners")
+    repo.add("payments-api", "owner", "bob", derived_from=[alice])
+    repo.commit("bob too")
+    result = run(repo, "agent/owners")
+    assert "multi-hop-contradiction" not in rule_ids(result)
+    assert "contradiction" not in rule_ids(result)
+    assert not result.blocked
+
+
+def test_restating_a_fact_without_about_drops_the_link(repo):
+    repo.branch("agent/detach")
+    repo.add("payments-api", "database", "postgres-15", about=False)
+    repo.commit("detach the fact")
+    result = run(repo, "agent/detach")
+    assert rule_ids(result) == ["orphan-fact"]
+    assert ("rel", f"Fact/{DB}", "ABOUT", "Entity/payments-api", "{}") in result.removed
+
+
+def test_agreeing_with_the_ancestor_is_not_a_multi_hop_contradiction(repo):
+    repo.branch("agent/same")
+    repo.add("backup-policy", "database", "postgres-15", derived_from=[DB])
+    repo.commit("same value")
+    assert not run(repo, "agent/same").blocked
+
+
+def test_a_fact_with_no_about_link_is_blocked(repo):
+    repo.branch("agent/orphan")
+    repo.add("payments-api", "region", "eu-west", about=False)
+    repo.commit("unattached")
+    result = run(repo, "agent/orphan")
+    assert rule_ids(result) == ["orphan-fact"]
+    assert "no `ABOUT` link" in render(result)
+
+
+def test_a_retracted_source_blocks_the_fact_and_what_was_derived_from_it(repo):
+    repo.branch("agent/source")
+    root = repo.add("ledger-worker", "region", "eu-west", source_status="retracted")
+    child = repo.add(
+        "ledger-worker",
+        "failover",
+        "eu-central",
+        source="docs/failover.md",
+        derived_from=[root.removeprefix("Fact/")],
+    )
+    repo.commit("retracted source")
+    result = run(repo, "agent/source")
+    assert set(rule_ids(result)) == {"broken-provenance"}
+    hops = {finding.row["fact"]: finding.row["hops"] for finding in result.findings}
+    assert hops[root.removeprefix("Fact/")] == 0
+    assert hops[child.removeprefix("Fact/")] == 1
+    assert "Source/" in result.findings[0].row["path"]
+
+
+def test_the_shipped_memory_is_clean():
+    from pathlib import Path
+
+    from mempr.vault import load
+
+    root = Path(__file__).resolve().parents[1] / "memory"
+    findings = load(root, default_rules()).findings
+    assert {rule: rows for rule, rows in findings.items() if rows} == {}
+
+
 def test_no_common_ancestor_is_a_clear_error(repo):
     repo.git("checkout", "-q", "--orphan", "agent/unrelated")
     repo.git("rm", "-q", "-rf", ".")

@@ -17,6 +17,9 @@ test('anything else says why not', () => {
   assert.match(whyNot(draft({ value: '$(id)' }), [], false), /value/);
   assert.match(whyNot(draft({ entity: 'x'.repeat(61) }), [], false), /entity/);
   assert.match(whyNot(draft({ source: '' }), [], false), /source/);
+  assert.match(whyNot(draft({ derived_from: ['payments-api--database--postgres-15'] }), [], false), /graph link/);
+  assert.match(whyNot(draft({ about: false }), [], false), /graph link/);
+  assert.match(whyNot(draft({ source_status: 'retracted' }), [], false), /graph link/);
   assert.match(whyNot(draft({ source: '../x' }), [], false), /source/);
 });
 

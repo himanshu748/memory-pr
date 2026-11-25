@@ -79,6 +79,12 @@ def clean(draft: Any) -> dict[str, Any]:
     # Seven characters are kept for the suffix a name gets when another value holds it.
     if len(memory.fact_name(entity, predicate, value)) > MAX_FACT_NAME - 7:
         raise BadDraft("entity, predicate and value are too long together for one fact name")
+    about = draft.get("about", True)
+    if not isinstance(about, bool):
+        raise BadDraft("about must be true or false")
+    status = draft.get("source_status", "")
+    if status not in ("", "retracted"):
+        raise BadDraft("source_status must be retracted")
     return {
         "kind": "fact",
         "agent": _slug(draft, "agent"),
@@ -87,7 +93,10 @@ def clean(draft: Any) -> dict[str, Any]:
         "value": value,
         "source": _text(draft, "source", 200, required=False),
         "supersedes": _facts(draft, "supersedes"),
+        "derived_from": _facts(draft, "derived_from"),
         "retract": _facts(draft, "retract"),
+        "about": about,
+        "source_status": status,
     }
 
 
@@ -105,6 +114,9 @@ def apply(vault: Path, draft: dict[str, Any]) -> None:
         agent=draft["agent"],
         source=draft["source"] or None,
         supersedes=draft["supersedes"],
+        derived_from=draft["derived_from"],
+        about=draft["about"],
+        source_status=draft["source_status"] or None,
     )
     for fact in draft["retract"]:
         memory.retract(vault, fact)

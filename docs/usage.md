@@ -19,7 +19,7 @@
    [Run it locally](#run-it-locally).
 
 With write access (your own fork, for example) you can also open a new one: **Actions →
-demo-agent → Run workflow**, pick a scenario (`contradiction`, `supersede`,
+demo-agent → Run workflow**, pick a scenario (`contradiction`, `hop`, `supersede`,
 `stale-clone`, `unsourced` or `clean`), and a scripted agent writes to the memory on a
 new branch and opens a pull request for `memory-review` to check.
 
@@ -90,25 +90,39 @@ print(result["blocked"], [(c["entity"], c["old"], c["new"]) for c in result["cha
 
 ## Run it locally
 
-Requires Python 3.10+ and git 2.38+. For the zero-setup browser demo see
-[`quickstart.sh`](../quickstart.sh) at the repository root.
+No Docker. No API key. Python 3.10+, git 2.38+, and Node 18+ for the JavaScript tests.
+The playground itself is [`quickstart.sh`](../quickstart.sh): Python's standard-library
+HTTP server, nothing to install.
 
 ```bash
 git clone https://github.com/himanshu748/memory-pr && cd memory-pr
-python -m venv .venv && . .venv/bin/activate
+./quickstart.sh                       # playground in the browser
+
+node --test tests/js/*.test.mjs       # 13 tests, no npm install
+./test.sh                             # creates .venv, installs, runs both suites
+
+# or, if you already have a virtualenv:
 pip install -e ".[dev]"
-pytest -q
+pytest -q                             # runs the JS tests too when node is on PATH
 
 # Ask the memory something (current facts only, each with its source)
 mempr recall payments-api
+
+# Keyword, then the facts up to 6 hops along DERIVED_FROM. No model.
+mempr search postgres
 
 # Any Cypher, straight on the Markdown files
 mempr query "MATCH p = (f:Fact)-[:DERIVED_FROM*]->(r:Fact {name: 'payments-api--database--postgres-15'}) RETURN f.name AS fact, length(p) AS hops"
 
 # Let an agent make a bad change on a branch, then review it
-python demo/agent.py run --scenario contradiction
+python demo/agent.py run --scenario hop
 mempr check --base origin/main --head HEAD
 ```
+
+`mempr search` matches entity names, predicates, values, statements and source paths,
+then walks `DERIVED_FROM`. Searching for `postgres` also returns the restore drill two
+hops away. `mempr search --json` includes the two Cypher queries. The page's search box
+runs the same queries in Relate's WebAssembly build.
 
 ## Backend
 

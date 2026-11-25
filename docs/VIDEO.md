@@ -2,29 +2,28 @@
 
 [Back to README](../README.md)
 
-Shot list keyed to captured artifacts. Narration in quotes; actions in plain text.
-Total 90 s. Every visual named below exists and is linked.
+Shot list. Narration in quotes; actions in plain text. Total 90 s.
+Film the local page (`./quickstart.sh`) after this branch is deployed, or the live
+page once Vercel has the same build. Pull request
+[#60](https://github.com/himanshu748/memory-pr/pull/60) is unchanged: git still calls
+that merge clean, and the review still blocks it for dropping links.
 
 | Time | Shot | Narration |
 | --- | --- | --- |
-| 0:00-0:04 | Full-screen text: "A text diff can't show what a memory change breaks." | — |
-| 0:04-0:12 | Split screen. Left: `git merge` output "Merge made by the 'ort' strategy" / "clean". Right: the hero card on the live page — "✓ Clean. No conflicts." beside "Blocked. This merge would silently drop 3 links, 4 properties", the `LINK LOST` badge on `payments-api/service.yaml`. Artifact: [`docs/hero.gif`](hero.gif) frame 1. | "Git calls this merge clean. The agent memory it touched is not." |
-| 0:12-0:20 | Zoom the explorer graph (`auditor-agent` card): dashed red edges out of `payments-api--database--postgres-15`, panel reading "Merge blocked: 2 problems — This merge would silently drop 3 links, 4 properties". Artifact: hero.gif frame 2. | "The fact still exists — but every link to the evidence it cites is gone, and git never noticed." |
-| 0:20-0:34 | GitHub PR [#60](https://github.com/himanshu748/memory-pr/pull/60): the `memory-review` comment — "Memory review: blocked (3 problems)", "This merge would silently drop 3 links, 4 properties", the list of lost edges, and the `mempr with Relate` footer. Artifact: hero.gif frame 3, or film the live comment. | "This is the check posting on a real pull request. Git merged it without a conflict — the review shows the three links and four properties the merge silently erases, and the note it leaves unreadable." |
-| 0:34-0:54 | The A/B run. Terminal: `mempr recall payments-api` → `postgres-15` on run A; `mongodb-8` on run B. Then the two PR diffs side by side: [`agent/run-a`](https://github.com/himanshu748/memory-pr-ab-fixture/pull/1) adds `postgres:15`; [`agent/run-b`](https://github.com/himanshu748/memory-pr-ab-fixture/pull/2) adds `mongo:8`. | "Same fixture, same prompt, same model — only the memory differs. The stale checkout ships Postgres, the reviewed checkout ships Mongo. Run A's memory proposal is blocked: no source, and a link to an agent note that doesn't exist." |
-| 0:54-1:04 | Run A's blocked comment on PR #1 ("blocked (2 problems): links to a note that does not exist; fact has no source") beside run B's "passed" comment on PR #2. | "The review catches what the stale memory let through — and clears the reviewed one." |
-| 1:04-1:16 | Quick tour of the feature map: the Cypher rule file (`default_rules.yaml`), the `DERIVED_FROM*1..6` query, then the in-page Cypher console on the live site. | "Every rule is Cypher over the Markdown vault — the same Relate engine in CI, in a serverless backend, and in this page." |
-| 1:16-1:26 | `docs/real-repos.json` scrolling, then `docs/benchmarks.md` table; the word "simulated" visible on the benchmark section. | "On fifty real repositories, 154 of 328 facts an agent learned a year ago are wrong today — all blocked until superseded. The three-hundred-PR replay is labeled simulated; the A/B run is real." |
-| 1:26-1:30 | Terminal, verbatim: `./quickstart.sh` → `serving http://localhost:8899`; the graph page opens. End card: repo URL. | "One command from a fresh clone. Try it." |
+| 0:00-0:08 | The hero card. Left check: "Clean. No conflicts." Right check: "Blocked." | "Git calls this merge clean. The memory graph is not. The fact is still in the file. Every link to its evidence is gone." |
+| 0:08-0:22 | Pull request [#60](https://github.com/himanshu748/memory-pr/pull/60), the `memory-review` comment: "silently drop 3 links, 4 properties." | "This is a real pull request. The required check blocks it. A text diff never shows those links." |
+| 0:22-0:42 | The explorer card `reasoner-hop`: the path from `backup-policy database = mysql-8` back three hops to `payments-api database = postgres-15`. Open "Cypher for multi-hop-contradiction." | "This note is about a different entity, so the two values are not side by side. It was derived, three hops away, from a fact that says the opposite. The review is this Cypher query. The comment prints it." |
+| 0:42-0:58 | The search box. Type `postgres`. The list shows the database facts, then the backup job, the migration tool, and the restore drill marked `follows, 2 hops`. | "Search for postgres. The restore drill never says that word. It is two hops along DERIVED_FROM, and Relate returns it. No model and no API key." |
+| 0:58-1:14 | `action.yml` in the editor, then a terminal: `mempr search postgres` and `./test.sh` scrolling to passed tests. | "Any repo drops in one GitHub Action. Agents get the same graph over MCP, including search. The tests are one command, no Docker." |
+| 1:14-1:30 | `./quickstart.sh`, the graph opens. End card: the repo URL, the live page, pull requests #60, #15 and #6. | "One command from a fresh clone. The merge git calls clean is the bug." |
 
 Production notes:
 
-- Keep each beat on screen at least 3 s; the 0:04-0:12 and 0:20-0:34 shots are the
-  payload — do not shorten them.
-- If filming fresh captures is easier than embedding `docs/hero.gif`, shoot the same
-  three states on <https://memory-pr.vercel.app/> (hero card → `auditor-agent`
-  explorer card → [PR #60](https://github.com/himanshu748/memory-pr/pull/60)'s
-  comment). PR #15 is the contradiction example — mention it only if a second
-  blocked scenario is wanted.
-- The A/B section films from the two PR pages; both are public on
-  `himanshu748/memory-pr-ab-fixture`.
+- Keep 0:00-0:22 on the silent link drop. That is the proof already on pull request #60.
+  Do not re-cut #60, #15 or #6, and do not merge them.
+- 0:22-0:42 is the new card (`agent/reasoner-hop` in the playground). If the live site
+  does not show it yet, film `./quickstart.sh`.
+- The search box is under "Ask the graph yourself." `postgres` must show a connected
+  fact whose value does not contain that word.
+- #15 still blocks on a direct contradiction and #6 still passes. Say that only if
+  the end card is on screen long enough to point at them.

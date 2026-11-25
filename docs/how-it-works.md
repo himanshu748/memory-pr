@@ -28,6 +28,9 @@ Git merges text. A memory graph can be damaged by a merge git calls clean:
 | An agent replaces a fact that three other facts were derived from | clean merge | three facts rest on a fact that is no longer true, up to two hops away |
 | Two branches add the same property to one note on different lines | clean merge | the note has a duplicate key, Relate reads it as empty, and every link it had is gone |
 | An agent links a fact to a source that was never written down | clean merge | the fact cannot be verified |
+| A new note about a different entity is derived, three hops away, from a fact that states the opposite | clean merge | the conclusion contradicts the fact it came from |
+| A note names an entity in its file name and forgets the `ABOUT` link | clean merge | recall never returns the fact |
+| A fact cites a source, or was derived from a fact that does, and that source was retracted | clean merge | the evidence is gone and the conclusion is still current |
 
 Each row is a Cypher query or a graph comparison in this repository, and each has a
 test.
@@ -94,6 +97,11 @@ it is reviewed with.
 | `dangling-link` | yes | a link to a note that does not exist |
 | `unsourced-fact` | yes | an active fact with no source |
 | `unattributed-fact` | no | a fact with no author |
+| `orphan-fact` | yes | an active fact with no `ABOUT` link, so recall cannot find it |
+| `multi-hop-contradiction` | yes | an active fact that states a different value for the same predicate as a fact it was derived from, up to 6 hops away, unless that predicate's cardinality is `many` |
+| `broken-provenance` | yes | an active fact that reaches a retracted source, directly or through up to 6 `DERIVED_FROM` hops |
+
+The check comment includes the Cypher for each rule that fired, in a collapsed block under the problems. The same queries run in CI, in the API, and in the page.
 
 ## Inspect the store with Relate directly
 

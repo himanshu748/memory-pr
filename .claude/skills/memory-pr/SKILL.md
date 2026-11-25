@@ -23,11 +23,13 @@ Rules:
 
 ## Recall
 
-With the `memory` MCP server: `recall(entity)`, or `query(cypher)` for anything else.
+With the `memory` MCP server: `recall(entity)` when you know the entity, or `search(text)`
+when you only have a word. `query(cypher)` for anything else.
 Without it:
 
 ```bash
 mempr recall payments-api
+mempr search postgres
 mempr query "MATCH (f:Fact {status:'active'})-[:ABOUT]->(e:Entity) RETURN e.name, f.predicate, f.value"
 ```
 
@@ -59,6 +61,9 @@ Read each problem, fix it on the same branch (MCP: pass the same `branch`), chec
 | Rests on a fact that was retracted or replaced | Re-check each derived fact against the new value. Still true in a new form: add the new fact with `--supersedes <derived fact> --derived-from <new fact>`. No longer true: `mempr retract <derived fact>`. |
 | No source | Add the fact again with `--source`. |
 | Link to a note that does not exist | Use the fact name exactly as `recall` prints it. |
+| Contradicts a fact it was derived from | The path in the review names the ancestor. Point `DERIVED_FROM` at the fact that states the value you used, or drop yours. |
+| Fact is not about anything | Add `ABOUT` for the entity. A file name is not a link. |
+| Evidence for this fact was retracted | Cite a source that is still current, or retract the fact. |
 
 Fact names look like `payments-api--database--postgres-15`. Do not retract a fact only
 to make the check pass: retract it when you have checked it is no longer true.

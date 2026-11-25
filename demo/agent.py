@@ -32,6 +32,7 @@ SCENARIOS = {
     "supersede": "records a database move but forgets the facts derived from the old one",
     "stale-clone": "works from an old clone; git merges cleanly but the graph loses a note",
     "unsourced": "writes a fact by hand with no source and a link to a missing note",
+    "hop": "derives a mysql fact, three hops away, from the postgres fact",
 }
 
 
@@ -119,6 +120,46 @@ def scenario_stale_clone(agent: str) -> str:
     text = note.read_text()
     note.write_text(text.replace("type: Fact\n", f"type: Fact\nverified: by-{agent}\n", 1))
     return "Re-verified the payments-api database fact and stamped it."
+
+
+def scenario_hop(agent: str) -> str:
+    """A note about a different entity, derived three hops from a fact it contradicts.
+
+    Git merges the three new notes cleanly. They do not give one entity two values, so
+    the direct contradiction rule does not fire. The path does.
+    """
+    root = fact_name("payments-api", "database", "postgres-15")
+    cadence = fact_name("backup-policy", "cadence", "nightly")
+    window = fact_name("backup-policy", "window", "sunday")
+    memory.add_fact(
+        VAULT,
+        entity="backup-policy",
+        predicate="cadence",
+        value="nightly",
+        agent=agent,
+        source="demo/project/services/payments-api/service.yaml",
+        derived_from=[root],
+    )
+    memory.add_fact(
+        VAULT,
+        entity="backup-policy",
+        predicate="window",
+        value="sunday",
+        agent=agent,
+        source="demo/project/services/payments-api/service.yaml",
+        derived_from=[cadence],
+    )
+    memory.add_fact(
+        VAULT,
+        entity="backup-policy",
+        predicate="database",
+        value="mysql-8",
+        agent=agent,
+        source="demo/project/docs/legacy/payments-api.md",
+        statement="backup-policy database: mysql-8, derived from the payments-api database.",
+        derived_from=[window],
+    )
+    return "Derived a mysql database for backup-policy from the postgres fact, three hops away."
 
 
 def scenario_unsourced(agent: str) -> str:

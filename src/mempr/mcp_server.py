@@ -38,8 +38,10 @@ Shared project memory, reviewed like code. It is a graph of facts kept as Markdo
 (:Fact {predicate, value, status})-[:ABOUT]->(:Entity), -[:SOURCE]->(:Source {uri}),
 -[:ASSERTED_BY]->(:Agent), -[:SUPERSEDES]->(:Fact), -[:DERIVED_FROM]->(:Fact).
 
-- Before you assume something about the project, call `recall`. When it says nothing is
-  known, do not guess: read the real source, then `propose_fact` with that source.
+- Before you assume something about the project, call `recall` when you know the entity,
+  or `search` when you only have a word (a database, a file name, a value). When the
+  answer says nothing is known, do not guess: read the real source, then `propose_fact`
+  with that source.
 - You cannot write to the memory directly. `propose_fact` and `retract_fact` commit to a
   new branch and return the review of that branch. A blocked review tells you what to fix;
   pass the same `branch` again to add the fix to the same proposal.
@@ -285,6 +287,20 @@ def build_server(cfg: Settings) -> FastMCP:
             for f in facts
         ]
         return {"entity": entity, "known": True, "facts": facts, "answer": "\n".join(lines)}
+
+    @server.tool()
+    def search(text: str, ref: str | None = None) -> dict[str, Any]:
+        """Find facts by keyword, then the facts up to 6 hops along DERIVED_FROM.
+
+        Use this when you do not know the entity name. `text` is matched against entity
+        names, predicates, values, statements and source paths. `connected` holds facts
+        derived from a match (`via` is `follows`) and facts a match was derived from
+        (`via` is `supports`). No model and no API key. `cypher` is the two queries.
+        """
+        from .search import search as run_search
+
+        with _vault_at(cfg, ref) as vault:
+            return _plain(run_search(vault, text))
 
     @server.tool()
     def query(cypher: str, ref: str | None = None) -> dict[str, Any]:

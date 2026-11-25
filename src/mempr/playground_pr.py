@@ -62,6 +62,11 @@ def strict(draft: Any) -> dict[str, str]:
     draft = clean(draft)
     if draft["kind"] != "fact":
         raise BadDraft("only a new fact can be opened as a pull request on GitHub")
+    if draft["derived_from"] or not draft["about"] or draft["source_status"]:
+        raise BadDraft(
+            "a pull request on GitHub is one sourced fact. Review a derivation, a fact "
+            "with no ABOUT link, or a retracted source in the page or with mempr check."
+        )
     source = draft["source"]
     if len(source) > MAX_SOURCE or not SOURCE.fullmatch(source):
         raise BadDraft(
