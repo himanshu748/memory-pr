@@ -186,8 +186,7 @@ def counts(github=_github) -> tuple[int, int] | None:
             return count(rows, now)
         try:
             batch = [
-                (str(p["head"]["ref"]), p["state"] == "open", str(p["created_at"]))
-                for p in pulls
+                (str(p["head"]["ref"]), p["state"] == "open", str(p["created_at"])) for p in pulls
             ]
             oldest = min(
                 datetime.fromisoformat(made.replace("Z", "+00:00")) for _, _, made in batch
