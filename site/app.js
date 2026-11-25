@@ -1106,6 +1106,7 @@ const ADD_ORPHAN =
   'MERGE (a:Agent {name: $agent}) MERGE (f:Fact {name: $name}) ' +
   "SET f.predicate = $predicate, f.value = $value, f.status = 'active', f.body = $statement " +
   'MERGE (f)-[:ASSERTED_BY]->(a) RETURN f.name AS fact';
+const DROP_ABOUT = 'MATCH (:Fact {name: $name})-[r:ABOUT]->() DELETE r';
 const ADD_SOURCE =
   'MATCH (f:Fact {name: $name}) MERGE (s:Source {name: $source}) SET s.uri = $uri MERGE (f)-[:SOURCE]->(s) RETURN s.name AS source';
 const SOURCE_STATUS = "MATCH (s:Source {name: $source}) SET s.status = $status RETURN s.name AS source";
@@ -1124,6 +1125,7 @@ function applyDraft(db, d) {
   const statement = `${d.entity} ${d.predicate}: ${d.value}`;
   const params = { name, entity: d.entity, agent: d.agent, predicate: d.predicate, value: d.value, statement };
   run(db, d.about === false ? ADD_ORPHAN : ADD_FACT, params);
+  if (d.about === false) run(db, DROP_ABOUT, { name });
   if (d.source) run(db, ADD_SOURCE, { name, source: slug(d.source), uri: d.source });
   if (d.source_status) run(db, SOURCE_STATUS, { source: slug(d.source), status: d.source_status });
   for (const other of d.supersedes) run(db, SUPERSEDE, { name, other });

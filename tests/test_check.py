@@ -239,6 +239,30 @@ def test_a_derived_fact_that_disagrees_with_its_ancestor_is_blocked(repo):
     assert "DERIVED_FROM*1..6" in render(result)
 
 
+def test_a_many_predicate_may_differ_along_a_derivation(repo):
+    pred = repo.vault / "Predicate"
+    pred.mkdir()
+    (pred / "owner.md").write_text("---\ntype: Predicate\nname: owner\ncardinality: many\n---\n")
+    alice = repo.add("payments-api", "owner", "alice")
+    repo.commit("alice owns it")
+    repo.branch("agent/owners")
+    repo.add("payments-api", "owner", "bob", derived_from=[alice])
+    repo.commit("bob too")
+    result = run(repo, "agent/owners")
+    assert "multi-hop-contradiction" not in rule_ids(result)
+    assert "contradiction" not in rule_ids(result)
+    assert not result.blocked
+
+
+def test_restating_a_fact_without_about_drops_the_link(repo):
+    repo.branch("agent/detach")
+    repo.add("payments-api", "database", "postgres-15", about=False)
+    repo.commit("detach the fact")
+    result = run(repo, "agent/detach")
+    assert rule_ids(result) == ["orphan-fact"]
+    assert ("rel", f"Fact/{DB}", "ABOUT", "Entity/payments-api", "{}") in result.removed
+
+
 def test_agreeing_with_the_ancestor_is_not_a_multi_hop_contradiction(repo):
     repo.branch("agent/same")
     repo.add("backup-policy", "database", "postgres-15", derived_from=[DB])

@@ -134,6 +134,7 @@
       AND f.predicate = root.predicate AND f.value <> root.value
       AND NOT EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(f) WHERE n.status = 'active' }
       AND NOT EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(root) WHERE n.status = 'active' }
+      AND NOT EXISTS { MATCH (card:Predicate {name: f.predicate}) WHERE card.cardinality = 'many' }
     OPTIONAL MATCH (f)-[:ABOUT]->(e:Entity)
     OPTIONAL MATCH (root)-[:ABOUT]->(re:Entity)
     RETURN f.name AS fact, root.name AS root, f.predicate AS predicate,

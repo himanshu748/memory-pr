@@ -155,6 +155,9 @@ def add_fact(
                 "statement": statement or f"{entity} {predicate}: {value}",
             },
         )
+        if not about:
+            # Restating a fact must drop an ABOUT link it already had.
+            rows(conn, "MATCH (:Fact {name: $name})-[r:ABOUT]->() DELETE r", {"name": name})
         if source_status:
             rows(
                 conn,

@@ -98,7 +98,7 @@ it is reviewed with.
 | `unsourced-fact` | yes | an active fact with no source |
 | `unattributed-fact` | no | a fact with no author |
 | `orphan-fact` | yes | an active fact with no `ABOUT` link, so recall cannot find it |
-| `multi-hop-contradiction` | yes | an active fact that states a different value for the same predicate as a fact it was derived from, up to 6 hops away |
+| `multi-hop-contradiction` | yes | an active fact that states a different value for the same predicate as a fact it was derived from, up to 6 hops away, unless that predicate's cardinality is `many` |
 | `broken-provenance` | yes | an active fact that reaches a retracted source, directly or through up to 6 `DERIVED_FROM` hops |
 
 The check comment includes the Cypher for each rule that fired, in a collapsed block under the problems. The same queries run in CI, in the API, and in the page.
