@@ -29,7 +29,8 @@ except OSError as error:
         print(f"error: port {port} is already serving something else.", file=sys.stderr)
     else:
         print(f"error: the server could not start on port {port}: {error}", file=sys.stderr)
-    sys.exit("retry with a free port, e.g.: ./quickstart.sh")
+    alternate_port = port + 1 if port < 65535 else 8620
+    sys.exit(f"retry with a free port, e.g.: ./quickstart.sh {alternate_port}")
 
 url = f"http://127.0.0.1:{port}"
 print(f"Serving {url}. Ctrl+C to stop.", flush=True)
