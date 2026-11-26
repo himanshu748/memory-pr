@@ -25,6 +25,9 @@ test('the playground starts without curl and refuses an occupied port', { timeou
     const blocked = spawnSync(script, [String(port)], { env, encoding: 'utf8', timeout: 5_000 });
     assert.equal(blocked.status, 1);
     assert.match(blocked.stderr, /already serving something else/);
+    const retryPort = Number(blocked.stderr.match(/retry with a free port, e\.g\.: \.\/quickstart\.sh (\d+)/)?.[1]);
+    assert.ok(retryPort >= 1 && retryPort <= 65535);
+    assert.notEqual(retryPort, port);
     assert.equal(blocked.stdout, '');
   } finally {
     await new Promise((resolve, reject) => socket.close((error) => error ? reject(error) : resolve()));
