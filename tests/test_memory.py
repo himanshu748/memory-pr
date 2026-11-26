@@ -165,6 +165,25 @@ def test_two_sources_with_the_same_note_name_are_refused(repo):
         )
 
 
+@pytest.mark.parametrize(
+    ("rules", "error"),
+    [
+        ("- id: [broken", "invalid YAML"),
+        ("rules: []", "expected a list of review rules"),
+        ("- id: custom\n  severity: block\n", "'title' must be a string"),
+    ],
+)
+def test_check_reports_invalid_rule_configuration(repo, capsys, rules, error):
+    (repo.path / "memory-rules.yaml").write_text(rules, "utf-8")
+    repo.commit("add invalid rules")
+    assert main(["--repo", str(repo.path), "check", "--base", "main", "--head", "main"]) == 2
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert "memory-rules.yaml" in captured.err
+    assert error in captured.err
+    assert "Traceback" not in captured.err
+
+
 def test_rules_are_read_from_the_base_branch(repo, capsys):
     repo.git("checkout", "-q", "-b", "agent/sneaky")
     (repo.path / "memory-rules.yaml").write_text(

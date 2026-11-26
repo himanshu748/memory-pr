@@ -10,7 +10,7 @@ from pathlib import Path
 from . import __version__, export, gitutil, memory, search
 from .check import review
 from .report import render
-from .rules import load_rules
+from .rules import RuleConfigError, load_rules
 from .vault import open_vault, rows
 
 
@@ -24,7 +24,11 @@ def _vault(args: argparse.Namespace) -> Path:
 
 def cmd_check(args: argparse.Namespace) -> int:
     # Rules come from the base branch, so a pull request cannot switch off its own review.
-    rules = load_rules(gitutil.read_file(_repo(args), args.base, args.rules))
+    try:
+        rules = load_rules(gitutil.read_file(_repo(args), args.base, args.rules))
+    except RuleConfigError as err:
+        sys.stderr.write(f"mempr check: {args.rules}: {err}\n")
+        return 2
     try:
         result = review(_repo(args), args.base, args.head, args.vault, rules)
     except gitutil.GitError as err:

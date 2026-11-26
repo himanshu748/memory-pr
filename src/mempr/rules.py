@@ -18,11 +18,33 @@ class Rule:
     fix: str = ""
 
 
+class RuleConfigError(ValueError):
+    """The rule configuration cannot be applied."""
+
+
 def _parse(text: str) -> list[Rule]:
+    try:
+        items = yaml.safe_load(text)
+    except yaml.YAMLError as err:
+        mark = getattr(err, "problem_mark", None)
+        where = f" at line {mark.line + 1}" if mark is not None else ""
+        raise RuleConfigError(f"invalid YAML{where}") from err
+    if items is None:
+        return []
+    if not isinstance(items, list):
+        raise RuleConfigError("expected a list of review rules")
+
     rules = []
-    for item in yaml.safe_load(text) or []:
-        if item.get("severity") not in ("block", "warn"):
-            raise ValueError(f"rule {item.get('id')!r}: severity must be 'block' or 'warn'")
+    for number, item in enumerate(items, 1):
+        if not isinstance(item, dict):
+            raise RuleConfigError(f"rule #{number}: expected a mapping")
+        for field in ("id", "severity", "title", "message", "cypher"):
+            if not isinstance(item.get(field), str):
+                raise RuleConfigError(f"rule #{number}: {field!r} must be a string")
+        if not isinstance(item.get("fix", ""), str):
+            raise RuleConfigError(f"rule #{number}: 'fix' must be a string")
+        if item["severity"] not in ("block", "warn"):
+            raise RuleConfigError(f"rule {item['id']!r}: severity must be 'block' or 'warn'")
         rules.append(
             Rule(
                 id=item["id"],
