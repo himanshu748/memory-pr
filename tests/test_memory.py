@@ -70,6 +70,31 @@ def test_cli_check_exit_code_and_outputs(repo, tmp_path, capsys):
     assert '"blocked": true' in js.read_text()
 
 
+def test_cli_check_reports_unrelated_histories_without_a_traceback(repo, capsys):
+    repo.git("checkout", "-q", "--orphan", "agent/unrelated")
+    repo.git("rm", "-q", "-rf", ".")
+    (repo.path / "note.txt").write_text("unrelated history\n")
+    repo.commit("orphan")
+
+    code = main(
+        [
+            "--repo",
+            str(repo.path),
+            "check",
+            "--base",
+            "main",
+            "--head",
+            "agent/unrelated",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == 2
+    assert captured.out == ""
+    assert "mempr check: no common ancestor between" in captured.err
+    assert "Traceback" not in captured.err
+
+
 def _add(repo, value, **kwargs):
     return add_fact(
         repo.vault,
