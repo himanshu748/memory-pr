@@ -27,7 +27,12 @@ def rev_parse(repo: Path, rev: str) -> str:
 def merge_base(repo: Path, a: str, b: str) -> str:
     proc = git(repo, "merge-base", a, b, check=False)
     if proc.returncode != 0:
-        raise GitError(f"no common ancestor between {a!r} and {b!r}")
+        message = f"no common ancestor between {a!r} and {b!r}"
+        if proc.returncode == 1:
+            shallow = git(repo, "rev-parse", "--is-shallow-repository", check=False)
+            if shallow.stdout.strip() == "true":
+                message += "; this checkout is shallow. Run git fetch --unshallow and try again."
+        raise GitError(message)
     return proc.stdout.strip()
 
 

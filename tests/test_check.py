@@ -316,3 +316,19 @@ def test_no_common_ancestor_is_a_clear_error(repo):
     repo.git("checkout", "-q", "main")
     with pytest.raises(gitutil.GitError, match="no common ancestor"):
         run(repo, head="agent/unrelated")
+
+
+def test_shallow_checkout_explains_how_to_restore_history(repo, tmp_path):
+    repo.branch("agent/learn")
+    repo.add("ledger-worker", "queue", "kafka")
+    repo.commit("learn queue")
+    repo.git("checkout", "-q", "main")
+    repo.add("billing-worker", "queue", "rabbitmq")
+    repo.commit("learn another queue")
+    shallow = tmp_path / "shallow"
+    repo.git("clone", "-q", "--depth=1", "--no-single-branch", repo.path.as_uri(), str(shallow))
+    with pytest.raises(gitutil.GitError, match="git fetch --unshallow"):
+        gitutil.merge_base(shallow, "main", "origin/agent/learn")
+    gitutil.git(shallow, "fetch", "-q", "--unshallow")
+    ancestor = repo.git("rev-parse", "main^")
+    assert gitutil.merge_base(shallow, "main", "origin/agent/learn") == ancestor
