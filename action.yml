@@ -63,6 +63,8 @@ runs:
         echo "code=$?" >> "$GITHUB_OUTPUT"
         if [ -f "$RUNNER_TEMP/mempr-comment.md" ]; then
           cat "$RUNNER_TEMP/mempr-comment.md" >> "$GITHUB_STEP_SUMMARY"
+        else
+          printf '%s\n' 'Memory review could not run. See the review step log for details.' >> "$GITHUB_STEP_SUMMARY"
         fi
     - name: Comment on the pull request
       if: inputs.comment == 'true' && github.event.pull_request.number
