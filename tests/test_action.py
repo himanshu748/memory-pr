@@ -12,15 +12,21 @@ import yaml
 
 from mempr.report import MARKER
 
-ACTION = Path(__file__).resolve().parents[1] / "action.yml"
+ROOT = Path(__file__).resolve().parents[1]
+ACTION = ROOT / "action.yml"
+WORKFLOW = ROOT / ".github/workflows/memory-review.yml"
 
 
-def review_step() -> str:
-    steps = yaml.safe_load(ACTION.read_text("utf-8"))["runs"]["steps"]
+def review_step(workflow: Path = ACTION) -> str:
+    source = yaml.safe_load(workflow.read_text("utf-8"))
+    if workflow == ACTION:
+        steps = source["runs"]["steps"]
+    else:
+        steps = source["jobs"]["memory-review"]["steps"]
     return next(s["run"] for s in steps if s.get("id") == "review")
 
 
-def run_step(repo, tmp_path, head):
+def run_step(repo, tmp_path, head, workflow=ACTION):
     out = tmp_path / "runner"
     out.mkdir(exist_ok=True)
     env = {
@@ -33,9 +39,11 @@ def run_step(repo, tmp_path, head):
         "MEMPR_HEAD": head,
         "MEMPR_VAULT": "memory",
         "MEMPR_RULES": "memory-rules.yaml",
+        "BASE": "main",
+        "HEAD": head,
     }
-    subprocess.run(["bash", "-c", review_step()], cwd=repo.path, env=env, check=True)
-    comment = out / "mempr-comment.md"
+    subprocess.run(["bash", "-c", review_step(workflow)], cwd=repo.path, env=env, check=True)
+    comment = out / ("mempr-comment.md" if workflow == ACTION else "comment.md")
     return (out / "output").read_text().strip(), comment.read_text() if comment.exists() else ""
 
 
@@ -61,3 +69,12 @@ def test_the_action_step_fails_without_a_comment_on_a_bad_ref(repo, tmp_path):
     output, comment = run_step(repo, tmp_path, "no-such-ref")
     assert output == "code=2"
     assert comment == ""
+    assert "Memory review could not run" in (tmp_path / "runner" / "summary").read_text()
+
+
+def test_native_workflow_summarizes_a_bad_ref_without_a_comment(repo, tmp_path):
+    repo.git("update-ref", "refs/remotes/origin/main", repo.git("rev-parse", "main"))
+    output, comment = run_step(repo, tmp_path, "no-such-ref", WORKFLOW)
+    assert output == "code=2"
+    assert comment == ""
+    assert "Memory review could not run" in (tmp_path / "runner" / "summary").read_text()
