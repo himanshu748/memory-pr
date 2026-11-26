@@ -19,11 +19,10 @@ WORKFLOW = ROOT / ".github/workflows/memory-review.yml"
 
 def review_step(workflow: Path = ACTION) -> str:
     source = yaml.safe_load(workflow.read_text("utf-8"))
-    steps = (
-        source["runs"]["steps"]
-        if workflow == ACTION
-        else source["jobs"]["memory-review"]["steps"]
-    )
+    if workflow == ACTION:
+        steps = source["runs"]["steps"]
+    else:
+        steps = source["jobs"]["memory-review"]["steps"]
     return next(s["run"] for s in steps if s.get("id") == "review")
 
 
