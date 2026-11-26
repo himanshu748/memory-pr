@@ -4,48 +4,44 @@
 # Usage: ./quickstart.sh [port]
 set -eu
 
-port="${1:-8619}"
-dir="$(cd "$(dirname "$0")/site" && pwd)"
-url="http://localhost:$port"
+exec python3 - "$0" "${1:-8619}" <<'PY'
+import errno
+import functools
+import http.server
+import pathlib
+import sys
+import threading
+import webbrowser
 
-# If something already answers on the port, refuse before opening a browser
-# at a service that is not this project.
-if curl -sf -o /dev/null "$url/" 2>/dev/null; then
-  echo "error: port $port is already serving something else." >&2
-  echo "retry with a free port, e.g.: ./quickstart.sh $((port + 1))" >&2
-  exit 1
-fi
+try:
+    port = int(sys.argv[2])
+    if not 1 <= port <= 65535:
+        raise ValueError
+except ValueError:
+    sys.exit("error: choose a port between 1 and 65535.")
 
-python3 -m http.server "$port" -d "$dir" >/dev/null 2>&1 &
-server=$!
-trap 'kill $server 2>/dev/null || true' EXIT INT TERM
+directory = pathlib.Path(sys.argv[1]).resolve().parent / "site"
+handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=directory)
+try:
+    server = http.server.ThreadingHTTPServer(("127.0.0.1", port), handler)
+except OSError as error:
+    if error.errno == errno.EADDRINUSE:
+        print(f"error: port {port} is already serving something else.", file=sys.stderr)
+    else:
+        print(f"error: the server could not start on port {port}: {error}", file=sys.stderr)
+    sys.exit("retry with a free port, e.g.: ./quickstart.sh")
 
-# Wait until the server actually answers. If startup fails (bind error etc.)
-# the python process exits — report that instead of claiming success.
-i=0
-while [ "$i" -lt 40 ]; do
-  if ! kill -0 "$server" 2>/dev/null; then
-    echo "error: the server could not start on port $port." >&2
-    echo "retry with a free port, e.g.: ./quickstart.sh $((port + 1))" >&2
-    exit 1
-  fi
-  if curl -sf -o /dev/null "$url/" 2>/dev/null; then
-    break
-  fi
-  i=$((i + 1))
-  sleep 0.25
-done
-if [ "$i" -ge 40 ]; then
-  echo "error: no response from $url after 10 seconds." >&2
-  exit 1
-fi
+url = f"http://127.0.0.1:{port}"
+print(f"Serving {url}. Ctrl+C to stop.", flush=True)
 
-echo "Serving $url — the graph view opens in your browser. Ctrl+C to stop."
-if command -v xdg-open >/dev/null 2>&1; then
-  xdg-open "$url" >/dev/null 2>&1 || true
-elif command -v open >/dev/null 2>&1; then
-  open "$url" >/dev/null 2>&1 || true
-else
-  echo "No opener found — open $url yourself."
-fi
-wait $server
+def open_graph():
+    if not webbrowser.open(url):
+        print(f"Open {url} in your browser.", flush=True)
+
+threading.Thread(target=open_graph, daemon=True).start()
+with server:
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        pass
+PY
