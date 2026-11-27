@@ -38,9 +38,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: himanshu748/memory-pr@v1
+      - uses: himanshu748/memory-pr@3905ebb71453b2bd8fa303333ca11e9d2f76e5d0
 ```
 
+The example pins the version exercised by the [consumer Action test](../.github/workflows/ci.yml).
 Full Git history lets the action find the common ancestor and inspect what Git
 would merge. On a pull request the action picks the base branch and the PR head
 commit from the event. It updates one review comment and also writes the review

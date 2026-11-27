@@ -33,3 +33,63 @@ jobs:
           base: origin/main
           head: origin/main
           comment: "false"
+  consumer-action:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: source
+      - name: Prepare a separate consumer repository
+        run: |
+          cp -R source/memory memory
+          git init -q -b main
+          git config user.email 'consumer-example@example.invalid'
+          git config user.name 'Memory PR consumer example'
+          git add memory
+          git commit -qm 'Seed consumer vault'
+          git switch -qc derived-change
+          cat > memory/Entity/backup-policy.md <<'EOF'
+          ---
+          type: Entity
+          name: backup-policy
+          ---
+          EOF
+          cat > memory/Fact/backup-policy--database--mysql-8.md <<'EOF'
+          ---
+          type: Fact
+          name: backup-policy--database--mysql-8
+          predicate: database
+          value: mysql-8
+          status: active
+          preserve_value: true
+          ABOUT:
+            - "[[Entity/backup-policy]]"
+          ASSERTED_BY:
+            - "[[Agent/scout]]"
+          SOURCE:
+            - "[[Source/demo-project-services-payments-api-service-yaml]]"
+          DERIVED_FROM:
+            - "[[Fact/payments-api--restore-drill--quarterly-pg-restore]]"
+          ---
+          EOF
+          git add memory
+          git commit -qm 'Propose a contradictory derived value'
+      - uses: himanshu748/memory-pr@3905ebb71453b2bd8fa303333ca11e9d2f76e5d0
+        with:
+          base: main
+          head: main
+          comment: "false"
+      - uses: himanshu748/memory-pr@3905ebb71453b2bd8fa303333ca11e9d2f76e5d0
+        id: derived-review
+        continue-on-error: true
+        with:
+          base: main
+          head: derived-change
+          comment: "false"
+      - name: Confirm the published Action rejected the three-hop contradiction
+        env:
+          REVIEW_OUTCOME: ${{ steps.derived-review.outcome }}
+        run: |
+          test "$REVIEW_OUTCOME" = failure
+          grep -q 'multi-hop-contradiction' "$RUNNER_TEMP/mempr-comment.md"
+          grep -q '3 step(s)' "$RUNNER_TEMP/mempr-comment.md"

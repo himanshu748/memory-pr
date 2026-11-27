@@ -48,6 +48,8 @@ def test_contradiction_between_two_branches_git_merges_cleanly(repo):
     repo.branch("agent/b")
     repo.add("checkout-web", "port", "8080")
     repo.commit("b")
+    assert not run(repo, "agent/a").blocked
+    assert not run(repo, "agent/b").blocked
     repo.git("checkout", "-q", "main")
     repo.git("merge", "-q", "--no-ff", "agent/a", "-m", "merge a")
     result = run(repo, "agent/b")
