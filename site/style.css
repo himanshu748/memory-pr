@@ -325,10 +325,13 @@ td { font-family: var(--mono); font-size: 13px; }
 .write-head > p:not(.eyebrow) { color: var(--muted); font-size: 17px; }
 .write-head strong { color: var(--ink); font-weight: 600; }
 .agent-comparison { padding: var(--s5) 0 0; }
+.agent-trial-picker { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); margin-top: var(--s3); }
+.agent-trial-picker select { padding: 6px 10px; background: var(--surface); border: 1px solid var(--rule); }
+.agent-trial-picker p { width: 100%; color: var(--muted); }
 .agent-run-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: var(--s3); margin: var(--s3) 0; }
 .agent-run { display: grid; align-content: start; gap: var(--s2); padding: var(--s3); border: 1px solid var(--rule); background: var(--surface); }
-.agent-run[data-agent-run="stale"] { border-top: 3px solid var(--bad); }
-.agent-run[data-agent-run="reviewed"] { border-top: 3px solid var(--good); }
+.agent-comparison:not([data-trial="fresh"]) .agent-run[data-agent-run="stale"] { border-top: 3px solid var(--bad); }
+.agent-run[data-agent-run="reviewed"], .agent-comparison[data-trial="fresh"] .agent-run { border-top: 3px solid var(--good); }
 .agent-recall { padding: var(--s2); background: var(--faint); overflow-wrap: anywhere; }
 .agent-run-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s3); }
 #agent-recall-status:not(:empty), .agent-query { margin-top: var(--s2); }

@@ -1807,19 +1807,37 @@ OPTIONAL MATCH (f)-[:SUPERSEDES]->(old:Fact)
 RETURN f.value AS database, s.uri AS source, old.value AS replaced`;
 
 function wireAgentComparison(starting) {
+  const section = $('agent-comparison');
+  const trial = $('agent-trial');
   const button = $('agent-recall');
   const status = $('agent-recall-status');
+  const cards = [...section.querySelectorAll('[data-agent-run]')];
   $('agent-recall-query').textContent = AGENT_RECALL;
+  function showTrial() {
+    section.dataset.trial = trial.value;
+    for (const variant of section.querySelectorAll('[data-agent-trial]')) {
+      variant.hidden = variant.dataset.agentTrial !== trial.value;
+    }
+    for (const card of cards) {
+      const output = card.querySelector('.agent-recall');
+      output.hidden = true;
+      output.replaceChildren();
+    }
+    status.textContent = '';
+  }
+  showTrial();
+  trial.addEventListener('change', showTrial);
   button.addEventListener('click', async () => {
     button.disabled = true;
+    trial.disabled = true;
     status.textContent = 'Running the recall on both published memory snapshots.';
     try {
       await starting;
       if (!relate) throw new Error('Relate could not start. The original check output is linked above.');
-      const response = await fetch('data/agent-comparison.json');
+      const file = trial.value === 'fresh' ? 'agent-comparison-fresh.json' : 'agent-comparison.json';
+      const response = await fetch(`data/${file}`);
       if (!response.ok) throw new Error('The archived memory snapshots could not load.');
       const snapshots = await response.json();
-      const cards = [...document.querySelectorAll('[data-agent-run]')];
       const results = cards.map((card) => {
         const snapshot = snapshots[card.dataset.agentRun];
         const db = loadDb(snapshot.graph);
@@ -1846,6 +1864,7 @@ function wireAgentComparison(starting) {
       status.textContent = err.message;
     } finally {
       button.disabled = false;
+      trial.disabled = false;
     }
   });
 }

@@ -57,25 +57,38 @@
 <section class="agent-comparison" id="agent-comparison" aria-labelledby="agent-comparison-title">
   <div class="write-head">
     <h2 id="agent-comparison-title">Same task, different shared memory</h2>
-    <p>Devin ran the same database setup task in separate checkouts of a public fixture. The two pull requests show what it chose.</p>
+    <p>Both trials gave agents the same database setup task with different shared memory. Replay what each checkout would recall and open the actual proposals.</p>
+  </div>
+  <div class="agent-trial-picker">
+    <label for="agent-trial">Experiment</label>
+    <select id="agent-trial">
+      <option value="original">Original Devin trial</option>
+      <option value="fresh">Fresh Codex trial</option>
+    </select>
+    <p data-agent-trial="fresh" hidden>Both fresh agents chose MongoDB. One recovered from stale memory by reading the project. The other started from a current source.</p>
   </div>
   <div class="agent-run-grid">
     <article class="agent-run" data-agent-run="stale">
       <h3>Stale memory</h3>
-      <p>Devin proposed <code>postgres:15</code>. The local review blocked the unsourced fact and the link to a missing author.</p>
+      <p data-agent-trial="original">Devin proposed <code>postgres:15</code>. The local review blocked the unsourced fact and the link to a missing author.</p>
+      <p data-agent-trial="fresh" hidden>Codex checked the README and PyMongo code, then proposed <code>mongo:8</code>. The service probe and graph check passed on GitHub.</p>
       <p class="agent-recall" hidden></p>
-      <a href="https://github.com/himanshu748/memory-pr-ab-fixture/pull/1">Read the blocked PR and check output</a>
+      <a data-agent-trial="original" href="https://github.com/himanshu748/memory-pr-ab-fixture/pull/1">Read the blocked PR and check output</a>
+      <a data-agent-trial="fresh" hidden href="https://github.com/himanshu748/memory-pr/pull/73">Read the stale-memory proposal and checks</a>
     </article>
     <article class="agent-run" data-agent-run="reviewed">
       <h3>Reviewed memory</h3>
-      <p>Devin proposed <code>mongo:8</code>. The local review passed the proposal with its source and author linked.</p>
+      <p data-agent-trial="original">Devin proposed <code>mongo:8</code>. The local review passed the proposal with its source and author linked.</p>
+      <p data-agent-trial="fresh" hidden>Codex proposed <code>mongo:8</code> and cited the current source linked from memory. The service probe and graph check passed on GitHub.</p>
       <p class="agent-recall" hidden></p>
-      <a href="https://github.com/himanshu748/memory-pr-ab-fixture/pull/2">Read the passing PR and check output</a>
+      <a data-agent-trial="original" href="https://github.com/himanshu748/memory-pr-ab-fixture/pull/2">Read the passing PR and check output</a>
+      <a data-agent-trial="fresh" hidden href="https://github.com/himanshu748/memory-pr/pull/74">Read the reviewed-memory proposal and checks</a>
     </article>
   </div>
   <div class="agent-run-actions">
     <button type="button" class="btn primary" id="agent-recall">Run the same recall in Relate</button>
-    <a href="https://github.com/himanshu748/memory-pr/blob/main/docs/EVIDENCE.md#real-agent-run-ab">Read the experiment notes</a>
+    <a data-agent-trial="original" href="https://github.com/himanshu748/memory-pr/blob/main/docs/EVIDENCE.md#real-agent-run-ab">Read the original experiment notes</a>
+    <a data-agent-trial="fresh" hidden href="https://github.com/himanshu748/memory-pr/blob/main/docs/EVIDENCE.md#fresh-independent-agent-trial">Read the fresh trial notes</a>
   </div>
   <p id="agent-recall-status" role="status"></p>
   <details class="agent-query">

@@ -1,0 +1,130 @@
+{
+  "stale": {
+    "url": "https://github.com/himanshu748/memory-pr/blob/053e0132df713668a51b47924945ed7757270691/demo/ab/fresh/stale",
+    "graph": {
+      "nodes": [
+        {
+          "id": "Entity/payments-api",
+          "label": "Entity",
+          "props": {
+            "name": "payments-api"
+          }
+        },
+        {
+          "id": "Fact/payments-api--database--postgres-15",
+          "label": "Fact",
+          "props": {
+            "name": "payments-api--database--postgres-15",
+            "predicate": "database",
+            "status": "active",
+            "value": "postgres-15"
+          }
+        },
+        {
+          "id": "Source/payments-api-demo-service-yaml",
+          "label": "Source",
+          "props": {
+            "name": "payments-api-demo-service-yaml",
+            "uri": "https://github.com/himanshu748/memory-pr/blob/0a0bc4f875446efa487193b84a905d8c6687fc7f/demo/ab/old-evidence/services/payments-api/service.yaml"
+          }
+        }
+      ],
+      "rels": [
+        {
+          "source": "Fact/payments-api--database--postgres-15",
+          "type": "ABOUT",
+          "target": "Entity/payments-api",
+          "props": {}
+        },
+        {
+          "source": "Fact/payments-api--database--postgres-15",
+          "type": "SOURCE",
+          "target": "Source/payments-api-demo-service-yaml",
+          "props": {}
+        }
+      ]
+    }
+  },
+  "reviewed": {
+    "url": "https://github.com/himanshu748/memory-pr/blob/053e0132df713668a51b47924945ed7757270691/demo/ab/fresh/reviewed",
+    "graph": {
+      "nodes": [
+        {
+          "id": "Entity/payments-api",
+          "label": "Entity",
+          "props": {
+            "name": "payments-api"
+          }
+        },
+        {
+          "id": "Fact/payments-api--database--mongodb-8",
+          "label": "Fact",
+          "props": {
+            "name": "payments-api--database--mongodb-8",
+            "predicate": "database",
+            "status": "active",
+            "value": "mongodb-8"
+          }
+        },
+        {
+          "id": "Fact/payments-api--database--postgres-15",
+          "label": "Fact",
+          "props": {
+            "name": "payments-api--database--postgres-15",
+            "predicate": "database",
+            "status": "retracted",
+            "value": "postgres-15"
+          }
+        },
+        {
+          "id": "Source/https-github-com-himanshu748-memory-pr-blob-0a0bc4f875446efa487193b84a905d8c6687fc7f-demo-ab-fixture-src-db-py",
+          "label": "Source",
+          "props": {
+            "name": "https-github-com-himanshu748-memory-pr-blob-0a0bc4f875446efa487193b84a905d8c6687fc7f-demo-ab-fixture-src-db-py",
+            "uri": "https://github.com/himanshu748/memory-pr/blob/0a0bc4f875446efa487193b84a905d8c6687fc7f/demo/ab/fixture/src/db.py"
+          }
+        },
+        {
+          "id": "Source/payments-api-demo-service-yaml",
+          "label": "Source",
+          "props": {
+            "name": "payments-api-demo-service-yaml",
+            "uri": "https://github.com/himanshu748/memory-pr/blob/0a0bc4f875446efa487193b84a905d8c6687fc7f/demo/ab/old-evidence/services/payments-api/service.yaml"
+          }
+        }
+      ],
+      "rels": [
+        {
+          "source": "Fact/payments-api--database--mongodb-8",
+          "type": "ABOUT",
+          "target": "Entity/payments-api",
+          "props": {}
+        },
+        {
+          "source": "Fact/payments-api--database--mongodb-8",
+          "type": "SOURCE",
+          "target": "Source/https-github-com-himanshu748-memory-pr-blob-0a0bc4f875446efa487193b84a905d8c6687fc7f-demo-ab-fixture-src-db-py",
+          "props": {}
+        },
+        {
+          "source": "Fact/payments-api--database--mongodb-8",
+          "type": "SUPERSEDES",
+          "target": "Fact/payments-api--database--postgres-15",
+          "props": {}
+        },
+        {
+          "source": "Fact/payments-api--database--postgres-15",
+          "type": "ABOUT",
+          "target": "Entity/payments-api",
+          "props": {}
+        },
+        {
+          "source": "Fact/payments-api--database--postgres-15",
+          "type": "SOURCE",
+          "target": "Source/payments-api-demo-service-yaml",
+          "props": {}
+        }
+      ]
+    }
+  }
+}
