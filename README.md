@@ -61,6 +61,7 @@ properties (the failure in the GIF);
   ([PR #2](https://github.com/himanshu748/memory-pr-ab-fixture/pull/2)). See the
   [check transcripts](docs/EVIDENCE.md#real-agent-run-ab) and
   [demo/ab/RUNBOOK.md](demo/ab/RUNBOOK.md).
+- **[Fresh agent trial](docs/EVIDENCE.md#fresh-independent-agent-trial).** Two independent Codex runs recalled different facts. Both chose MongoDB: the stale-memory agent recovered by reading the project, while the reviewed-memory agent cited the current source directly.
 - **50 real repositories:** 154 of the 328 facts learned a year ago are wrong today;
   the check blocks all 154 until superseded —
   [docs/real-repos.json](docs/real-repos.json), details in
