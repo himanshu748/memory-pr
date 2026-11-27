@@ -1,5 +1,5 @@
 import { apiBase, fetchServerReview, serverLine, serverRequest } from './server-check.js';
-import { again, prLine, watchPullRequest, whyNot } from './github-pr.js';
+import { again, prLine, submitPullRequest, watchPullRequest, whyNot } from './github-pr.js';
 import { LEXICAL, NEIGHBORHOOD } from './search.js';
 
 // memory-pr browser view. No build step: plain ES module, Cytoscape for drawing, and
@@ -1256,18 +1256,10 @@ function openOnGithub(v) {
     if (play.view === v) renderPlay();
   };
   show({ state: 'sending' });
-  fetch(`${API}/api/pull-requests`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ draft: v.draft }),
-  })
-    .then((response) => response.json().then((body) => ({ ok: response.ok, body })))
-    .then(({ ok, body }) => {
-      if (!ok || typeof body.id !== 'string') return show({ state: 'refused', note: typeof body.error === 'string' ? body.error : '' });
-      show({ state: 'queued' });
-      void watchPullRequest(API, body.id, show);
-    })
-    .catch(() => show({ state: 'refused', note: '' }));
+  void submitPullRequest(API, v.draft).then((state) => {
+    show(state);
+    if (state.state === 'queued') void watchPullRequest(API, state.id, show);
+  });
 }
 
 function githubHtml(v) {
