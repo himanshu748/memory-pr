@@ -1,4 +1,4 @@
-import { apiBase, fetchServerReview, serverLine, serverRequest } from './server-check.js';
+import { apiBase, fetchRepoReview, fetchServerReview, serverLine, serverRequest } from './server-check.js';
 import { again, prLine, submitPullRequest, watchPullRequest, whyNot } from './github-pr.js';
 import { LEXICAL, NEIGHBORHOOD } from './search.js';
 
@@ -1997,12 +1997,7 @@ async function learnReal(repo, period) {
   Object.assign(real, { busy: true, error: '', fixed: false });
   renderReal();
   try {
-    const query = new URLSearchParams({ repo });
-    if (period === 'previous') query.set('baseline', 'previous');
-    else query.set('months', period);
-    const response = await fetch(`${API}/api/learn?${query}`);
-    const body = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(body.error || `the server answered ${response.status}`);
+    const body = await fetchRepoReview(API, repo, period);
     if (ask === real.ask) real.body = body;
   } catch (err) {
     if (ask === real.ask) real.error = `Could not read ${repo}: ${err.message}`;
