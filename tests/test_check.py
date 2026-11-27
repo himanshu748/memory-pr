@@ -48,6 +48,8 @@ def test_contradiction_between_two_branches_git_merges_cleanly(repo):
     repo.branch("agent/b")
     repo.add("checkout-web", "port", "8080")
     repo.commit("b")
+    assert not run(repo, "agent/a").blocked
+    assert not run(repo, "agent/b").blocked
     repo.git("checkout", "-q", "main")
     repo.git("merge", "-q", "--no-ff", "agent/a", "-m", "merge a")
     result = run(repo, "agent/b")
@@ -133,6 +135,34 @@ def test_unsourced_fact_and_dangling_link_are_blocked(repo):
     assert result.blocked
 
 
+@pytest.mark.parametrize("field", ["predicate", "value", "status"])
+def test_handwritten_fact_with_a_missing_field_is_blocked(repo, field):
+    repo.branch("agent/incomplete")
+    fact = repo.add("ledger-worker", "queue", "kafka")
+    path = repo.vault / "Fact" / f"{fact}.md"
+    lines = path.read_text().splitlines(keepends=True)
+    path.write_text("".join(line for line in lines if not line.startswith(f"{field}:")))
+    repo.commit("write an incomplete fact")
+    assert rule_ids(run(repo, "agent/incomplete")) == ["incomplete-fact"]
+
+
+def test_a_link_to_an_agent_does_not_count_as_evidence(repo):
+    repo.branch("agent/no-evidence")
+    fact = repo.add("ledger-worker", "queue", "kafka")
+    path = repo.vault / "Fact" / f"{fact}.md"
+    text, _, _ = path.read_text().partition("SOURCE:\n")
+    path.write_text(f'{text}SOURCE:\n  - "[[Agent/scout]]"\n---\n')
+    repo.commit("confuse an author with a source")
+    assert rule_ids(run(repo, "agent/no-evidence")) == ["unsourced-fact"]
+
+
+def test_a_fact_cannot_supersede_a_different_entity(repo):
+    repo.branch("agent/wrong-replacement")
+    repo.add("ledger-worker", "runtime", "node-24", supersedes=["checkout-web--runtime--node-22"])
+    repo.commit("replace an unrelated database")
+    assert rule_ids(run(repo, "agent/wrong-replacement")) == ["unrelated-replacement"]
+
+
 def test_clean_git_merge_that_damages_the_graph_is_blocked(repo):
     """Both branches add `reviewed` to one note on different lines: git merges, Relate loses it."""
     note = f"Fact/{DB}"
@@ -213,6 +243,32 @@ def test_facts_that_replace_each_other_in_a_circle_are_blocked(repo):
     assert "supersedes-cycle" in rule_ids(run(repo, head="agent/circle"))
 
 
+def test_a_long_replacement_chain_passes_until_it_closes_a_cycle(repo):
+    repo.branch("agent/long-chain")
+    original = repo.add("cache", "version", "v0")
+    current = original
+    for version in range(1, 10):
+        current = repo.add("cache", "version", f"v{version}", supersedes=[current])
+    repo.commit("add a long replacement chain")
+    assert not run(repo, "agent/long-chain").blocked
+
+    repo.branch("agent/long-cycle", "agent/long-chain")
+    repo.edit(f"Fact/{original}", "\n---\n", f'\nSUPERSEDES:\n  - "[[Fact/{current}]]"\n---\n')
+    repo.commit("link the oldest version back to the newest")
+    result = run(repo, "agent/long-cycle", base="agent/long-chain")
+    assert set(rule_ids(result)) == {"supersedes-cycle"}
+    assert {finding.row["hops"] for finding in result.blocking} == {10}
+
+
+def test_a_derived_value_may_transform_its_source(repo):
+    repo.branch("agent/transformed-value")
+    request_timeout = repo.add("edge-proxy", "timeout", "30s")
+    probe_policy = repo.add("probe-policy", "timeout", "5s", derived_from=[request_timeout])
+    repo.add("health-probe", "timeout", "5s", derived_from=[probe_policy], preserve_value=True)
+    repo.commit("set a shorter health-probe timeout")
+    assert not run(repo, "agent/transformed-value").blocked
+
+
 def test_a_derived_fact_that_disagrees_with_its_ancestor_is_blocked(repo):
     repo.branch("agent/hop")
     repo.add("backup-policy", "cadence", "nightly", derived_from=[DB])
@@ -227,6 +283,7 @@ def test_a_derived_fact_that_disagrees_with_its_ancestor_is_blocked(repo):
         "database",
         "mysql-8",
         derived_from=["backup-policy--window--sunday"],
+        preserve_value=True,
     )
     repo.commit("three hops")
     result = run(repo, "agent/hop")
@@ -246,7 +303,7 @@ def test_a_many_predicate_may_differ_along_a_derivation(repo):
     alice = repo.add("payments-api", "owner", "alice")
     repo.commit("alice owns it")
     repo.branch("agent/owners")
-    repo.add("payments-api", "owner", "bob", derived_from=[alice])
+    repo.add("payments-api", "owner", "bob", derived_from=[alice], preserve_value=True)
     repo.commit("bob too")
     result = run(repo, "agent/owners")
     assert "multi-hop-contradiction" not in rule_ids(result)

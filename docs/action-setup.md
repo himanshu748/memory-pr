@@ -38,9 +38,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: himanshu748/memory-pr@v1
+      - uses: himanshu748/memory-pr@5c881355da5e595464ae5c15f61d56db783259fb
 ```
 
+The example pins the version exercised by the [consumer Action test](../.github/workflows/ci.yml).
 Full Git history lets the action find the common ancestor and inspect what Git
 would merge. On a pull request the action picks the base branch and the PR head
 commit from the event. It updates one review comment and also writes the review
@@ -67,8 +68,10 @@ the review is available in the job summary. No extra GitHub secret is needed.
    default branch for `main` if needed.
 3. In the destination branch's GitHub ruleset or branch protection rule, enable
    **Require status checks to pass**. Select the `memory-review` job from your
-   repository's recent checks, then save the rule. Confirm that the failing test
-   pull request is blocked and close it when finished.
+   repository's recent checks. Enable **Require branches to be up to date before
+   merging** and save the rule. A green result applies to the base the check
+   reviewed, so this setting forces another review when the base advances.
+   Confirm that the failing test pull request is blocked and close it when finished.
 
 The CLI exits `0` for a passed review, `1` for blocking findings, and `2` when
 the review cannot run. If it cannot find the base, head, or common ancestor,

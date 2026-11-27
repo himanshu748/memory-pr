@@ -350,6 +350,7 @@ def build_server(cfg: Settings) -> FastMCP:
         statement: str = "",
         supersedes: list[str] | None = None,
         derived_from: list[str] | None = None,
+        preserve_value: bool = False,
         branch: str | None = None,
         base: str | None = None,
         open_pull_request: bool = False,
@@ -358,7 +359,8 @@ def build_server(cfg: Settings) -> FastMCP:
         that is checked out) and return the review of that branch against the base.
 
         `source` is where you read it (a file path or URL) and is required. `supersedes` and
-        `derived_from` take fact names as returned by recall. Pass `branch` (an
+        `derived_from` take fact names as returned by recall. Set `preserve_value` when
+        the derived fact should copy the ancestor's value. Pass `branch` (an
         `agent/*` branch) to add to an earlier proposal; leave it out to start a new one.
         `open_pull_request` also pushes the branch and opens a pull request with `gh`.
         """
@@ -374,6 +376,7 @@ def build_server(cfg: Settings) -> FastMCP:
                 statement=statement,
                 supersedes=supersedes,
                 derived_from=derived_from,
+                preserve_value=preserve_value,
             )
 
         return _proposal(

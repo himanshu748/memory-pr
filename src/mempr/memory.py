@@ -111,6 +111,7 @@ def add_fact(
     statement: str = "",
     supersedes: list[str] | None = None,
     derived_from: list[str] | None = None,
+    preserve_value: bool = False,
     about: bool = True,
     source_status: str | None = None,
 ) -> str:
@@ -119,7 +120,7 @@ def add_fact(
     `source` is the file, commit or document the agent read it from. Without one the fact
     is still written, and the review blocks it. `about=False` writes the fact with no
     `ABOUT` link (the review blocks that too). `source_status='retracted'` marks the
-    source note retracted.
+    source note retracted. Use `preserve_value` when the derivation copies the value.
     """
     for label, text in (("entity", entity), ("predicate", predicate), ("agent", agent)):
         if slug(text) != text:
@@ -164,6 +165,8 @@ def add_fact(
                 "MATCH (s:Source {name: $name}) SET s.status = $status RETURN s.name AS name",
                 {"name": slug(source), "status": source_status},
             )
+        if preserve_value:
+            rows(conn, "MATCH (f:Fact {name: $name}) SET f.preserve_value = true", {"name": name})
         for other in supersedes:
             rows(conn, LINK["SUPERSEDES"], {"name": name, "other": other})
         for other in derived_from:

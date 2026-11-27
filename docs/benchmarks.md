@@ -25,11 +25,20 @@ Typical moves: `fastapi` now requires Python 3.11 instead of 3.8, `n8n` Node 24 
 22.16, `traefik` builds on Alpine 3.24 instead of 3.22. Each fact links to the file at the
 commit it was read from.
 
-Reproduce: `GITHUB_READ_TOKEN=$(gh auth token) python bench/real.py` (a few minutes; the
-repositories are listed in [`bench/repos.txt`](../bench/repos.txt), and the numbers change as
-the repositories do). Per-repository results, with every changed value and both source
-links, are in [`docs/real-repos.json`](real-repos.json); the memory itself, with each
-new fact superseding the stale one, is the Relate vault [`bench/real-memory/`](../bench/real-memory/):
+Replay the published sample after [installing `mempr`](usage.md#run-it-locally).
+This command uses the committed notes and report, with no network or token. It
+checks each changed value and both source links, then reruns the Relate rules
+with and without the recorded `SUPERSEDES` relationships.
+
+```bash
+python bench/replay_real.py
+```
+
+For a fresh scan of the projects in [`bench/repos.txt`](../bench/repos.txt), run
+`GITHUB_READ_TOKEN=$(gh auth token) python bench/real.py`. It reads newer commits,
+so its numbers will change. The published per-repository results are in
+[`docs/real-repos.json`](real-repos.json). You can query the underlying Relate
+vault at [`bench/real-memory/`](../bench/real-memory/) directly.
 
 ```bash
 mempr --vault bench/real-memory query "MATCH (new:Fact)-[:SUPERSEDES]->(old:Fact) RETURN old.value, new.value LIMIT 5"

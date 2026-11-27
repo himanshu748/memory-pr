@@ -1328,10 +1328,11 @@
        "body": "backup-policy database: mysql-8, derived from the payments-api database.",
        "name": "backup-policy--database--mysql-8",
        "predicate": "database",
+       "preserve_value": true,
        "status": "active",
        "value": "mysql-8"
       },
-      "text": "---\ntype: Fact\nname: backup-policy--database--mysql-8\npredicate: database\nstatus: active\nvalue: mysql-8\nABOUT:\n  - \"[[Entity/backup-policy]]\"\nASSERTED_BY:\n  - \"[[Agent/reasoner]]\"\nDERIVED_FROM:\n  - \"[[Fact/backup-policy--window--sunday]]\"\nSOURCE:\n  - \"[[Source/demo-project-docs-legacy-payments-api-md]]\"\n---\n\nbackup-policy database: mysql-8, derived from the payments-api database.\n"
+      "text": "---\ntype: Fact\nname: backup-policy--database--mysql-8\npredicate: database\npreserve_value: true\nstatus: active\nvalue: mysql-8\nABOUT:\n  - \"[[Entity/backup-policy]]\"\nASSERTED_BY:\n  - \"[[Agent/reasoner]]\"\nDERIVED_FROM:\n  - \"[[Fact/backup-policy--window--sunday]]\"\nSOURCE:\n  - \"[[Source/demo-project-docs-legacy-payments-api-md]]\"\n---\n\nbackup-policy database: mysql-8, derived from the payments-api database.\n"
      },
      {
       "file": "memory/Fact/backup-policy--window--sunday.md",
@@ -1927,7 +1928,7 @@
    },
    "author": "reasoner-agent",
    "blocked": true,
-   "comment": "<!-- mempr-review -->\n## Memory review: blocked (1 problem)\n\nThis pull request adds **6 notes, 12 links, 13 properties** and removes **nothing** in the memory graph.\n\n### 1. Contradicts a fact it was derived from\nFact/backup-policy--database--mysql-8 says `database` is `mysql-8` for `backup-policy`, but it was derived, 3 step(s) away, from Fact/payments-api--database--postgres-15, which says `postgres-15` for `payments-api`. The two notes are not about the same entity, so a side-by-side diff does not show a clash. Path: Fact/backup-policy--database--mysql-8 -[:DERIVED_FROM]-> Fact/backup-policy--window--sunday -[:DERIVED_FROM]-> Fact/backup-policy--cadence--nightly -[:DERIVED_FROM]-> Fact/payments-api--database--postgres-15\n\nFix: If the derived value is wrong, drop it or point `DERIVED_FROM` at the fact that states the value you actually used. If the old fact is wrong, supersede it and retract or replace the facts that were derived from it.\n\n<details><summary>Cypher for the rules that fired</summary>\n\n### `multi-hop-contradiction`\n\n```cypher\nMATCH p = (f:Fact)-[:DERIVED_FROM*1..6]->(root:Fact)\nWHERE f.status = 'active' AND root.status = 'active'\n  AND f.predicate = root.predicate AND f.value <> root.value\n  AND NOT EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(f) WHERE n.status = 'active' }\n  AND NOT EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(root) WHERE n.status = 'active' }\n  AND NOT EXISTS { MATCH (card:Predicate {name: f.predicate}) WHERE card.cardinality = 'many' }\nOPTIONAL MATCH (f)-[:ABOUT]->(e:Entity)\nOPTIONAL MATCH (root)-[:ABOUT]->(re:Entity)\nRETURN f.name AS fact, root.name AS root, f.predicate AS predicate,\n       f.value AS value, root.value AS other_value, length(p) AS hops,\n       coalesce(e.name, '(no entity)') AS entity,\n       coalesce(re.name, '(no entity)') AS root_entity,\n       reduce(s = '', n IN nodes(p) |\n              s + CASE WHEN s = '' THEN '' ELSE ' -[:DERIVED_FROM]-> ' END + 'Fact/' + n.name)\n         AS path\nORDER BY fact, hops\n```\n\n</details>\n\n<details><summary>Graph changes in this pull request</summary>\n\n- added note `Agent/reasoner`\n- added note `Entity/backup-policy`\n- added note `Fact/backup-policy--cadence--nightly`\n- added note `Fact/backup-policy--database--mysql-8`\n- added note `Fact/backup-policy--window--sunday`\n- added note `Source/demo-project-docs-legacy-payments-api-md`\n- added `Fact/backup-policy--cadence--nightly` -[:ABOUT]-> `Entity/backup-policy`\n- added `Fact/backup-policy--cadence--nightly` -[:ASSERTED_BY]-> `Agent/reasoner`\n- added `Fact/backup-policy--cadence--nightly` -[:DERIVED_FROM]-> `Fact/payments-api--database--postgres-15`\n- added `Fact/backup-policy--cadence--nightly` -[:SOURCE]-> `Source/demo-project-services-payments-api-service-yaml`\n- added `Fact/backup-policy--database--mysql-8` -[:ABOUT]-> `Entity/backup-policy`\n- added `Fact/backup-policy--database--mysql-8` -[:ASSERTED_BY]-> `Agent/reasoner`\n- added `Fact/backup-policy--database--mysql-8` -[:DERIVED_FROM]-> `Fact/backup-policy--window--sunday`\n- added `Fact/backup-policy--database--mysql-8` -[:SOURCE]-> `Source/demo-project-docs-legacy-payments-api-md`\n- added `Fact/backup-policy--window--sunday` -[:ABOUT]-> `Entity/backup-policy`\n- added `Fact/backup-policy--window--sunday` -[:ASSERTED_BY]-> `Agent/reasoner`\n- added `Fact/backup-policy--window--sunday` -[:DERIVED_FROM]-> `Fact/backup-policy--cadence--nightly`\n- added `Fact/backup-policy--window--sunday` -[:SOURCE]-> `Source/demo-project-services-payments-api-service-yaml`\n- added `Fact/backup-policy--cadence--nightly`.body = `backup-policy cadence: nightly`\n- added `Fact/backup-policy--cadence--nightly`.predicate = `cadence`\n- added `Fact/backup-policy--cadence--nightly`.status = `active`\n- added `Fact/backup-policy--cadence--nightly`.value = `nightly`\n- added `Fact/backup-policy--database--mysql-8`.body = `backup-policy database: mysql-8, derived from the payments-api database.`\n- added `Fact/backup-policy--database--mysql-8`.predicate = `database`\n- added `Fact/backup-policy--database--mysql-8`.status = `active`\n- ... and 6 more\n\n</details>\n\n<sub>Checked by mempr with Relate: base `35ddba2`, head `b73ff93`, common ancestor `35ddba2`. Each rule is a Cypher query over the merged graph.</sub>\n",
+   "comment": "<!-- mempr-review -->\n## Memory review: blocked (1 problem)\n\nThis pull request adds **6 notes, 12 links, 14 properties** and removes **nothing** in the memory graph.\n\n### 1. Contradicts a fact it was derived from\nFact/backup-policy--database--mysql-8 says `database` is `mysql-8` for `backup-policy` and claims to preserve that value, 3 step(s) away, from Fact/payments-api--database--postgres-15, which says `postgres-15` for `payments-api`. The two notes are not about the same entity, so a side-by-side diff does not show a clash. Path: Fact/backup-policy--database--mysql-8 -[:DERIVED_FROM]-> Fact/backup-policy--window--sunday -[:DERIVED_FROM]-> Fact/backup-policy--cadence--nightly -[:DERIVED_FROM]-> Fact/payments-api--database--postgres-15\n\nFix: If the derived value is wrong, drop it or point `DERIVED_FROM` at the fact that states the value you actually used. If the old fact is wrong, supersede it and retract or replace the facts that were derived from it.\n\n<details><summary>Cypher for the rules that fired</summary>\n\n### `multi-hop-contradiction`\n\n```cypher\nMATCH p = (f:Fact)-[:DERIVED_FROM*1..6]->(root:Fact)\nWHERE f.status = 'active' AND root.status = 'active'\n  AND f.preserve_value = true\n  AND f.predicate = root.predicate AND f.value <> root.value\n  AND none(n IN nodes(p) WHERE n.name <> f.name AND n.name <> root.name\n           AND n.predicate = f.predicate)\n  AND NOT EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(f) WHERE n.status = 'active' }\n  AND NOT EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(root) WHERE n.status = 'active' }\n  AND NOT EXISTS { MATCH (card:Predicate {name: f.predicate}) WHERE card.cardinality = 'many' }\nOPTIONAL MATCH (f)-[:ABOUT]->(e:Entity)\nOPTIONAL MATCH (root)-[:ABOUT]->(re:Entity)\nRETURN f.name AS fact, root.name AS root, f.predicate AS predicate,\n       f.value AS value, root.value AS other_value, length(p) AS hops,\n       coalesce(e.name, '(no entity)') AS entity,\n       coalesce(re.name, '(no entity)') AS root_entity,\n       reduce(s = '', n IN nodes(p) |\n              s + CASE WHEN s = '' THEN '' ELSE ' -[:DERIVED_FROM]-> ' END + 'Fact/' + n.name)\n         AS path\nORDER BY fact, hops\n```\n\n</details>\n\n<details><summary>Graph changes in this pull request</summary>\n\n- added note `Agent/reasoner`\n- added note `Entity/backup-policy`\n- added note `Fact/backup-policy--cadence--nightly`\n- added note `Fact/backup-policy--database--mysql-8`\n- added note `Fact/backup-policy--window--sunday`\n- added note `Source/demo-project-docs-legacy-payments-api-md`\n- added `Fact/backup-policy--cadence--nightly` -[:ABOUT]-> `Entity/backup-policy`\n- added `Fact/backup-policy--cadence--nightly` -[:ASSERTED_BY]-> `Agent/reasoner`\n- added `Fact/backup-policy--cadence--nightly` -[:DERIVED_FROM]-> `Fact/payments-api--database--postgres-15`\n- added `Fact/backup-policy--cadence--nightly` -[:SOURCE]-> `Source/demo-project-services-payments-api-service-yaml`\n- added `Fact/backup-policy--database--mysql-8` -[:ABOUT]-> `Entity/backup-policy`\n- added `Fact/backup-policy--database--mysql-8` -[:ASSERTED_BY]-> `Agent/reasoner`\n- added `Fact/backup-policy--database--mysql-8` -[:DERIVED_FROM]-> `Fact/backup-policy--window--sunday`\n- added `Fact/backup-policy--database--mysql-8` -[:SOURCE]-> `Source/demo-project-docs-legacy-payments-api-md`\n- added `Fact/backup-policy--window--sunday` -[:ABOUT]-> `Entity/backup-policy`\n- added `Fact/backup-policy--window--sunday` -[:ASSERTED_BY]-> `Agent/reasoner`\n- added `Fact/backup-policy--window--sunday` -[:DERIVED_FROM]-> `Fact/backup-policy--cadence--nightly`\n- added `Fact/backup-policy--window--sunday` -[:SOURCE]-> `Source/demo-project-services-payments-api-service-yaml`\n- added `Fact/backup-policy--cadence--nightly`.body = `backup-policy cadence: nightly`\n- added `Fact/backup-policy--cadence--nightly`.predicate = `cadence`\n- added `Fact/backup-policy--cadence--nightly`.status = `active`\n- added `Fact/backup-policy--cadence--nightly`.value = `nightly`\n- added `Fact/backup-policy--database--mysql-8`.body = `backup-policy database: mysql-8, derived from the payments-api database.`\n- added `Fact/backup-policy--database--mysql-8`.predicate = `database`\n- added `Fact/backup-policy--database--mysql-8`.preserve_value = `true`\n- ... and 7 more\n\n</details>\n\n<sub>Checked by mempr with Relate: base `35ddba2`, head `068e4e3`, common ancestor `35ddba2`. Each rule is a Cypher query over the merged graph.</sub>\n",
    "description": "derives a mysql fact, three hops away, from the postgres fact",
    "id": "agent/reasoner-hop",
    "problems": [
@@ -1981,7 +1982,7 @@
      ],
      "rule": "multi-hop-contradiction",
      "severity": "block",
-     "text": "Fact/backup-policy--database--mysql-8 says `database` is `mysql-8` for `backup-policy`, but it was derived, 3 step(s) away, from Fact/payments-api--database--postgres-15, which says `postgres-15` for `payments-api`. The two notes are not about the same entity, so a side-by-side diff does not show a clash. Path: Fact/backup-policy--database--mysql-8 -[:DERIVED_FROM]-> Fact/backup-policy--window--sunday -[:DERIVED_FROM]-> Fact/backup-policy--cadence--nightly -[:DERIVED_FROM]-> Fact/payments-api--database--postgres-15",
+     "text": "Fact/backup-policy--database--mysql-8 says `database` is `mysql-8` for `backup-policy` and claims to preserve that value, 3 step(s) away, from Fact/payments-api--database--postgres-15, which says `postgres-15` for `payments-api`. The two notes are not about the same entity, so a side-by-side diff does not show a clash. Path: Fact/backup-policy--database--mysql-8 -[:DERIVED_FROM]-> Fact/backup-policy--window--sunday -[:DERIVED_FROM]-> Fact/backup-policy--cadence--nightly -[:DERIVED_FROM]-> Fact/payments-api--database--postgres-15",
      "title": "Contradicts a fact it was derived from"
     }
    ],
@@ -2046,6 +2047,12 @@
       "Fact/backup-policy--database--mysql-8",
       "predicate",
       "\"database\""
+     ],
+     [
+      "prop",
+      "Fact/backup-policy--database--mysql-8",
+      "preserve_value",
+      "true"
      ],
      [
       "prop",
@@ -2180,7 +2187,7 @@
     "file_issues": [],
     "findings": [
      {
-      "cypher": "MATCH p = (f:Fact)-[:DERIVED_FROM*1..6]->(root:Fact)\nWHERE f.status = 'active' AND root.status = 'active'\n  AND f.predicate = root.predicate AND f.value <> root.value\n  AND NOT EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(f) WHERE n.status = 'active' }\n  AND NOT EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(root) WHERE n.status = 'active' }\n  AND NOT EXISTS { MATCH (card:Predicate {name: f.predicate}) WHERE card.cardinality = 'many' }\nOPTIONAL MATCH (f)-[:ABOUT]->(e:Entity)\nOPTIONAL MATCH (root)-[:ABOUT]->(re:Entity)\nRETURN f.name AS fact, root.name AS root, f.predicate AS predicate,\n       f.value AS value, root.value AS other_value, length(p) AS hops,\n       coalesce(e.name, '(no entity)') AS entity,\n       coalesce(re.name, '(no entity)') AS root_entity,\n       reduce(s = '', n IN nodes(p) |\n              s + CASE WHEN s = '' THEN '' ELSE ' -[:DERIVED_FROM]-> ' END + 'Fact/' + n.name)\n         AS path\nORDER BY fact, hops",
+      "cypher": "MATCH p = (f:Fact)-[:DERIVED_FROM*1..6]->(root:Fact)\nWHERE f.status = 'active' AND root.status = 'active'\n  AND f.preserve_value = true\n  AND f.predicate = root.predicate AND f.value <> root.value\n  AND none(n IN nodes(p) WHERE n.name <> f.name AND n.name <> root.name\n           AND n.predicate = f.predicate)\n  AND NOT EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(f) WHERE n.status = 'active' }\n  AND NOT EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(root) WHERE n.status = 'active' }\n  AND NOT EXISTS { MATCH (card:Predicate {name: f.predicate}) WHERE card.cardinality = 'many' }\nOPTIONAL MATCH (f)-[:ABOUT]->(e:Entity)\nOPTIONAL MATCH (root)-[:ABOUT]->(re:Entity)\nRETURN f.name AS fact, root.name AS root, f.predicate AS predicate,\n       f.value AS value, root.value AS other_value, length(p) AS hops,\n       coalesce(e.name, '(no entity)') AS entity,\n       coalesce(re.name, '(no entity)') AS root_entity,\n       reduce(s = '', n IN nodes(p) |\n              s + CASE WHEN s = '' THEN '' ELSE ' -[:DERIVED_FROM]-> ' END + 'Fact/' + n.name)\n         AS path\nORDER BY fact, hops",
       "row": {
        "entity": "backup-policy",
        "fact": "backup-policy--database--mysql-8",
@@ -2194,11 +2201,11 @@
       },
       "rule": "multi-hop-contradiction",
       "severity": "block",
-      "text": "Fact/backup-policy--database--mysql-8 says `database` is `mysql-8` for `backup-policy`, but it was derived, 3 step(s) away, from Fact/payments-api--database--postgres-15, which says `postgres-15` for `payments-api`. The two notes are not about the same entity, so a side-by-side diff does not show a clash. Path: Fact/backup-policy--database--mysql-8 -[:DERIVED_FROM]-> Fact/backup-policy--window--sunday -[:DERIVED_FROM]-> Fact/backup-policy--cadence--nightly -[:DERIVED_FROM]-> Fact/payments-api--database--postgres-15"
+      "text": "Fact/backup-policy--database--mysql-8 says `database` is `mysql-8` for `backup-policy` and claims to preserve that value, 3 step(s) away, from Fact/payments-api--database--postgres-15, which says `postgres-15` for `payments-api`. The two notes are not about the same entity, so a side-by-side diff does not show a clash. Path: Fact/backup-policy--database--mysql-8 -[:DERIVED_FROM]-> Fact/backup-policy--window--sunday -[:DERIVED_FROM]-> Fact/backup-policy--cadence--nightly -[:DERIVED_FROM]-> Fact/payments-api--database--postgres-15"
      }
     ],
     "git_conflicts": [],
-    "head": "b73ff93fea38d348752348414ce2822cfed2154d",
+    "head": "068e4e3ae4bfec54ef35d99187a06494119f8fee",
     "merge_base": "35ddba271f8aca29a414265124450c737b03e92c",
     "problems": 1,
     "property_conflicts": [],
@@ -3532,7 +3539,7 @@
    },
    "author": "auditor-agent",
    "blocked": true,
-   "comment": "<!-- mempr-review -->\n## Memory review: blocked (2 problems)\n\nThis pull request adds **1 property** and removes **nothing** in the memory graph.\n\n### 1. This merge would silently drop 3 links, 4 properties\nGit reports a clean merge, but these facts exist before the merge and are gone after it, although neither branch removed them:\n- lost `Fact/payments-api--database--postgres-15` -[:ABOUT]-> `Entity/payments-api`\n- lost `Fact/payments-api--database--postgres-15` -[:ASSERTED_BY]-> `Agent/scout`\n- lost `Fact/payments-api--database--postgres-15` -[:SOURCE]-> `Source/demo-project-services-payments-api-service-yaml`\n- lost `Fact/payments-api--database--postgres-15`.predicate = `database`\n- lost `Fact/payments-api--database--postgres-15`.status = `active`\n- lost `Fact/payments-api--database--postgres-15`.value = `postgres-15`\n- lost `Fact/payments-api--database--postgres-15`.verified = `by-auditor`\n\n### 2. Broken note `Fact/payments-api--database--postgres-15.md`\nKey `verified` is set twice (lines 3 and 8); Relate reads this note as empty.\n\n### Warnings\n- Fact has no author: Fact/payments-api--database--postgres-15 has no `ASSERTED_BY` link.\n\n<details><summary>Cypher for the rules that fired</summary>\n\n### `unattributed-fact`\n\n```cypher\nMATCH (f:Fact)\nWHERE NOT (f)-[:ASSERTED_BY]->()\nRETURN f.name AS fact\nORDER BY fact\n```\n\n</details>\n\n<details><summary>Graph changes in this pull request</summary>\n\n- added `Fact/payments-api--database--postgres-15`.verified = `by-auditor`\n\n</details>\n\n<sub>Checked by mempr with Relate: base `35ddba2`, head `fe67b2d`, common ancestor `242ea07`. Each rule is a Cypher query over the merged graph.</sub>\n",
+   "comment": "<!-- mempr-review -->\n## Memory review: blocked (2 problems)\n\nThis pull request adds **1 property** and removes **nothing** in the memory graph.\n\n### 1. This merge would silently drop 3 links, 4 properties\nGit reports a clean merge, but these facts exist before the merge and are gone after it, although neither branch removed them:\n- lost `Fact/payments-api--database--postgres-15` -[:ABOUT]-> `Entity/payments-api`\n- lost `Fact/payments-api--database--postgres-15` -[:ASSERTED_BY]-> `Agent/scout`\n- lost `Fact/payments-api--database--postgres-15` -[:SOURCE]-> `Source/demo-project-services-payments-api-service-yaml`\n- lost `Fact/payments-api--database--postgres-15`.predicate = `database`\n- lost `Fact/payments-api--database--postgres-15`.status = `active`\n- lost `Fact/payments-api--database--postgres-15`.value = `postgres-15`\n- lost `Fact/payments-api--database--postgres-15`.verified = `by-auditor`\n\n### 2. Broken note `Fact/payments-api--database--postgres-15.md`\nKey `verified` is set twice (lines 3 and 8); Relate reads this note as empty.\n\n### Warnings\n- Fact has no author: Fact/payments-api--database--postgres-15 has no `ASSERTED_BY` link.\n\n<details><summary>Cypher for the rules that fired</summary>\n\n### `unattributed-fact`\n\n```cypher\nMATCH (f:Fact)\nWHERE NOT (f)-[:ASSERTED_BY]->(:Agent)\nRETURN f.name AS fact\nORDER BY fact\n```\n\n</details>\n\n<details><summary>Graph changes in this pull request</summary>\n\n- added `Fact/payments-api--database--postgres-15`.verified = `by-auditor`\n\n</details>\n\n<sub>Checked by mempr with Relate: base `35ddba2`, head `fe67b2d`, common ancestor `242ea07`. Each rule is a Cypher query over the merged graph.</sub>\n",
    "description": "works from an old clone; git merges cleanly but the graph loses a note",
    "id": "agent/auditor-stale-clone",
    "problems": [
@@ -3655,7 +3662,7 @@
     ],
     "findings": [
      {
-      "cypher": "MATCH (f:Fact)\nWHERE NOT (f)-[:ASSERTED_BY]->()\nRETURN f.name AS fact\nORDER BY fact",
+      "cypher": "MATCH (f:Fact)\nWHERE NOT (f)-[:ASSERTED_BY]->(:Agent)\nRETURN f.name AS fact\nORDER BY fact",
       "row": {
        "fact": "payments-api--database--postgres-15"
       },
@@ -4258,7 +4265,7 @@
    },
    "author": "intern-agent",
    "blocked": true,
-   "comment": "<!-- mempr-review -->\n## Memory review: blocked (2 problems)\n\nThis pull request adds **1 note, 3 links, 4 properties** and removes **nothing** in the memory graph.\n\n### 1. Links to a note that does not exist\nFact/ledger-worker--retries--5 -[:ASSERTED_BY]-> Agent/intern, but there is no note `Agent/intern.md`.\n\nFix: Add the missing note or remove the link.\n\n### 2. Links to a note that does not exist\nFact/ledger-worker--retries--5 -[:SOURCE]-> Source/a-chat-i-half-remember, but there is no note `Source/a-chat-i-half-remember.md`.\n\nFix: Add the missing note or remove the link.\n\n<details><summary>Cypher for the rules that fired</summary>\n\n### `dangling-link`\n\n```cypher\nMATCH (a)-[r]->(b)\nWHERE b.stub = true\nRETURN labels(a)[0] + '/' + a.name AS source, type(r) AS type,\n       labels(b)[0] + '/' + b.name AS target\nORDER BY source, type, target\n```\n\n</details>\n\n<details><summary>Graph changes in this pull request</summary>\n\n- added note `Fact/ledger-worker--retries--5`\n- added `Fact/ledger-worker--retries--5` -[:ABOUT]-> `Entity/ledger-worker`\n- added `Fact/ledger-worker--retries--5` -[:ASSERTED_BY]-> `Agent/intern`\n- added `Fact/ledger-worker--retries--5` -[:SOURCE]-> `Source/a-chat-i-half-remember`\n- added `Fact/ledger-worker--retries--5`.body = `ledger-worker retries 5 times.`\n- added `Fact/ledger-worker--retries--5`.predicate = `retries`\n- added `Fact/ledger-worker--retries--5`.status = `active`\n- added `Fact/ledger-worker--retries--5`.value = `5`\n\n</details>\n\n<sub>Checked by mempr with Relate: base `35ddba2`, head `3dd28d9`, common ancestor `35ddba2`. Each rule is a Cypher query over the merged graph.</sub>\n",
+   "comment": "<!-- mempr-review -->\n## Memory review: blocked (3 problems)\n\nThis pull request adds **1 note, 3 links, 4 properties** and removes **nothing** in the memory graph.\n\n### 1. Links to a note that does not exist\nFact/ledger-worker--retries--5 -[:ASSERTED_BY]-> Agent/intern, but there is no note `Agent/intern.md`.\n\nFix: Add the missing note or remove the link.\n\n### 2. Links to a note that does not exist\nFact/ledger-worker--retries--5 -[:SOURCE]-> Source/a-chat-i-half-remember, but there is no note `Source/a-chat-i-half-remember.md`.\n\nFix: Add the missing note or remove the link.\n\n### 3. Fact has no source\nFact/ledger-worker--retries--5 is active but has no `SOURCE` link to a source with a URI.\n\nFix: Link a `Source` note whose `uri` identifies the file, commit, or document.\n\n<details><summary>Cypher for the rules that fired</summary>\n\n### `dangling-link`\n\n```cypher\nMATCH (a)-[r]->(b)\nWHERE b.stub = true\nRETURN labels(a)[0] + '/' + a.name AS source, type(r) AS type,\n       labels(b)[0] + '/' + b.name AS target\nORDER BY source, type, target\n```\n\n### `unsourced-fact`\n\n```cypher\nMATCH (f:Fact)\nWHERE f.status = 'active'\n  AND NOT EXISTS {\n    MATCH (f)-[:SOURCE]->(s:Source) WHERE coalesce(s.uri, '') <> ''\n  }\nRETURN f.name AS fact\nORDER BY fact\n```\n\n</details>\n\n<details><summary>Graph changes in this pull request</summary>\n\n- added note `Fact/ledger-worker--retries--5`\n- added `Fact/ledger-worker--retries--5` -[:ABOUT]-> `Entity/ledger-worker`\n- added `Fact/ledger-worker--retries--5` -[:ASSERTED_BY]-> `Agent/intern`\n- added `Fact/ledger-worker--retries--5` -[:SOURCE]-> `Source/a-chat-i-half-remember`\n- added `Fact/ledger-worker--retries--5`.body = `ledger-worker retries 5 times.`\n- added `Fact/ledger-worker--retries--5`.predicate = `retries`\n- added `Fact/ledger-worker--retries--5`.status = `active`\n- added `Fact/ledger-worker--retries--5`.value = `5`\n\n</details>\n\n<sub>Checked by mempr with Relate: base `35ddba2`, head `3dd28d9`, common ancestor `35ddba2`. Each rule is a Cypher query over the merged graph.</sub>\n",
    "description": "writes a fact by hand with no source and a link to a missing note",
    "id": "agent/intern-unsourced",
    "problems": [
@@ -4299,6 +4306,18 @@
      "severity": "block",
      "text": "Fact/ledger-worker--retries--5 -[:SOURCE]-> Source/a-chat-i-half-remember, but there is no note `Source/a-chat-i-half-remember.md`.",
      "title": "Links to a note that does not exist"
+    },
+    {
+     "fix": "Link a `Source` note whose `uri` identifies the file, commit, or document.",
+     "kind": "finding",
+     "nodes": [
+      "Fact/ledger-worker--retries--5"
+     ],
+     "rels": [],
+     "rule": "unsourced-fact",
+     "severity": "block",
+     "text": "Fact/ledger-worker--retries--5 is active but has no `SOURCE` link to a source with a URI.",
+     "title": "Fact has no source"
     }
    ],
    "review": {
@@ -4379,12 +4398,21 @@
       "rule": "dangling-link",
       "severity": "block",
       "text": "Fact/ledger-worker--retries--5 -[:SOURCE]-> Source/a-chat-i-half-remember, but there is no note `Source/a-chat-i-half-remember.md`."
+     },
+     {
+      "cypher": "MATCH (f:Fact)\nWHERE f.status = 'active'\n  AND NOT EXISTS {\n    MATCH (f)-[:SOURCE]->(s:Source) WHERE coalesce(s.uri, '') <> ''\n  }\nRETURN f.name AS fact\nORDER BY fact",
+      "row": {
+       "fact": "ledger-worker--retries--5"
+      },
+      "rule": "unsourced-fact",
+      "severity": "block",
+      "text": "Fact/ledger-worker--retries--5 is active but has no `SOURCE` link to a source with a URI."
      }
     ],
     "git_conflicts": [],
     "head": "3dd28d951798e4194752d7259fa82a51d7c9d3ef",
     "merge_base": "35ddba271f8aca29a414265124450c737b03e92c",
-    "problems": 2,
+    "problems": 3,
     "property_conflicts": [],
     "removed": []
    },
@@ -5054,7 +5082,7 @@
    "title": "Contradicts a fact already in memory"
   },
   {
-   "cypher": "MATCH p = (f:Fact)-[:SUPERSEDES*1..6]->(f)\nRETURN f.name AS fact, length(p) AS hops,\n       reduce(s = '', n IN nodes(p) |\n              s + CASE WHEN s = '' THEN '' ELSE ' -[:SUPERSEDES]-> ' END + 'Fact/' + n.name) AS path\n",
+   "cypher": "MATCH p = (f:Fact)-[:SUPERSEDES*1..]->(f)\nRETURN f.name AS fact, length(p) AS hops,\n       reduce(s = '', n IN nodes(p) |\n              s + CASE WHEN s = '' THEN '' ELSE ' -[:SUPERSEDES]-> ' END + 'Fact/' + n.name) AS path\n",
    "fix": "Remove the `SUPERSEDES` link that points at the fact that should be current.",
    "id": "supersedes-cycle",
    "message": "Fact/{fact} replaces itself through {hops} `SUPERSEDES` link(s), so none of the facts in the circle counts as current. Path: {path}",
@@ -5078,20 +5106,36 @@
    "title": "Links to a note that does not exist"
   },
   {
-   "cypher": "MATCH (f:Fact)\nWHERE f.status = 'active' AND NOT (f)-[:SOURCE]->()\nRETURN f.name AS fact\nORDER BY fact\n",
-   "fix": "Link the file, commit, or document the agent read it from under `SOURCE`.",
+   "cypher": "MATCH (f:Fact)\nWHERE f.status = 'active'\n  AND NOT EXISTS {\n    MATCH (f)-[:SOURCE]->(s:Source) WHERE coalesce(s.uri, '') <> ''\n  }\nRETURN f.name AS fact\nORDER BY fact\n",
+   "fix": "Link a `Source` note whose `uri` identifies the file, commit, or document.",
    "id": "unsourced-fact",
-   "message": "Fact/{fact} is active but has no `SOURCE` link, so nobody can verify it.",
+   "message": "Fact/{fact} is active but has no `SOURCE` link to a source with a URI.",
    "severity": "block",
    "title": "Fact has no source"
   },
   {
-   "cypher": "MATCH (f:Fact)\nWHERE NOT (f)-[:ASSERTED_BY]->()\nRETURN f.name AS fact\nORDER BY fact\n",
+   "cypher": "MATCH (f:Fact)\nWHERE NOT (f)-[:ASSERTED_BY]->(:Agent)\nRETURN f.name AS fact\nORDER BY fact\n",
    "fix": "Link the agent that wrote the fact under `ASSERTED_BY`.",
    "id": "unattributed-fact",
    "message": "Fact/{fact} has no `ASSERTED_BY` link.",
    "severity": "warn",
    "title": "Fact has no author"
+  },
+  {
+   "cypher": "MATCH (f:Fact)\nWHERE (f.type IS NOT NULL OR f.predicate IS NOT NULL OR f.value IS NOT NULL\n       OR f.status IS NOT NULL OR (f)-[]->())\n  AND (coalesce(f.predicate, '') = '' OR coalesce(f.value, '') = ''\n       OR NOT (coalesce(f.status, '') IN ['active', 'retracted', 'unconfirmed']))\nRETURN f.name AS fact\nORDER BY fact\n",
+   "fix": "Supply `predicate` and `value`, and set `status` to `active`, `retracted`, or `unconfirmed`.",
+   "id": "incomplete-fact",
+   "message": "Fact/{fact} needs a predicate, a value, and a supported status for recall.",
+   "severity": "block",
+   "title": "Fact is missing required fields"
+  },
+  {
+   "cypher": "MATCH (f:Fact)-[:SUPERSEDES]->(old)\nWHERE coalesce(old.stub, false) = false\n  AND (NOT ('Fact' IN labels(old)) OR f.predicate <> old.predicate\n       OR NOT EXISTS { MATCH (f)-[:ABOUT]->(:Entity)<-[:ABOUT]-(old) })\nRETURN f.name AS fact, labels(old)[0] + '/' + old.name AS target\nORDER BY fact, target\n",
+   "fix": "Point `SUPERSEDES` at a fact about the same entity and predicate.",
+   "id": "unrelated-replacement",
+   "message": "Fact/{fact} cannot replace {target}. A replacement must share its entity and predicate.",
+   "severity": "block",
+   "title": "Fact replaces an unrelated note"
   },
   {
    "cypher": "MATCH (f:Fact)\nWHERE f.status = 'active'\n  AND NOT (f)-[:ABOUT]->(:Entity)\n  AND NOT EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(f) WHERE n.status = 'active' }\nRETURN f.name AS fact\nORDER BY fact\n",
@@ -5102,10 +5146,10 @@
    "title": "Fact is not about anything"
   },
   {
-   "cypher": "MATCH p = (f:Fact)-[:DERIVED_FROM*1..6]->(root:Fact)\nWHERE f.status = 'active' AND root.status = 'active'\n  AND f.predicate = root.predicate AND f.value <> root.value\n  AND NOT EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(f) WHERE n.status = 'active' }\n  AND NOT EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(root) WHERE n.status = 'active' }\n  AND NOT EXISTS { MATCH (card:Predicate {name: f.predicate}) WHERE card.cardinality = 'many' }\nOPTIONAL MATCH (f)-[:ABOUT]->(e:Entity)\nOPTIONAL MATCH (root)-[:ABOUT]->(re:Entity)\nRETURN f.name AS fact, root.name AS root, f.predicate AS predicate,\n       f.value AS value, root.value AS other_value, length(p) AS hops,\n       coalesce(e.name, '(no entity)') AS entity,\n       coalesce(re.name, '(no entity)') AS root_entity,\n       reduce(s = '', n IN nodes(p) |\n              s + CASE WHEN s = '' THEN '' ELSE ' -[:DERIVED_FROM]-> ' END + 'Fact/' + n.name)\n         AS path\nORDER BY fact, hops\n",
+   "cypher": "MATCH p = (f:Fact)-[:DERIVED_FROM*1..6]->(root:Fact)\nWHERE f.status = 'active' AND root.status = 'active'\n  AND f.preserve_value = true\n  AND f.predicate = root.predicate AND f.value <> root.value\n  AND none(n IN nodes(p) WHERE n.name <> f.name AND n.name <> root.name\n           AND n.predicate = f.predicate)\n  AND NOT EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(f) WHERE n.status = 'active' }\n  AND NOT EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(root) WHERE n.status = 'active' }\n  AND NOT EXISTS { MATCH (card:Predicate {name: f.predicate}) WHERE card.cardinality = 'many' }\nOPTIONAL MATCH (f)-[:ABOUT]->(e:Entity)\nOPTIONAL MATCH (root)-[:ABOUT]->(re:Entity)\nRETURN f.name AS fact, root.name AS root, f.predicate AS predicate,\n       f.value AS value, root.value AS other_value, length(p) AS hops,\n       coalesce(e.name, '(no entity)') AS entity,\n       coalesce(re.name, '(no entity)') AS root_entity,\n       reduce(s = '', n IN nodes(p) |\n              s + CASE WHEN s = '' THEN '' ELSE ' -[:DERIVED_FROM]-> ' END + 'Fact/' + n.name)\n         AS path\nORDER BY fact, hops\n",
    "fix": "If the derived value is wrong, drop it or point `DERIVED_FROM` at the fact that states the value you actually used. If the old fact is wrong, supersede it and retract or replace the facts that were derived from it.",
    "id": "multi-hop-contradiction",
-   "message": "Fact/{fact} says `{predicate}` is `{value}` for `{entity}`, but it was derived, {hops} step(s) away, from Fact/{root}, which says `{other_value}` for `{root_entity}`. The two notes are not about the same entity, so a side-by-side diff does not show a clash. Path: {path}",
+   "message": "Fact/{fact} says `{predicate}` is `{value}` for `{entity}` and claims to preserve that value, {hops} step(s) away, from Fact/{root}, which says `{other_value}` for `{root_entity}`. The two notes are not about the same entity, so a side-by-side diff does not show a clash. Path: {path}",
    "severity": "block",
    "title": "Contradicts a fact it was derived from"
   },

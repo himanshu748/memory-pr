@@ -86,6 +86,7 @@ def cmd_add(args: argparse.Namespace) -> int:
         statement=args.statement,
         supersedes=args.supersedes,
         derived_from=args.derived_from,
+        preserve_value=args.preserve_value,
     )
     print(f"Fact/{name}")
     return 0
@@ -171,6 +172,7 @@ def build_parser() -> argparse.ArgumentParser:
     add.add_argument("--statement", default="")
     add.add_argument("--supersedes", action="append", metavar="FACT")
     add.add_argument("--derived-from", action="append", metavar="FACT")
+    add.add_argument("--preserve-value", action="store_true", help="copy the ancestor's value")
     add.set_defaults(func=cmd_add)
 
     retract = sub.add_parser("retract", help="mark a fact as retracted")

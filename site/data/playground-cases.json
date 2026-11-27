@@ -10,6 +10,7 @@
         "predicate": "database",
         "value": "mysql-8",
         "source": "demo/project/docs/legacy/payments-api.md",
+        "preserve_value": true,
         "derived_from": [
           "payments-api--database--postgres-15"
         ]
