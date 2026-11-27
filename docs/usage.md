@@ -92,7 +92,7 @@ print(result["blocked"], [(c["entity"], c["old"], c["new"]) for c in result["cha
 
 ## Run it locally
 
-No Docker. No API key. Python 3.10+, git 2.38+, and Node 18+ for the JavaScript tests.
+No Docker. No API key. Python 3.10+ and git 2.38+. Use Node.js 22+ for the JavaScript tests.
 The playground itself is [`quickstart.sh`](../quickstart.sh): Python's standard-library
 HTTP server, nothing to install.
 
@@ -100,7 +100,7 @@ HTTP server, nothing to install.
 git clone https://github.com/himanshu748/memory-pr && cd memory-pr
 ./quickstart.sh                       # playground in the browser
 
-node --test tests/js/*.test.mjs       # 13 tests, no npm install
+node --test tests/js/*.test.mjs       # no npm install
 ./test.sh                             # creates .venv, installs, runs both suites
 
 # or, if you already have a virtualenv:

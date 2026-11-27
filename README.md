@@ -27,7 +27,7 @@ Python 3.10+ only. It serves the playground: write a memory, open a pull request
 watch the review block it, then search `postgres` and see the facts derived from it.
 Verified from a fresh clone — output in [docs/EVIDENCE.md](docs/EVIDENCE.md).
 
-Tests, also with nothing else installed for the JavaScript:
+Use Node.js 22 or later for tests. The JavaScript suite has no npm dependencies:
 
 ```bash
 node --test tests/js/*.test.mjs   # no npm install
