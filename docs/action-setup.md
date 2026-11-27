@@ -38,7 +38,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: himanshu748/memory-pr@3905ebb71453b2bd8fa303333ca11e9d2f76e5d0
+      - uses: himanshu748/memory-pr@5c881355da5e595464ae5c15f61d56db783259fb
 ```
 
 The example pins the version exercised by the [consumer Action test](../.github/workflows/ci.yml).

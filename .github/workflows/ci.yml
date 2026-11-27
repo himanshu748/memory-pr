@@ -74,12 +74,12 @@ jobs:
           EOF
           git add memory
           git commit -qm 'Propose a contradictory derived value'
-      - uses: himanshu748/memory-pr@3905ebb71453b2bd8fa303333ca11e9d2f76e5d0
+      - uses: himanshu748/memory-pr@5c881355da5e595464ae5c15f61d56db783259fb
         with:
           base: main
           head: main
           comment: "false"
-      - uses: himanshu748/memory-pr@3905ebb71453b2bd8fa303333ca11e9d2f76e5d0
+      - uses: himanshu748/memory-pr@5c881355da5e595464ae5c15f61d56db783259fb
         id: derived-review
         continue-on-error: true
         with:
