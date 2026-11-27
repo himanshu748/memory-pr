@@ -34,8 +34,8 @@ node --test tests/js/*.test.mjs   # no npm install
 ./test.sh                         # Python venv, then both suites
 ```
 
-On GitHub, [PR #60](https://github.com/himanshu748/memory-pr/pull/60) has a clean
-Git merge on the demo branch, but `memory-review` reports 3 lost links and 4 lost
+Git reports no merge conflicts for [demo PR #60](https://github.com/himanshu748/memory-pr/pull/60).
+The `memory-review` check reports 3 lost links and 4 lost
 properties. On `main`, the required check fails on the contradiction in
 [PR #15](https://github.com/himanshu748/memory-pr/pull/15) and passes on
 [PR #6](https://github.com/himanshu748/memory-pr/pull/6).
