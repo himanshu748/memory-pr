@@ -61,7 +61,8 @@ properties. On `main`, the required check fails on the contradiction in
   both agents chose `mongo:8` after checking the code. Both of those proposals passed
   a live MongoDB health check in CI.
   [Devin check transcripts](docs/EVIDENCE.md#real-agent-run-ab) ·
-  [Independent trial and CI runs](docs/EVIDENCE.md#fresh-independent-agent-trial)
+  [Independent trial and CI runs](docs/EVIDENCE.md#fresh-independent-agent-trial) ·
+  [Paired runtime handoff trial](demo/ab/runtime-handoff.md)
 - **50 public repositories.** Across the recorded commits, 154 of the 328 facts
   had changed values. The check caught all 154 contradictions and
   passed after supersession. [Replay the archived scan offline](docs/benchmarks.md#measured-on-50-real-repositories).

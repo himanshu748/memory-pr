@@ -157,7 +157,16 @@ service probes passed. The graph review also passed on the
 [reviewed](https://github.com/himanshu748/memory-pr/actions/runs/45935149058)
 proof PRs. Those checks ran against the isolated experiment branch.
 The [rules active on main](https://api.github.com/repos/himanshu748/memory-pr/rules/branches/main)
-require `memory-review`. The separate proof branch records its own workflow results.
+require `memory-review` and require branches to be up to date before merging. The
+separate proof branch records its own workflow results.
+
+## Paired runtime handoff trial
+
+Four fresh Astra sessions handled the same three pinned runtime requirements.
+Each session retrieved different facts according to its memory snapshot. All four
+sessions returned the three correct values with current commit citations and
+independently checked all three primary manifests. [Protocol, inputs, and access
+log](../demo/ab/runtime-handoff.md).
 
 ## The shared-memory workflow on GitHub (independent PRs)
 
@@ -170,8 +179,8 @@ the real `memory-review` status check:
   the failure the README GIF opens with.
 - [PR #15](https://github.com/himanshu748/memory-pr/pull/15) — **blocked**:
   a database contradiction, with the `SUPERSEDES` fix spelled out in the comment.
-- [PR #6](https://github.com/himanshu748/memory-pr/pull/6) — **passes** against
-  current main: the same check green on a correct proposal.
+- [PR #6](https://github.com/himanshu748/memory-pr/pull/6) shows the same check
+  **passing** on a correct proposal at its reviewed base.
 
 ## Sequential Devin trial transcripts
 
