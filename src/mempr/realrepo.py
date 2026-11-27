@@ -137,10 +137,16 @@ def extract(path: str, text: str) -> list[tuple[str, str]]:
             value = _toml(text, ("package", "workspace.package"), key)
             if value:
                 out.append(("rust-" + key.removeprefix("rust-"), value))
-    elif name in (".nvmrc", ".python-version"):
+    elif name == ".nvmrc":
+        # nvm ignores blank lines, comments and reserved key/value metadata.
+        lines = (line.partition("#")[0].strip() for line in text.splitlines())
+        versions = [line for line in lines if line and "=" not in line]
+        if len(versions) == 1 and len(versions[0]) < 40:
+            out.append(("node-version", versions[0]))
+    elif name == ".python-version":
         value = text.strip().splitlines()[0].strip() if text.strip() else ""
         if value and len(value) < 40:
-            out.append((name[1:].replace("nvmrc", "node-version"), value))
+            out.append(("python-version", value))
     return [(p, _short(v.strip())) for p, v in out if v.strip()]
 
 
