@@ -73,7 +73,7 @@ properties. On `main`, the required check fails on the contradiction in
 - **300-PR replay (simulated):** wrong facts left in memory 21 → 1, zero correct PRs
   blocked — [docs/benchmark.json](docs/benchmark.json), details in
   [docs/benchmarks.md](docs/benchmarks.md).
-- **288 pytest cases and 14 standalone JavaScript tests passed** on 27 Nov 2026.
+- **303 pytest cases and 23 standalone JavaScript tests passed** on 27 Nov 2026.
   See the [test output](docs/EVIDENCE.md#test-count).
 
 ## Docs
