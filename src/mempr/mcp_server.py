@@ -193,16 +193,16 @@ def _commit_on_branch(
 
 
 def _open_pull_request(cfg: Settings, branch: str, base: str, title: str, body: str) -> dict:
-    """Push the branch and open a pull request with `gh`. Failures are returned, not raised:
-    the commit already exists and the agent can still push it another way."""
+    """Push the branch and return its open pull request, creating one if needed."""
     push = gitutil.git(cfg.repo, "push", "-q", "-u", cfg.remote, branch, check=False)
     if push.returncode != 0:
         return {"pushed": False, "error": f"git push failed: {push.stderr.strip()}"}
     # Name the repository of the remote that was pushed to; gh's own default can differ.
     target, head = _pull_request_target(cfg.repo, cfg.remote, branch)
+    base_branch = min(_branch_names(cfg.repo, base), key=len)
     try:
         proc = subprocess.run(
-            ["gh", "pr", "create", "--base", min(_branch_names(cfg.repo, base), key=len)]
+            ["gh", "pr", "create", "--base", base_branch]
             + ["--head", head, "--title", title, "--body", body]
             + (["--repo", target] if target else []),
             cwd=cfg.repo,
@@ -211,9 +211,25 @@ def _open_pull_request(cfg: Settings, branch: str, base: str, title: str, body: 
         )
     except FileNotFoundError:
         return {"pushed": True, "error": "gh is not installed; open the pull request by hand"}
-    if proc.returncode != 0:
-        return {"pushed": True, "error": f"gh pr create failed: {proc.stderr.strip()}"}
-    return {"pushed": True, "url": proc.stdout.strip().splitlines()[-1]}
+    if proc.returncode == 0:
+        return {"pushed": True, "url": proc.stdout.strip().splitlines()[-1]}
+
+    if target:
+        # A repair to an existing proposal has already updated its PR via the push.
+        # Match both refs and the head owner so a fork's PR is found unambiguously.
+        host, owner, repo_name = target.split("/", 2)
+        head_filter = head if ":" in head else f"{owner}:{head}"
+        existing = subprocess.run(
+            ["gh", "api", "--hostname", host, "--method", "GET", f"repos/{owner}/{repo_name}/pulls"]
+            + ["-f", "state=open", "-f", f"head={head_filter}", "-f", f"base={base_branch}"]
+            + ["--jq", ".[0].html_url // empty"],
+            cwd=cfg.repo,
+            capture_output=True,
+            text=True,
+        )
+        if existing.returncode == 0 and existing.stdout.strip():
+            return {"pushed": True, "url": existing.stdout.strip()}
+    return {"pushed": True, "error": f"gh pr create failed: {proc.stderr.strip()}"}
 
 
 def _proposal(
