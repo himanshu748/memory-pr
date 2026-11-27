@@ -5,7 +5,7 @@ second agent reads the code as it is today and proposes what it sees. The review
 `mempr check` the pull requests get: every value that moved since is a contradiction until
 the new fact says which old one it replaces.
 
-Facts come from files whose meaning is not in doubt: the final `FROM` of a Dockerfile, the
+Facts come from files whose meaning is not in doubt: the final Dockerfile stage's base image, the
 `engines` and `packageManager` of package.json, the `go` line of go.mod, `requires-python`,
 Cargo's `rust-version` and `edition`, and .nvmrc / .python-version.
 """
@@ -72,16 +72,16 @@ def wanted(path: str) -> bool:
 
 
 def _from_line(text: str) -> str | None:
-    stages: set[str] = set()
+    stages: dict[str, str | None] = {}
     last = None
     for line in text.splitlines():
         m = re.match(r"\s*FROM\s+(?:--\S+\s+)*(\S+)(?:\s+AS\s+(\S+))?", line, re.I)
         if not m:
             continue
         image = m.group(1)
-        last = None if image.lower() in stages or "$" in image else image
+        last = None if "$" in image else stages.get(image.lower(), image)
         if m.group(2):
-            stages.add(m.group(2).lower())
+            stages[m.group(2).lower()] = last
     if not last or last == "scratch":
         return last
     # The whole reference: a move to another registry or digest is a different base image.
