@@ -94,7 +94,7 @@ def _from_line(text: str) -> str | None:
 def _toml(text: str, table: tuple[str, ...], key: str) -> str | None:
     section = None
     for line in text.splitlines():
-        head = re.match(r"\s*\[([^\]]+)\]\s*$", line)
+        head = re.match(r"\s*\[([^\]]+)\]\s*(?:#.*)?$", line)
         if head:
             section = head.group(1).strip()
             continue
@@ -125,7 +125,7 @@ def extract(path: str, text: str) -> list[tuple[str, str]]:
         if isinstance(pkg, dict) and isinstance(pkg.get("packageManager"), str):
             out.append(("package-manager", pkg["packageManager"].split("+")[0]))
     elif name == "go.mod":
-        m = re.search(r"^go\s+(\d+\.\d+(?:\.\d+)?)\s*$", text, re.M)
+        m = re.search(r"^[ \t]*go[ \t]+(\d+\.\d+(?:\.\d+)?)[ \t]*(?://[^\r\n]*)?\r?$", text, re.M)
         if m:
             out.append(("go-version", m.group(1)))
     elif name == "pyproject.toml":
