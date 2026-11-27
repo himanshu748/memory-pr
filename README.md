@@ -62,10 +62,9 @@ properties. On `main`, the required check fails on the contradiction in
   a live MongoDB health check in CI.
   [Devin check transcripts](docs/EVIDENCE.md#real-agent-run-ab) ·
   [Independent trial and CI runs](docs/EVIDENCE.md#fresh-independent-agent-trial)
-- **50 real repositories:** 154 of the 328 facts learned a year ago are wrong today;
-  the check blocks all 154 until superseded —
-  [docs/real-repos.json](docs/real-repos.json), details in
-  [docs/benchmarks.md](docs/benchmarks.md):
+- **50 public repositories.** Comparing their recorded commits found 154 changed
+  values among 328 earlier facts. The check caught all 154 contradictions and
+  passed after supersession. [Replay the archived scan offline](docs/benchmarks.md#measured-on-50-real-repositories).
 
   | | |
   | --- | --- |
@@ -96,7 +95,7 @@ properties. On `main`, the required check fails on the contradiction in
   recorded Devin and Codex agent runs. Third-party libraries and tools include Relate (`relate-db`,
   `@relate/relate-wasm`), PyYAML, the MCP Python SDK, Cytoscape.js, the Geist and Geist
   Mono fonts, pytest, ruff.
-- The sample project is fictional. The five scripted demo agents run without a
+- The sample project is fictional. The scripted demo agents run without a
   model. The real-repository scan reads public files on request and stores nothing.
   The backend sets no cookies, has no accounts, and keeps no state between requests.
 - License: [MIT](LICENSE).

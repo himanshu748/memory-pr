@@ -67,8 +67,10 @@ the review is available in the job summary. No extra GitHub secret is needed.
    default branch for `main` if needed.
 3. In the destination branch's GitHub ruleset or branch protection rule, enable
    **Require status checks to pass**. Select the `memory-review` job from your
-   repository's recent checks, then save the rule. Confirm that the failing test
-   pull request is blocked and close it when finished.
+   repository's recent checks. Enable **Require branches to be up to date before
+   merging** and save the rule. A green result applies to the base the check
+   reviewed, so this setting forces another review when the base advances.
+   Confirm that the failing test pull request is blocked and close it when finished.
 
 The CLI exits `0` for a passed review, `1` for blocking findings, and `2` when
 the review cannot run. If it cannot find the base, head, or common ancestor,

@@ -38,7 +38,7 @@
   fix: >-
     Remove the `SUPERSEDES` link that points at the fact that should be current.
   cypher: |
-    MATCH p = (f:Fact)-[:SUPERSEDES*1..6]->(f)
+    MATCH p = (f:Fact)-[:SUPERSEDES*1..]->(f)
     RETURN f.name AS fact, length(p) AS hops,
            reduce(s = '', n IN nodes(p) |
                   s + CASE WHEN s = '' THEN '' ELSE ' -[:SUPERSEDES]-> ' END + 'Fact/' + n.name) AS path
@@ -81,11 +81,14 @@
 - id: unsourced-fact
   severity: block
   title: Fact has no source
-  message: "Fact/{fact} is active but has no `SOURCE` link, so nobody can verify it."
-  fix: Link the file, commit, or document the agent read it from under `SOURCE`.
+  message: "Fact/{fact} is active but has no `SOURCE` link to a source with a URI."
+  fix: Link a `Source` note whose `uri` identifies the file, commit, or document.
   cypher: |
     MATCH (f:Fact)
-    WHERE f.status = 'active' AND NOT (f)-[:SOURCE]->()
+    WHERE f.status = 'active'
+      AND NOT EXISTS {
+        MATCH (f)-[:SOURCE]->(s:Source) WHERE coalesce(s.uri, '') <> ''
+      }
     RETURN f.name AS fact
     ORDER BY fact
 
@@ -96,9 +99,36 @@
   fix: Link the agent that wrote the fact under `ASSERTED_BY`.
   cypher: |
     MATCH (f:Fact)
-    WHERE NOT (f)-[:ASSERTED_BY]->()
+    WHERE NOT (f)-[:ASSERTED_BY]->(:Agent)
     RETURN f.name AS fact
     ORDER BY fact
+
+- id: incomplete-fact
+  severity: block
+  title: Fact is missing required fields
+  message: "Fact/{fact} needs a predicate, a value, and a supported status for recall."
+  fix: Supply `predicate` and `value`, and set `status` to `active`, `retracted`, or `unconfirmed`.
+  cypher: |
+    MATCH (f:Fact)
+    WHERE (f.type IS NOT NULL OR f.predicate IS NOT NULL OR f.value IS NOT NULL
+           OR f.status IS NOT NULL OR (f)-[]->())
+      AND (coalesce(f.predicate, '') = '' OR coalesce(f.value, '') = ''
+           OR NOT (coalesce(f.status, '') IN ['active', 'retracted', 'unconfirmed']))
+    RETURN f.name AS fact
+    ORDER BY fact
+
+- id: unrelated-replacement
+  severity: block
+  title: Fact replaces an unrelated note
+  message: "Fact/{fact} cannot replace {target}. A replacement must share its entity and predicate."
+  fix: Point `SUPERSEDES` at a fact about the same entity and predicate.
+  cypher: |
+    MATCH (f:Fact)-[:SUPERSEDES]->(old)
+    WHERE coalesce(old.stub, false) = false
+      AND (NOT ('Fact' IN labels(old)) OR f.predicate <> old.predicate
+           OR NOT EXISTS { MATCH (f)-[:ABOUT]->(:Entity)<-[:ABOUT]-(old) })
+    RETURN f.name AS fact, labels(old)[0] + '/' + old.name AS target
+    ORDER BY fact, target
 
 - id: orphan-fact
   severity: block
@@ -120,7 +150,7 @@
   severity: block
   title: Contradicts a fact it was derived from
   message: >-
-    Fact/{fact} says `{predicate}` is `{value}` for `{entity}`, but it was derived,
+    Fact/{fact} says `{predicate}` is `{value}` for `{entity}` and claims to preserve that value,
     {hops} step(s) away, from Fact/{root}, which says `{other_value}` for `{root_entity}`.
     The two notes are not about the same entity, so a side-by-side diff does not show a clash.
     Path: {path}
@@ -131,6 +161,7 @@
   cypher: |
     MATCH p = (f:Fact)-[:DERIVED_FROM*1..6]->(root:Fact)
     WHERE f.status = 'active' AND root.status = 'active'
+      AND f.preserve_value = true
       AND f.predicate = root.predicate AND f.value <> root.value
       AND NOT EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(f) WHERE n.status = 'active' }
       AND NOT EXISTS { MATCH (n:Fact)-[:SUPERSEDES]->(root) WHERE n.status = 'active' }

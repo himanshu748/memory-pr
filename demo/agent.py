@@ -158,6 +158,7 @@ def scenario_hop(agent: str) -> str:
         source="demo/project/docs/legacy/payments-api.md",
         statement="backup-policy database: mysql-8, derived from the payments-api database.",
         derived_from=[window],
+        preserve_value=True,
     )
     return "Derived a mysql database for backup-policy from the postgres fact, three hops away."
 

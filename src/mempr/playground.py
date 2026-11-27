@@ -82,6 +82,9 @@ def clean(draft: Any) -> dict[str, Any]:
     about = draft.get("about", True)
     if not isinstance(about, bool):
         raise BadDraft("about must be true or false")
+    preserve_value = draft.get("preserve_value", False)
+    if not isinstance(preserve_value, bool):
+        raise BadDraft("preserve_value must be true or false")
     status = draft.get("source_status", "")
     if status not in ("", "retracted"):
         raise BadDraft("source_status must be retracted")
@@ -94,6 +97,7 @@ def clean(draft: Any) -> dict[str, Any]:
         "source": _text(draft, "source", 200, required=False),
         "supersedes": _facts(draft, "supersedes"),
         "derived_from": _facts(draft, "derived_from"),
+        "preserve_value": preserve_value,
         "retract": _facts(draft, "retract"),
         "about": about,
         "source_status": status,
@@ -115,6 +119,7 @@ def apply(vault: Path, draft: dict[str, Any]) -> None:
         source=draft["source"] or None,
         supersedes=draft["supersedes"],
         derived_from=draft["derived_from"],
+        preserve_value=draft.get("preserve_value", False),
         about=draft["about"],
         source_status=draft["source_status"] or None,
     )

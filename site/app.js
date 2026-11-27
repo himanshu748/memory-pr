@@ -99,8 +99,8 @@ function ruleRows(db, rules) {
   for (const rule of rules) {
     try {
       found.set(rule.id, run(db, rule.cypher).rows);
-    } catch {
-      found.set(rule.id, []);
+    } catch (error) {
+      throw new Error(`${rule.id}: ${error.message}`);
     }
   }
   return found;
@@ -152,20 +152,36 @@ function openView(v) {
   v.db = loadDb(v.after);
   if (v.apply) v.apply(v.db); // a visitor's draft: the change is written with Cypher
   const base = loadDb(v.before);
-  const rows = ruleRows(base, rulesOf(v));
-  base.free();
-  // On the memory itself every finding counts; on a pull request only the new ones do.
-  v.baseline = new Map([...rows].map(([id, r]) => [id, new Set(v.pull ? r.map(rowKey) : [])]));
+  try {
+    const rows = ruleRows(base, rulesOf(v));
+    // On the memory itself every finding counts; on a pull request only the new ones do.
+    v.baseline = new Map([...rows].map(([id, r]) => [id, new Set(v.pull ? r.map(rowKey) : [])]));
+    v.baseRuleError = null;
+  } catch (error) {
+    v.baseRuleError = error.message;
+  } finally {
+    base.free();
+  }
   refresh(v);
 }
 
 function refresh(v) {
   v.graph = readGraph(v.db, v.after);
   for (const note of v.notes || []) Object.assign(v.graph.nodes.find((n) => n.id === note.id) || {}, note);
-  v.live = liveFindings(v);
+  v.live = null;
+  v.ruleError = v.baseRuleError;
+  if (v.ruleError) return;
+  try {
+    v.live = liveFindings(v);
+  } catch (error) {
+    v.ruleError = error.message;
+  }
 }
 
 function problemsOf(v) {
+  if (v.ruleError) return [{
+    kind: 'review-error', severity: 'block', title: 'Review incomplete', text: v.ruleError, nodes: [], rels: [],
+  }];
   const exported = v.pull ? v.pull.problems : [];
   if (!v.live) return exported;
   return [...exported.filter((p) => p.kind !== 'finding'), ...v.live];
@@ -639,7 +655,7 @@ function renderReview() {
     const state = reviewState(blocked, unconfirmed);
     parts.push(
       `<div class="verdict ${state}">${
-        blocked ? `Merge blocked: ${plural(blocking, 'problem', 'problems')}` : unconfirmed ? 'Needs verification' : 'Review passed: safe to merge'
+        v.ruleError ? 'Review incomplete' : blocked ? `Merge blocked: ${plural(blocking, 'problem', 'problems')}` : unconfirmed ? 'Needs verification' : 'Review passed: safe to merge'
       }</div>`,
       `<h2>${esc(v.title)}</h2>`,
       `<p class="meta"><strong>${esc(v.pull.author)}</strong> ${esc(v.pull.description)}. Branch <code>${esc(v.pull.id)}</code>.</p>`,
@@ -648,7 +664,7 @@ function renderReview() {
     if (list.length) parts.push(problemList(list));
     if (unconfirmed) parts.push(`<p><a href="#real-out">${plural(unconfirmed, 'older fact needs', 'older facts need')} verification.</a></p>`);
     else if (!list.length) parts.push('<p class="ok">Nothing contradicts, nothing is lost, every fact has a source.</p>');
-    if (v.mine && !v.edited) parts.push(`<p class="live">Relate reviewed your pull request in this page with the ${rulesOf(v).length} rules <code>mempr check</code> runs. <a href="#write">Change it</a>.</p>`);
+    if (v.mine && !v.edited && !v.ruleError) parts.push(`<p class="live">Relate reviewed your pull request in this page with the ${rulesOf(v).length} rules <code>mempr check</code> runs. <a href="#write">Change it</a>.</p>`);
     else if (v.live) parts.push(liveLine(v, list));
     if (v.pull.comment) parts.push(
       '<details><summary>The comment the check posts on the pull request</summary>' +
@@ -659,17 +675,19 @@ function renderReview() {
 }
 
 function liveLine(v, list) {
+  if (v.ruleError) return '';
   if (v.edited) {
     return (
       `<p class="live edited">You changed this graph. Relate re-ran the ${rulesOf(view).length} review rules: ` +
       `${list.length ? plural(list.length, 'problem', 'problems') + ' now' : 'no problems now'}.</p>`
     );
   }
-  const exported = v.pull.problems.filter((p) => p.kind === 'finding').length;
-  const same = exported === v.live.length;
+  const signature = (findings) => JSON.stringify(findings.map((p) => JSON.stringify([p.rule, p.severity, p.text])).sort());
+  const exported = v.pull.problems.filter((p) => p.kind === 'finding');
+  const same = signature(exported) === signature(v.live);
   return (
     `<p class="live ${same ? '' : 'edited'}">Relate ran the ${rulesOf(view).length} review rules in this page ` +
-    `${same ? 'and got the same result as' : `and found ${v.live.length}, against ${exported} from`} <code>mempr check</code>.</p>`
+    `${same ? 'and matched the findings from' : 'and found a difference from the findings in'} <code>mempr check</code>.</p>`
   );
 }
 
@@ -1035,6 +1053,7 @@ const clean = (d) => ({
   agent: slug(d.agent || ''), entity: slug(d.entity || ''), predicate: slug(d.predicate || ''),
   value: String(d.value || '').trim(), source: String(d.source || '').trim(),
   supersedes: [...(d.supersedes || [])], derived_from: [...(d.derived_from || [])],
+  preserve_value: d.preserve_value === true,
   retract: [...(d.retract || [])],
   about: d.about !== false,
   source_status: d.source_status === 'retracted' ? 'retracted' : '',
@@ -1085,6 +1104,7 @@ function noteOf(d) {
   const links = (key, targets) => (targets.length ? [`${key}:`, ...targets.map((t) => `  - "[[${t}]]"`)] : []);
   const text = [
     '---', 'type: Fact', `name: ${name}`, `predicate: ${d.predicate}`, 'status: active', `value: ${plain ? d.value : JSON.stringify(d.value)}`,
+    ...(d.preserve_value ? ['preserve_value: true'] : []),
     ...links('ABOUT', d.about === false ? [] : [`Entity/${d.entity}`]),
     ...links('ASSERTED_BY', [`Agent/${d.agent}`]),
     ...links('SOURCE', d.source ? [`Source/${slug(d.source)}`] : []),
@@ -1125,6 +1145,7 @@ function applyDraft(db, d) {
   const statement = `${d.entity} ${d.predicate}: ${d.value}`;
   const params = { name, entity: d.entity, agent: d.agent, predicate: d.predicate, value: d.value, statement };
   run(db, d.about === false ? ADD_ORPHAN : ADD_FACT, params);
+  if (d.preserve_value) run(db, 'MATCH (f:Fact {name: $name}) SET f.preserve_value = true', { name });
   if (d.about === false) run(db, DROP_ABOUT, { name });
   if (d.source) run(db, ADD_SOURCE, { name, source: slug(d.source), uri: d.source });
   if (d.source_status) run(db, SOURCE_STATUS, { source: slug(d.source), status: d.source_status });
@@ -1200,7 +1221,7 @@ if (API !== null) {
 }
 
 function serverCheck(v) {
-  if (API === null) return;
+  if (API === null || v.ruleError) return;
   const request = serverRequest(play.landed, v.draft);
   if (request.skip) {
     v.server = { state: 'skipped', why: request.skip };
@@ -1239,7 +1260,7 @@ const POLL_MS = 5000;
 const POLL_LIMIT = 60; // five minutes
 
 function openOnGithub(v) {
-  if (!github.enabled || (v.github && !again(v.github)) || whyNot(v.draft, play.landed, v.edited)) return;
+  if (!github.enabled || v.ruleError || (v.github && !again(v.github)) || whyNot(v.draft, play.landed, v.edited)) return;
   const show = (state) => {
     v.github = state;
     if (play.view === v) renderPlay();
@@ -1506,6 +1527,7 @@ function outcomeHtml(c) {
       '<p class="adds">It is part of the shared memory now. Your next pull request is reviewed against it, so you can contradict yourself.</p>';
   }
   if (!v) return '<p class="outcome-empty">The review appears here: what the pull request adds, each problem with its path, and the verdict.</p>';
+  if (v.ruleError) return `<p class="outcome-empty error">Review incomplete. ${esc(v.ruleError)}</p>`;
   const stale = JSON.stringify(v.draft) !== JSON.stringify(c);
   const { list, blocked, blocking } = verdict(v);
   const u = union(v);
