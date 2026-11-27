@@ -65,7 +65,9 @@ Two repository settings make this work, both set once by the owner:
 
 The sample memory is made up; this part is not. Under "Point it at a real repository" on
 <https://memory-pr.vercel.app/>, name any public GitHub repository. Agent `scout` reads it
-at the last commit before a date months ago and agent `builder` reads today's head. Each
+at the last commit before the selected date and agent `builder` reads today's head.
+For a recent repository, choose **Previous commit** to start from the latest commit's
+first parent instead. Each
 writes what the files state as notes (the final `FROM` of each Dockerfile, `engines` and
 `packageManager` in package.json, the `go` line of go.mod, `requires-python`, Cargo's
 `rust-version` and `edition`, `.nvmrc`, `.python-version`), each fact linked to its

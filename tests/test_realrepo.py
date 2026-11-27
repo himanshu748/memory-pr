@@ -25,17 +25,16 @@ FILES = {
 }
 
 
-def fake(url, *, files=FILES):
+def fake(url, *, files=FILES, parents=(OLD,)):
     api = "https://api.github.com/repos/acme/shop"
 
     def commit(sha):
-        return [
-            {
-                "sha": sha,
-                "html_url": f"https://github.com/acme/shop/commit/{sha}",
-                "commit": {"committer": {"date": "2025-01-01T00:00:00Z"}},
-            }
-        ]
+        return {
+            "sha": sha,
+            "html_url": f"https://github.com/acme/shop/commit/{sha}",
+            "commit": {"committer": {"date": "2025-01-01T00:00:00Z"}},
+            "parents": [{"sha": parent} for parent in parents] if sha == NEW else [],
+        }
 
     if url == api:
         return 200, json.dumps(
@@ -46,7 +45,11 @@ def fake(url, *, files=FILES):
             }
         ).encode()
     if url.startswith(api + "/commits?"):
-        return 200, json.dumps(commit(OLD if "until=" in url else NEW)).encode()
+        if "until=" in url:
+            assert f"sha={NEW}&until=" in url
+        return 200, json.dumps([commit(OLD if "until=" in url else NEW)]).encode()
+    if url == f"{api}/commits/{OLD}":
+        return 200, json.dumps(commit(OLD)).encode()
     if url.startswith(api + "/git/trees/"):
         sha = url.split("/trees/")[1].split("?")[0]
         return 200, json.dumps({"tree": [{"path": p, "type": "blob"} for p in files[sha]]}).encode()
@@ -125,6 +128,25 @@ def test_learn_blocks_values_that_moved_and_passes_once_they_replace_the_old():
     assert "Fact/web--package-manager--pnpm-9-1-0" in ids and "Agent/builder" in ids
     source = next(n for n in out["before"]["nodes"] if n["id"].startswith("Source/dockerfile"))
     assert source["props"]["uri"] == f"https://github.com/acme/shop/blob/{OLD}/Dockerfile"
+
+
+def test_previous_commit_uses_exact_first_parent_of_a_merge_tip():
+    out = learn(
+        "acme/shop",
+        None,
+        load_rules(None),
+        fetch=lambda url: fake(url, parents=(OLD, "c" * 40)),
+    )
+    assert out["months"] is None
+    assert (out["old"]["sha"], out["head"]["sha"]) == (OLD, NEW)
+    assert out["blocked"] and not out["fixed"]["blocked"]
+    assert all(f"/blob/{OLD}/" in f["old_url"] for f in out["changed"])
+
+
+def test_previous_commit_on_a_one_commit_repo_explains_why_it_cannot_compare():
+    with pytest.raises(RepoError, match="only one commit") as error:
+        learn("acme/shop", None, load_rules(None), fetch=lambda url: fake(url, parents=()))
+    assert error.value.status == 422
 
 
 @pytest.mark.parametrize(

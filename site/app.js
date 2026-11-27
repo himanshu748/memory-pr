@@ -1982,7 +1982,7 @@ function renderReal() {
     '<button type="button" class="btn primary" id="real-explore">Explore the graph</button></div></div>' +
     (rows.length
       ? `<table class="moved"><thead><tr><th>About</th><th>What</th><th>${day(b.old.date)}</th><th>${day(b.head.date)}</th></tr></thead><tbody>${rows.join('')}</tbody></table>`
-      : `<p class="outcome-empty">Read ${plural(b.files.head, 'file', 'files')} (Dockerfiles, package.json, go.mod, pyproject.toml, Cargo.toml, .nvmrc). Try more months or another repository.</p>`);
+      : `<p class="outcome-empty">Read ${plural(b.files.head, 'file', 'files')} (Dockerfiles, package.json, go.mod, pyproject.toml, Cargo.toml, .nvmrc). Try a different starting point or another repository.</p>`);
   out.classList.remove('play');
   void out.offsetWidth;
   out.classList.add('play');
@@ -1994,7 +1994,7 @@ function renderReal() {
   $('real-explore').addEventListener('click', exploreReal);
 }
 
-async function learnReal(repo, months) {
+async function learnReal(repo, period) {
   if (API === null) {
     real.error = 'This copy of the page has no server. Open https://memory-pr.vercel.app/ to read a repository.';
     return renderReal();
@@ -2003,7 +2003,10 @@ async function learnReal(repo, months) {
   Object.assign(real, { busy: true, error: '', fixed: false });
   renderReal();
   try {
-    const response = await fetch(`${API}/api/learn?repo=${encodeURIComponent(repo)}&months=${months}`);
+    const query = new URLSearchParams({ repo });
+    if (period === 'previous') query.set('baseline', 'previous');
+    else query.set('months', period);
+    const response = await fetch(`${API}/api/learn?${query}`);
     const body = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(body.error || `the server answered ${response.status}`);
     if (ask === real.ask) real.body = body;

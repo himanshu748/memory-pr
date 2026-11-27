@@ -1,6 +1,6 @@
 """Learn facts from a real public GitHub repository at two moments, and review the change.
 
-An agent learned the repository some months ago and its notes are the shared memory. A
+An agent learned the repository at an earlier commit and its notes are the shared memory. A
 second agent reads the code as it is today and proposes what it sees. The review is the same
 `mempr check` the pull requests get: every value that moved since is a contradiction until
 the new fact says which old one it replaces.
@@ -292,24 +292,20 @@ def _graph(vault: Path) -> dict[str, Any]:
     return graph_dict(load(vault), notes)
 
 
-def _commit(api: Callable[[str], Any], repo: str, query: str, months: int = 0) -> dict[str, str]:
-    found = api(f"/repos/{repo}/commits?{query}&per_page=1")
-    if not found:
-        raise RepoError(422, f"{repo} is younger than {months} months; pick fewer months")
-    c = found[0]
+def _commit(c: dict[str, Any]) -> dict[str, str]:
     return {"sha": c["sha"], "date": c["commit"]["committer"]["date"], "url": c["html_url"]}
 
 
 def learn(
     repo: str,
-    months: int,
+    months: int | None,
     rules: list[Rule],
     *,
     token: str | None = None,
     fetch: Fetch | None = None,
     qualify: bool = False,
 ) -> dict[str, Any]:
-    """The review of what changed in `repo` over the last `months`, read from GitHub.
+    """Review changes over `months`, or since the first parent of HEAD if None.
 
     `qualify` names entities after the repository too, so several repositories can share
     one memory without two `frontend` folders becoming one entity.
@@ -317,7 +313,7 @@ def learn(
     if not isinstance(repo, str) or not REPO.match(repo.strip()):
         raise RepoError(422, "repo must look like owner/name")
     repo = repo.strip()
-    if not isinstance(months, int) or not 1 <= months <= 60:
+    if months is not None and (not isinstance(months, int) or not 1 <= months <= 60):
         raise RepoError(422, "months must be a whole number from 1 to 60")
     get = fetch or (lambda url: _http(url, token))
     started = time.perf_counter()
@@ -345,14 +341,26 @@ def learn(
     if not isinstance(branch, str) or not branch:
         # An empty repository has no default branch and no commits to compare.
         raise RepoError(422, f"{repo} has no commits yet; there is nothing to compare")
-    head = _commit(api, repo, f"sha={urllib.parse.quote(branch)}")
-    until = datetime.now(timezone.utc) - timedelta(days=round(months * 30.44))
-    old = _commit(
-        api,
-        repo,
-        f"sha={urllib.parse.quote(branch)}&until={until.strftime('%Y-%m-%dT%H:%M:%SZ')}",
-        months,
-    )
+    commits = api(f"/repos/{repo}/commits?sha={urllib.parse.quote(branch)}&per_page=1")
+    if not commits:
+        raise RepoError(422, f"{repo} has no commits yet; there is nothing to compare")
+    head = _commit(commits[0])
+    if months is None:
+        parents = commits[0].get("parents", [])
+        if not parents:
+            raise RepoError(422, f"{repo} has only one commit; there is no previous commit")
+        old = _commit(api(f"/repos/{repo}/commits/{parents[0]['sha']}"))
+    else:
+        until = datetime.now(timezone.utc) - timedelta(days=round(months * 30.44))
+        commits = api(
+            f"/repos/{repo}/commits?sha={head['sha']}"
+            f"&until={until.strftime('%Y-%m-%dT%H:%M:%SZ')}&per_page=1"
+        )
+        if not commits:
+            raise RepoError(
+                422, f"{repo} has no commit that far back; choose fewer months or Previous commit"
+            )
+        old = _commit(commits[0])
 
     trees = {c["sha"]: api(f"/repos/{repo}/git/trees/{c['sha']}?recursive=1") for c in (old, head)}
     if any(t.get("truncated") for t in trees.values()):
