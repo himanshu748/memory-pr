@@ -1,4 +1,4 @@
-import { apiBase, compare, serverLine, serverRequest } from './server-check.js';
+import { apiBase, fetchServerReview, serverLine, serverRequest } from './server-check.js';
 import { again, prLine, settled, whyNot } from './github-pr.js';
 import { LEXICAL, NEIGHBORHOOD } from './search.js';
 
@@ -1211,7 +1211,7 @@ function openPull(entry) {
 }
 
 // The same draft is also sent to the server, where `mempr check` reviews it against the
-// committed memory. The page works without it: with no server in reach the line is not shown.
+// committed memory. The page keeps its own verdict if that second check is unavailable.
 const API = apiBase(location.hostname, location.search);
 
 if (API !== null) {
@@ -1234,14 +1234,7 @@ function serverCheck(v) {
     v.server = result;
     if (play.view === v) renderPlay();
   };
-  fetch(`${API}/api/review`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(request.body),
-  })
-    .then((response) => (response.ok ? response.json() : Promise.reject(new Error(String(response.status)))))
-    .then((body) => settle(compare(own, body)))
-    .catch(() => settle({ state: 'off' })); // no server here, or it refused: the page's own review stands
+  void fetchServerReview(API, request.body, own).then(settle);
 }
 
 // A real pull request on GitHub, where this deployment's server can ask for one.

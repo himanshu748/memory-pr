@@ -34,6 +34,26 @@ export function compare(mine, body) {
   return { state: agrees ? 'agrees' : 'differs', blocked: body.blocked, rules, ms: Number(body.elapsed_ms) || 0 };
 }
 
+/** Run the independent server check with a deadline. The browser verdict stays available. */
+export async function fetchServerReview(api, body, mine) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15_000);
+  try {
+    const response = await fetch(`${api}/api/review`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+    if (response.ok) return compare(mine, await response.json());
+  } catch {
+    // A failed server comparison leaves the browser review intact.
+  } finally {
+    clearTimeout(timer);
+  }
+  return { state: 'unavailable' };
+}
+
 const SKIP_LINES = {
   'merged-edit':
     'Server check skipped. You merged a pull request you had changed in the Cypher console, so the server cannot rebuild this memory from your drafts. Reset memory to compare again.',
@@ -48,6 +68,8 @@ export function serverLine(server, edited) {
   if (edited)
     return { tone: '', text: 'Server check not shown. You changed this pull request in the Cypher console, and the server only saw the draft.' };
   if (server.state === 'checking') return { tone: '', text: 'Asking the server to check it too.' };
+  if (server.state === 'unavailable')
+    return { tone: '', text: 'Server check unavailable. The verdict above is from the review in this browser.' };
   if (server.state === 'agrees')
     return { tone: 'agrees', text: `Server check agrees. mempr check ran on the server and gave the same verdict in ${Math.round(server.ms)} ms.` };
   const theirs = server.blocked ? `blocked${server.rules.length ? ` by ${server.rules.join(', ')}` : ''}` : 'passed';

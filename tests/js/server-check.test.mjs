@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { apiBase, compare, MAX_MERGED, serverLine, serverRequest } from '../../site/server-check.js';
+import { apiBase, compare, fetchServerReview, MAX_MERGED, serverLine, serverRequest } from '../../site/server-check.js';
 
 const draft = (value) => ({ agent: 'visitor', entity: 'payments-api', predicate: 'database', value, source: 'docs/design.md' });
 
@@ -66,4 +66,41 @@ test('a pull request changed in the console after the check shows no verdict fro
   const line = serverLine({ state: 'agrees', blocked: true, rules: ['contradiction'], ms: 5 }, true);
   assert.equal(line.tone, '');
   assert.match(line.text, /^Server check not shown\./);
+});
+
+test('an unavailable server check identifies the browser verdict', () => {
+  const line = serverLine({ state: 'unavailable' }, false);
+  assert.equal(line.tone, '');
+  assert.match(line.text, /^Server check unavailable\./);
+  assert.match(line.text, /review in this browser/);
+});
+
+test('a stalled server request settles as unavailable at the deadline', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const request = { draft: draft('x'), merged: [] };
+  const calls = [];
+  t.mock.method(globalThis, 'fetch', (url, init) => {
+    calls.push({ url, init });
+    return new Promise((_resolve, reject) => {
+      init.signal.addEventListener('abort', () => reject(init.signal.reason), { once: true });
+    });
+  });
+  const result = fetchServerReview('', request, { blocked: false, rules: [] });
+  assert.equal(calls.length, 1);
+  const [{ url, init }] = calls;
+  assert.equal(url, '/api/review');
+  assert.deepEqual(JSON.parse(init.body), request);
+  t.mock.timers.tick(14_999);
+  assert.equal(init.signal.aborted, false);
+  t.mock.timers.tick(1);
+  assert.equal(init.signal.aborted, true);
+  assert.deepEqual(await result, { state: 'unavailable' });
+});
+
+test('a completed server check still compares the two verdicts', async (t) => {
+  t.mock.method(globalThis, 'fetch', async () => ({ ok: true, json: async () => ({
+    blocked: false, rules: [], elapsed_ms: 25,
+  }) }));
+  assert.deepEqual(await fetchServerReview('', { draft: draft('x'), merged: [] }, { blocked: false, rules: [] }),
+    { state: 'agrees', blocked: false, rules: [], ms: 25 });
 });
