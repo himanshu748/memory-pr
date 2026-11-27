@@ -42,6 +42,8 @@ def fake(url, *, files=FILES, parents=(OLD,)):
                 "full_name": "acme/shop",
                 "default_branch": "main",
                 "html_url": "https://github.com/acme/shop",
+                "private": False,
+                "visibility": "public",
             }
         ).encode()
     if url.startswith(api + "/commits?"):
@@ -64,7 +66,12 @@ def test_an_empty_repository_is_a_clear_error_not_a_500():
     def fake(url):
         if url == "https://api.github.com/repos/acme/empty":
             return 200, json.dumps(
-                {"full_name": "acme/empty", "default_branch": None, "html_url": "x"}
+                {
+                    "full_name": "acme/empty",
+                    "default_branch": None,
+                    "html_url": "x",
+                    "private": False,
+                }
             ).encode()
         return 404, b""
 
@@ -77,7 +84,12 @@ def test_an_empty_repository_can_still_name_a_default_branch():
     def fake(url):
         if url == "https://api.github.com/repos/acme/empty":
             return 200, json.dumps(
-                {"full_name": "acme/empty", "default_branch": "master", "html_url": "x"}
+                {
+                    "full_name": "acme/empty",
+                    "default_branch": "master",
+                    "html_url": "x",
+                    "private": False,
+                }
             ).encode()
         if "/commits?" in url:
             return 409, b'{"message": "Git Repository is empty."}'
@@ -157,6 +169,20 @@ def test_learn_refuses_what_it_cannot_read(repo, months, status):
     with pytest.raises(RepoError) as error:
         learn(repo, months, load_rules(None), fetch=fake)
     assert error.value.status == status
+
+
+@pytest.mark.parametrize(
+    "visibility",
+    [{"private": True}, {"private": False, "visibility": "internal"}, {}],
+)
+def test_learn_requires_public_metadata_before_reading_contents(visibility):
+    def fetch_metadata(url):
+        assert url == "https://api.github.com/repos/acme/shop"
+        return 200, json.dumps({"default_branch": "main", **visibility}).encode()
+
+    with pytest.raises(RepoError, match="no public repository") as error:
+        learn("acme/shop", None, load_rules(None), fetch=fetch_metadata)
+    assert error.value.status == 404
 
 
 def test_a_value_whose_slug_matches_the_old_one_is_still_a_change():

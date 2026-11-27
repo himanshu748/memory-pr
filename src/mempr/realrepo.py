@@ -337,6 +337,10 @@ def learn(
             ) from error
 
     meta = api(f"/repos/{repo}")
+    if not isinstance(meta, dict) or (
+        meta.get("private") is not False or meta.get("visibility", "public") != "public"
+    ):
+        raise RepoError(404, f"GitHub has no public repository {repo}")
     repo, branch = meta.get("full_name", repo), meta.get("default_branch")
     if not isinstance(branch, str) or not branch:
         # An empty repository has no default branch and no commits to compare.
