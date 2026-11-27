@@ -143,6 +143,29 @@ def test_learn_blocks_values_that_moved_and_passes_once_they_replace_the_old():
     assert source["props"]["uri"] == f"https://github.com/acme/shop/blob/{OLD}/Dockerfile"
 
 
+def test_review_reads_commented_runtime_versions():
+    def manifests(go, python):
+        return {
+            "api/go.mod": f"module acme/shop\r\n\r\n\tgo {go} // Minimum for CI\r\n",
+            "web/pyproject.toml": f'[project] # Package metadata\nrequires-python = "{python}"\n',
+        }
+
+    files = {OLD: manifests("1.22", ">=3.10"), NEW: manifests("1.23.0", ">=3.11")}
+    out = learn("acme/shop", 12, load_rules(None), fetch=lambda url: fake(url, files=files))
+    assert {c["predicate"]: (c["old"], c["new"]) for c in out["changed"]} == {
+        "go-version": ("1.22", "1.23.0"),
+        "python-requires": (">=3.10", ">=3.11"),
+    }
+    assert out["blocked"] and not out["fixed"]["blocked"]
+
+
+def test_commented_toml_header_ends_the_previous_table():
+    content = (
+        '[project]\nname = "shop"\n[tool.example] # Tool-only setting\nrequires-python = ">=3.12"\n'
+    )
+    assert extract("pyproject.toml", content) == []
+
+
 def test_review_reads_the_literal_base_through_named_docker_stages():
     dockerfile = "FROM alpine:{} AS base\nFROM base AS app\nFROM app AS final\n"
     files = {
