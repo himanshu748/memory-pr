@@ -79,6 +79,11 @@ $ node --test tests/js/*.test.mjs
 
 ## Real agent run (A/B)
 
+[Replay the recall in the browser](https://memory-pr.vercel.app/#agent-comparison).
+The bundled snapshot file lists the exact fixture base commits and projects the
+`Fact`, `Entity`, and `Source` notes and edges needed by the displayed Cypher.
+The local check outcomes shown beside the recall are linked to their original PR comments.
+
 Two sequential agent runs on the public fixture
 [`himanshu748/memory-pr-ab-fixture`](https://github.com/himanshu748/memory-pr-ab-fixture),
 same clone of the fixture, same `mempr` install, same prompt (verbatim in
