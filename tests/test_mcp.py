@@ -320,6 +320,69 @@ def test_open_pull_request_pushes_the_branch_and_calls_gh(repo, tmp_path):
     assert args[-2:] == ["--repo", "github.com/acme/project"]  # the remote that was pushed to
 
 
+@pytest.mark.parametrize(
+    ("push_owner", "has_open_pr"), [("acme", True), ("builder-bot", True), ("acme", False)]
+)
+def test_fixing_a_published_proposal_returns_its_open_pull_request(
+    repo, tmp_path, push_owner, has_open_pr
+):
+    remote = tmp_path / "remote.git"
+    repo.git("init", "-q", "--bare", str(remote))
+    push_url = f"https://github.com/{push_owner}/project.git"
+    repo.git("remote", "add", "origin", "https://github.com/acme/project.git")
+    repo.git("remote", "set-url", "--push", "origin", push_url)
+    repo.git("config", f"url.{remote}.insteadOf", push_url)
+    repo.git("push", "-q", "origin", "main")
+
+    gh = tmp_path / "gh"
+    log = tmp_path / "gh.jsonl"
+    url = "https://github.com/acme/project/pull/7"
+    gh.write_text(
+        f"#!{sys.executable}\n"
+        "import json, sys\n"
+        "from pathlib import Path\n"
+        f"log = Path({str(log)!r})\n"
+        "args = sys.argv[1:]\n"
+        "with log.open('a') as f:\n"
+        "    f.write(json.dumps(args) + '\\n')\n"
+        "if args[:2] == ['pr', 'create']:\n"
+        "    if len(log.read_text().splitlines()) > 1:\n"
+        "        sys.exit('a pull request already exists or could not be created')\n"
+        f"    print({url!r})\n"
+        "elif args[:1] == ['api']:\n"
+        f"    print({url if has_open_pr else ''!r})\n"
+        "else:\n"
+        "    sys.exit('unexpected gh command')\n"
+    )
+    gh.chmod(gh.stat().st_mode | stat.S_IEXEC)
+    agent = Agent(repo, env={"PATH": f"{tmp_path}{os.pathsep}{os.environ['PATH']}"})
+
+    bad = agent.ok("retract_fact", fact=DB, agent="builder", open_pull_request=True)
+    assert bad["blocked"] is True
+    assert bad["pull_request"] == {"pushed": True, "url": url}
+
+    fixed = agent.ok(
+        "retract_fact", fact=TOOL, agent="builder", branch=bad["branch"], open_pull_request=True
+    )
+    assert fixed["blocked"] is False
+    pushed = repo.git("ls-remote", "--heads", str(remote), bad["branch"])
+    assert pushed.split()[0] == fixed["commit"]
+    if has_open_pr:
+        assert fixed["pull_request"] == {"pushed": True, "url": url}
+    else:
+        assert fixed["pull_request"] == {
+            "pushed": True,
+            "error": "gh pr create failed: a pull request already exists or could not be created",
+        }
+
+    create, recreate, lookup = map(json.loads, log.read_text().splitlines())
+    create_head = bad["branch"] if push_owner == "acme" else f"{push_owner}:{bad['branch']}"
+    assert create[:6] == recreate[:6] == ["pr", "create", "--base", "main", "--head", create_head]
+    assert lookup[:5] == ["api", "--hostname", "github.com", "--method", "GET"]
+    assert lookup[5] == "repos/acme/project/pulls"
+    assert {"state=open", "base=main", f"head={push_owner}:{bad['branch']}"} <= set(lookup[6:])
+
+
 def test_proposing_on_the_checked_out_branch_is_refused(agent, repo):
     repo.branch("agent/work")
     before = state(repo)
