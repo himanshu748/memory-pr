@@ -1,4 +1,4 @@
-import { apiBase, fetchRepoReview, fetchServerReview, serverLine, serverRequest } from './server-check.js';
+import { apiBase, fetchRepoReview, fetchServerReview, repoCoverage, serverLine, serverRequest } from './server-check.js';
 import { again, prLine, submitPullRequest, watchPullRequest, whyNot } from './github-pr.js';
 import { LEXICAL, NEIGHBORHOOD } from './search.js';
 
@@ -545,13 +545,13 @@ function fixesFor(p) {
   return [];
 }
 
-const reviewState = (blocked, unconfirmed) => blocked ? 'blocked' : unconfirmed ? 'unconfirmed' : 'passed';
+const reviewState = (blocked, needsVerification) => blocked ? 'blocked' : needsVerification ? 'unconfirmed' : 'passed';
 const REVIEW_CHIP = { blocked: 'Blocked', unconfirmed: 'Needs verification', passed: 'Passes' };
 
 function renderViews() {
   $('views').innerHTML = views
     .map((v, i) => {
-      const state = v.pull ? reviewState(verdict(v).blocked, v.unconfirmed?.length) : '';
+      const state = v.pull ? reviewState(verdict(v).blocked, v.unconfirmed?.length || v.coverage) : '';
       const tone = state === 'unconfirmed' ? 'base' : state;
       const chip = v.pull ? `<span class="chip-state ${tone}">${REVIEW_CHIP[state]}</span>` : '<span class="chip-state base">main</span>';
       const name = v.mine ? 'Your pull request' : v.pull ? `${esc(v.pull.author)}` : 'Shared memory';
@@ -639,7 +639,7 @@ function renderReview() {
       '<h3>What a pull request does to it</h3><div class="pulls">',
       ...views.filter((x) => x.pull).map((x) => {
         const s = verdict(x);
-        const state = reviewState(s.blocked, x.unconfirmed?.length);
+        const state = reviewState(s.blocked, x.unconfirmed?.length || x.coverage);
         const label = s.blocked ? `blocked: ${plural(s.blocking, 'problem', 'problems')}` : REVIEW_CHIP[state];
         return (
           `<button type="button" class="pull" data-view="${views.indexOf(x)}">` +
@@ -652,18 +652,20 @@ function renderReview() {
   } else {
     const r = v.pull.review || delta(v);
     const unconfirmed = v.unconfirmed?.length || 0;
-    const state = reviewState(blocked, unconfirmed);
+    const needsVerification = unconfirmed || v.coverage;
+    const state = reviewState(blocked, needsVerification);
     parts.push(
       `<div class="verdict ${state}">${
-        v.ruleError ? 'Review incomplete' : blocked ? `Merge blocked: ${plural(blocking, 'problem', 'problems')}` : unconfirmed ? 'Needs verification' : 'Review passed: safe to merge'
+        v.ruleError ? 'Review incomplete' : blocked ? `Merge blocked: ${plural(blocking, 'problem', 'problems')}` : needsVerification ? 'Needs verification' : 'Review passed: safe to merge'
       }</div>`,
       `<h2>${esc(v.title)}</h2>`,
       `<p class="meta"><strong>${esc(v.pull.author)}</strong> ${esc(v.pull.description)}. Branch <code>${esc(v.pull.id)}</code>.</p>`,
       `<p class="delta"><span class="plus">+ ${count(r.added)}</span><span class="minus">− ${count(r.removed)}</span></p>`,
     );
     if (list.length) parts.push(problemList(list));
+    if (v.coverage) parts.push(`<p>${esc(v.coverage)}</p>`);
     if (unconfirmed) parts.push(`<p><a href="#real-out">${plural(unconfirmed, 'older fact needs', 'older facts need')} verification.</a></p>`);
-    else if (!list.length) parts.push('<p class="ok">Nothing contradicts, nothing is lost, every fact has a source.</p>');
+    else if (!list.length && !v.coverage) parts.push('<p class="ok">Nothing contradicts, nothing is lost, every fact has a source.</p>');
     if (v.mine && !v.edited && !v.ruleError) parts.push(`<p class="live">Relate reviewed your pull request in this page with the ${rulesOf(v).length} rules <code>mempr check</code> runs. <a href="#write">Change it</a>.</p>`);
     else if (v.live) parts.push(liveLine(v, list));
     if (v.pull.comment) parts.push(
@@ -1893,6 +1895,7 @@ function realView(b, fixed) {
     after: fixed ? b.fixed_after : b.after,
     real: true,
     unconfirmed: b.unconfirmed || [],
+    coverage: repoCoverage(b),
   };
 }
 
@@ -1940,11 +1943,13 @@ function renderReal() {
   const side = real.fixed ? b.fixed : b;
   const n = b.changed.length;
   const unconfirmed = b.unconfirmed || [];
-  const state = reviewState(side.blocked, unconfirmed.length);
+  const coverage = repoCoverage(b);
+  const needsVerification = unconfirmed.length || coverage;
+  const state = reviewState(side.blocked, needsVerification);
   const summary = side.blocked
     ? `${plural(side.review.problems, 'problem', 'problems')}: ${side.rules.join(', ')}`
     : unconfirmed.length ? plural(unconfirmed.length, 'unconfirmed fact', 'unconfirmed facts')
-      : n ? 'every change says what it replaces' : 'no existing values changed';
+      : coverage ? 'Only the files scanned were reviewed' : n ? 'every change says what it replaces' : 'no existing values changed';
   const rows = b.changed.map(
     (c, i) =>
       `<tr style="--i:${i}" class="${real.fixed ? 'fixed' : ''}"><td><code>${esc(c.entity)}</code><small class="what">${esc(c.predicate)}</small></td><td><code>${esc(c.predicate)}</code></td>` +
@@ -1960,8 +1965,9 @@ function renderReal() {
   }
   out.innerHTML =
     '<div class="real-side">' +
-    `<div class="stampbox ${state}"><strong>${side.blocked ? 'Merge blocked' : unconfirmed.length ? 'Needs verification' : 'Review passed'}</strong>` +
+    `<div class="stampbox ${state}"><strong>${side.blocked ? 'Merge blocked' : needsVerification ? 'Needs verification' : 'Review passed'}</strong>` +
     `<span>${esc(summary)}</span></div>` +
+    (coverage ? `<p>${esc(coverage)}</p>` : '') +
     `<p><strong>scout</strong> read <a href="${esc(b.url)}" target="_blank" rel="noopener">${esc(b.repo)}</a> at ` +
     `<a href="${esc(b.old.url)}" target="_blank" rel="noopener"><code>${short7(b.old.sha)}</code></a> on ${day(b.old.date)} and wrote ${plural(b.learned, 'fact', 'facts')}. ` +
     `<strong>builder</strong> read <a href="${esc(b.head.url)}" target="_blank" rel="noopener"><code>${short7(b.head.sha)}</code></a>, its latest commit (${day(b.head.date)}), and proposed ${plural(b.proposed, 'fact', 'facts')}. ` +

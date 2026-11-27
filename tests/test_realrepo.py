@@ -133,6 +133,7 @@ def test_learn_blocks_values_that_moved_and_passes_once_they_replace_the_old():
         ("web", "node-engine"): (">=18", ">=20"),
     }
     assert out["learned"] == 3 and out["proposed"] == 3  # the go version did not move; pnpm is new
+    assert out["files_skipped"] == {"old": 0, "head": 0}
     assert out["unconfirmed"] == []
     assert out["blocked"] and out["rules"] == ["contradiction"] and len(out["problems"]) == 2
     assert not out["fixed"]["blocked"]
@@ -140,6 +141,20 @@ def test_learn_blocks_values_that_moved_and_passes_once_they_replace_the_old():
     assert "Fact/web--package-manager--pnpm-9-1-0" in ids and "Agent/builder" in ids
     source = next(n for n in out["before"]["nodes"] if n["id"].startswith("Source/dockerfile"))
     assert source["props"]["uri"] == f"https://github.com/acme/shop/blob/{OLD}/Dockerfile"
+
+
+def test_a_clean_bounded_review_reports_files_it_did_not_read(monkeypatch):
+    monkeypatch.setattr("mempr.realrepo.MAX_FILES", 1)
+    root = "module root\n\ngo 1.22\n"
+    files = {
+        OLD: {"go.mod": root, "api/go.mod": root},
+        NEW: {"go.mod": root, "api/go.mod": "module api\n\ngo 1.23\n", "worker/go.mod": root},
+    }
+    out = learn("acme/shop", 12, load_rules(None), fetch=lambda url: fake(url, files=files))
+    assert out["files"] == {"old": 1, "head": 1}
+    assert out["files_skipped"] == {"old": 1, "head": 2}
+    assert not out["blocked"] and not out["fixed"]["blocked"]
+    assert out["changed"] == out["unconfirmed"] == []
 
 
 def test_previous_commit_uses_exact_first_parent_of_a_merge_tip():
