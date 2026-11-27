@@ -34,12 +34,30 @@ manifests are available. Each condition has two independent sessions.
 
 ## Reproduce
 
-Seed one vault with the three historical rows via `mempr add-fact`, using
-`maintainer` as the agent and the historical manifest URLs without their line
-fragments. Copy it. In the copy, add each current value with its current
-manifest URL and `--supersedes` pointing to the fact name returned when writing
-the historical row. Review the original and updated vaults with the default
-rules. The two actual pairs passed with zero blockers and warnings.
+In a fresh directory, seed `historical/` with the three historical rows via
+`mempr add-fact`, using `maintainer` as the agent and omitting the line fragment
+from each manifest URL. Save each returned fact reference. Copy that vault once
+after seeding all three rows. In `reviewed/`, add each current value with its
+current manifest URL and pass the old fact name to `--supersedes`. The command
+prints a `Fact/` prefix, which `--supersedes` expects you to strip.
+
+For example, the FastAPI row uses these commands:
+
+```bash
+old=$(mempr --repo historical add-fact --entity fastapi --predicate python-requires \
+  --value '>=3.8' --agent maintainer \
+  --source https://github.com/fastapi/fastapi/blob/cbe5bdb85f393712e5176cfa27275781ffcc07c0/pyproject.toml)
+# Add the other historical rows before copying the vault.
+cp -R historical reviewed
+mempr --repo reviewed add-fact --entity fastapi --predicate python-requires \
+  --value '>=3.11' --agent maintainer \
+  --source https://github.com/fastapi/fastapi/blob/05e6df7e906c3decba377c37548019973f40bf15/pyproject.toml \
+  --supersedes "${old#Fact/}"
+```
+
+Use the same pattern for the other two reviewed rows, then review the original
+and updated vaults with the default rules. The two actual pairs passed with
+zero blockers and warnings.
 
 Put the installed `mempr` on `PATH`. Copy [the recorded probe's read commands](handoff_probe.py)
 into each trial directory as `probe.py`. The probe uses this Cypher lookup for
