@@ -100,7 +100,7 @@ it is reviewed with.
 | `incomplete-fact` | yes | a fact missing its predicate, value, or supported status |
 | `unrelated-replacement` | yes | a replacement of a note outside the fact's entity and predicate |
 | `orphan-fact` | yes | an active fact with no `ABOUT` link, so recall cannot find it |
-| `multi-hop-contradiction` | yes | a derivation marked `preserve_value: true` that changes the ancestor's value for the same predicate, up to 6 hops away, unless the predicate's cardinality is `many` |
+| `multi-hop-contradiction` | yes | a derivation marked `preserve_value: true` that differs from the nearest same-predicate ancestor on a path of up to 6 hops, unless the predicate's cardinality is `many` |
 | `broken-provenance` | yes | an active fact that reaches a retracted source, directly or through up to 6 `DERIVED_FROM` hops |
 
 The check comment includes the Cypher for each rule that fired, in a collapsed block under the problems. The same queries run in CI, in the API, and in the page.
@@ -108,8 +108,9 @@ The check comment includes the Cypher for each rule that fired, in a collapsed b
 `DERIVED_FROM` records a dependency. A transformed value such as a shorter
 health-probe timeout can depend on the service's request timeout. When the
 derivation is meant to copy the value, pass `--preserve-value` to `mempr add-fact`
-or set `preserve_value: true` in the fact note or MCP proposal. The copy is then
-checked against its same-predicate ancestors.
+or set `preserve_value: true` in the fact note or MCP proposal. The review checks
+the nearest same-predicate ancestor on each path. This lets a fact copy a 5s
+probe policy that was itself transformed from a 30s request timeout.
 
 ## Inspect the store with Relate directly
 

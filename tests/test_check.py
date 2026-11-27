@@ -263,7 +263,8 @@ def test_a_long_replacement_chain_passes_until_it_closes_a_cycle(repo):
 def test_a_derived_value_may_transform_its_source(repo):
     repo.branch("agent/transformed-value")
     request_timeout = repo.add("edge-proxy", "timeout", "30s")
-    repo.add("health-probe", "timeout", "5s", derived_from=[request_timeout])
+    probe_policy = repo.add("probe-policy", "timeout", "5s", derived_from=[request_timeout])
+    repo.add("health-probe", "timeout", "5s", derived_from=[probe_policy], preserve_value=True)
     repo.commit("set a shorter health-probe timeout")
     assert not run(repo, "agent/transformed-value").blocked
 
