@@ -28,6 +28,7 @@
     memory-pr reviews the pull request in Cypher and blocks it.</p>
   <div class="cta">
     <a class="btn primary" href="#explorer" data-open="auditor-stale-clone">See a blocked pull request</a>
+    <a class="btn" href="#agent-comparison">Compare the agent runs</a>
     <a class="btn" href="#console">Ask the graph in Cypher</a>
   </div>
 </div>
@@ -51,6 +52,36 @@
     <li><span>2</span><div><strong>The problem</strong>A text diff looks fine while two facts contradict, a conclusion three hops away disagrees with its source, or a merge drops the links.</div></li>
     <li><span>3</span><div><strong>The proof</strong>Below, the review draws the problem on the graph. It runs live in this page.</div></li>
   </ol>
+</section>
+
+<section class="agent-comparison" id="agent-comparison" aria-labelledby="agent-comparison-title">
+  <div class="write-head">
+    <h2 id="agent-comparison-title">Same task, different shared memory</h2>
+    <p>Devin ran the same database setup task in separate checkouts of a public fixture. The two pull requests show what it chose.</p>
+  </div>
+  <div class="agent-run-grid">
+    <article class="agent-run" data-agent-run="stale">
+      <h3>Stale memory</h3>
+      <p>Devin proposed <code>postgres:15</code>. The local review blocked the unsourced fact and the link to a missing author.</p>
+      <p class="agent-recall" hidden></p>
+      <a href="https://github.com/himanshu748/memory-pr-ab-fixture/pull/1">Read the blocked PR and check output</a>
+    </article>
+    <article class="agent-run" data-agent-run="reviewed">
+      <h3>Reviewed memory</h3>
+      <p>Devin proposed <code>mongo:8</code>. The local review passed the proposal with its source and author linked.</p>
+      <p class="agent-recall" hidden></p>
+      <a href="https://github.com/himanshu748/memory-pr-ab-fixture/pull/2">Read the passing PR and check output</a>
+    </article>
+  </div>
+  <div class="agent-run-actions">
+    <button type="button" class="btn primary" id="agent-recall">Run the same recall in Relate</button>
+    <a href="https://github.com/himanshu748/memory-pr/blob/main/docs/EVIDENCE.md#real-agent-run-ab">Read the experiment notes</a>
+  </div>
+  <p id="agent-recall-status" role="status"></p>
+  <details class="agent-query">
+    <summary>View the Cypher query</summary>
+    <pre id="agent-recall-query"></pre>
+  </details>
 </section>
 
 <section class="write" id="write" data-reveal aria-label="Write a memory">
@@ -196,7 +227,7 @@
 <footer class="foot" data-reveal>
   <div class="foot-about">
     <a class="brand" href="#top"><span class="mark" aria-hidden="true"></span>memory-pr</a>
-    <p>The sample is generated: a fictional project and scripted agents. Nothing was recorded.
+    <p>The pull request explorer uses a fictional project and scripted agents. The agent comparison is drawn from the linked public pull requests.
     A real repository is read from public GitHub only when you ask for one.
     The graph runs in <a href="https://relatedb.ai">Relate</a> compiled to WebAssembly.</p>
     <p>Built during the Relate by Neo4j hackathon. Pre-existing code: the Relate WebAssembly

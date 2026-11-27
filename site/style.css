@@ -324,6 +324,15 @@ td { font-family: var(--mono); font-size: 13px; }
 .write-head h2 { font-size: clamp(30px, 3.4vw, 54px); letter-spacing: -0.045em; line-height: 1; font-weight: 600; }
 .write-head > p:not(.eyebrow) { color: var(--muted); font-size: 17px; }
 .write-head strong { color: var(--ink); font-weight: 600; }
+.agent-comparison { padding: var(--s5) 0 0; }
+.agent-run-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: var(--s3); margin: var(--s3) 0; }
+.agent-run { display: grid; align-content: start; gap: var(--s2); padding: var(--s3); border: 1px solid var(--rule); background: var(--surface); }
+.agent-run[data-agent-run="stale"] { border-top: 3px solid var(--bad); }
+.agent-run[data-agent-run="reviewed"] { border-top: 3px solid var(--good); }
+.agent-recall { padding: var(--s2); background: var(--faint); overflow-wrap: anywhere; }
+.agent-run-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s3); }
+#agent-recall-status:not(:empty), .agent-query { margin-top: var(--s2); }
+.agent-query pre { white-space: pre-wrap; overflow-wrap: anywhere; }
 .starters { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: var(--s2); min-height: 44px; }
 .starters button, .chip-pick, .mine-item, .mine-reset, .tabs button { background: none; border: 1px solid var(--ink); border-radius: 999px; padding: 9px 16px; font-size: 14.5px; transition: background 0.15s, color 0.15s, transform 0.15s; }
 .starters button::before { content: "+ "; color: var(--accent); font-weight: 600; }

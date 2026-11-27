@@ -54,7 +54,7 @@ properties (the failure in the GIF);
 
 ## Evidence
 
-- **Agent A/B on a public fixture.** Devin ran the same prompt in separate
+- **[Replay the agent A/B in your browser](https://memory-pr.vercel.app/#agent-comparison).** Devin ran the same prompt in separate
   checkouts. With stale memory it chose `postgres:15`; the local `mempr check`
   blocked its proposal ([PR #1](https://github.com/himanshu748/memory-pr-ab-fixture/pull/1)).
   With reviewed memory it chose `mongo:8`; its proposal passed the local check

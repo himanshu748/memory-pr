@@ -1800,6 +1800,56 @@ async function startRelate() {
   }
 }
 
+const AGENT_RECALL = `MATCH (f:Fact)-[:ABOUT]->(:Entity {name: 'payments-api'})
+WHERE f.predicate = 'database' AND f.status = 'active'
+OPTIONAL MATCH (f)-[:SOURCE]->(s:Source)
+OPTIONAL MATCH (f)-[:SUPERSEDES]->(old:Fact)
+RETURN f.value AS database, s.uri AS source, old.value AS replaced`;
+
+function wireAgentComparison(starting) {
+  const button = $('agent-recall');
+  const status = $('agent-recall-status');
+  $('agent-recall-query').textContent = AGENT_RECALL;
+  button.addEventListener('click', async () => {
+    button.disabled = true;
+    status.textContent = 'Running the recall on both published memory snapshots.';
+    try {
+      await starting;
+      if (!relate) throw new Error('Relate could not start. The original check output is linked above.');
+      const response = await fetch('data/agent-comparison.json');
+      if (!response.ok) throw new Error('The archived memory snapshots could not load.');
+      const snapshots = await response.json();
+      const cards = [...document.querySelectorAll('[data-agent-run]')];
+      const results = cards.map((card) => {
+        const snapshot = snapshots[card.dataset.agentRun];
+        const db = loadDb(snapshot.graph);
+        try {
+          const rows = run(db, AGENT_RECALL).rows;
+          if (rows.length !== 1) throw new Error('The snapshot did not return one current database fact.');
+          return { card, snapshot, ...rows[0] };
+        } finally {
+          db.free();
+        }
+      });
+      for (const { card, snapshot, database, source, replaced } of results) {
+        const output = card.querySelector('.agent-recall');
+        const uri = new URL(source, snapshot.url + '/');
+        const link = document.createElement('a');
+        link.href = uri.href;
+        link.textContent = uri.pathname.split('/').at(-1);
+        output.replaceChildren(`Relate recalls ${database}. `, 'Source: ', link);
+        if (replaced) output.append(`. Replaces ${replaced}.`);
+        output.hidden = false;
+      }
+      status.textContent = 'Relate ran the same Cypher on both snapshots in this browser.';
+    } catch (err) {
+      status.textContent = err.message;
+    } finally {
+      button.disabled = false;
+    }
+  });
+}
+
 // ---------------------------------------------------------------- real repository
 
 const REAL_PICKS = ['GoogleCloudPlatform/microservices-demo', 'open-telemetry/opentelemetry-demo', 'tokio-rs/tokio'];
@@ -1966,6 +2016,7 @@ async function main() {
   // The graph is drawn from the committed data straight away. Relate is a large download,
   // so it attaches when it arrives and then runs the review and the console.
   const starting = startRelate();
+  wireAgentComparison(starting);
   data = await (await fetch('data/demo.json')).json();
   memory = data.memory;
   views = [
