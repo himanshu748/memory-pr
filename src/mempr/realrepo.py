@@ -20,6 +20,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from collections import Counter
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
@@ -151,22 +152,42 @@ def _short(value: str) -> str:
 
 
 def entity_of(repo: str, path: str, qualify: bool = False) -> str:
-    folder = path.rsplit("/", 1)[0] if "/" in path else ""
+    folder = path.rpartition("/")[0]
     name = repo.split("/", 1)[1]
     if qualify:
         return slug(f"{name}-{folder}" if folder else name)
     return slug(folder) or slug(name)
 
 
+def _distinct_names(bases: dict[str, str]) -> dict[str, str]:
+    """Keep unambiguous slugs and disambiguate distinct inputs with the same slug."""
+    counts = Counter(bases.values())
+    taken = set(counts)
+    names = {}
+    for original, base in sorted(bases.items()):
+        if counts[base] == 1:
+            names[original] = base
+            continue
+        suffix = hashlib.sha1(original.encode()).hexdigest()[:8]
+        stem = name = f"{base}-{suffix}"
+        n = 1
+        while name in taken:
+            n += 1
+            name = f"{stem}-{n}"
+        names[original] = name
+        taken.add(name)
+    return names
+
+
 def _snapshot(
-    repo: str, commit: dict[str, str], texts: dict[str, str], qualify: bool = False
+    repo: str, commit: dict[str, str], texts: dict[str, str], entities: dict[str, str]
 ) -> list[dict[str, str]]:
     facts = []
     for path in sorted(texts):
         for predicate, value in extract(path, texts[path]):
             facts.append(
                 {
-                    "entity": entity_of(repo, path, qualify),
+                    "entity": entities[path.rpartition("/")[0]],
                     "predicate": predicate,
                     "value": value,
                     "path": path,
@@ -233,11 +254,15 @@ def _note(
 
 
 def _write(
-    vault: Path, facts: list[dict[str, str]], agent: str, sha: str, replaces: dict[str, str]
+    vault: Path,
+    facts: list[dict[str, str]],
+    agent: str,
+    sources: dict[str, str],
+    replaces: dict[str, str],
 ) -> None:
     _note(vault, "Agent", agent, {}, {})
     for f in facts:
-        source = slug(f"{f['path']}@{sha[:7]}")
+        source = sources[f["url"]]
         name = f["name"]
         _note(vault, "Entity", slug(f["entity"]), {}, {})
         _note(vault, "Source", source, {"uri": f["url"]}, {})
@@ -357,10 +382,26 @@ def learn(
         for sha, path, text in pool.map(raw, [(s, p) for s, ps in paths.items() for p in ps]):
             texts[sha][path] = text
 
-    then = _snapshot(repo, old, texts[old["sha"]], qualify)
-    now = _snapshot(repo, head, texts[head["sha"]], qualify)
+    # Resolve folder names across both readings so a folder keeps its identity when
+    # a different folder with the same slug appears or disappears.
+    entities = _distinct_names(
+        {
+            path.rpartition("/")[0]: entity_of(repo, path, qualify)
+            for snapshot in texts.values()
+            for path in snapshot
+        }
+    )
+    then = _snapshot(repo, old, texts[old["sha"]], entities)
+    now = _snapshot(repo, head, texts[head["sha"]], entities)
     if not then and not now:
         raise RepoError(422, "No supported facts found in either commit. Try another repository.")
+    sources = _distinct_names(
+        {
+            f["url"]: slug(f"{f['path']}@{sha[:7]}")
+            for sha, facts in ((old["sha"], then), (head["sha"], now))
+            for f in facts
+        }
+    )
 
     held = {fact_name(f["entity"], f["predicate"], f["value"]): f["value"] for f in then}
     for f in then:
@@ -394,13 +435,13 @@ def learn(
     with tempfile.TemporaryDirectory(prefix="mempr-learn-") as tmp:
         root = Path(tmp)
         before = root / "before"
-        _write(before, then, OLD_AGENT, old["sha"], {})
+        _write(before, then, OLD_AGENT, sources, {})
         before.mkdir(exist_ok=True)
         results = {}
         for kind, links in (("stale", {}), ("fixed", replaces)):
             after = root / kind
-            _write(after, carried, OLD_AGENT, old["sha"], {})
-            _write(after, proposed, NEW_AGENT, head["sha"], links)
+            _write(after, carried, OLD_AGENT, sources, {})
+            _write(after, proposed, NEW_AGENT, sources, links)
             review = review_vaults(before, after, rules, base="memory", head=f"agent/{NEW_AGENT}")
             results[kind] = (review, after)
         stale, stale_vault = results["stale"]
