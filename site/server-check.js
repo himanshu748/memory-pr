@@ -76,6 +76,14 @@ export function serverLine(server, edited) {
   return { tone: 'differs', text: `Server check differs. mempr check on the server says ${theirs}. It reviews against the committed memory plus what you merged here.` };
 }
 
+/** Scope a result when at least one commit exceeded the manifest budget. */
+export function repoCoverage(body) {
+  const skipped = body.files_skipped;
+  if (!skipped?.old && !skipped?.head) return null;
+  const { old, head } = body.files;
+  return `Scan limit reached. Baseline: read ${old} of ${old + skipped.old} eligible files. Latest: read ${head} of ${head + skipped.head}.`;
+}
+
 /** Read a public repository, allowing time for the server's 15-second deadline. */
 export async function fetchRepoReview(api, repo, period) {
   const query = new URLSearchParams({ repo });

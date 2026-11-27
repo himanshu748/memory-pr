@@ -370,13 +370,14 @@ def learn(
     if any(t.get("truncated") for t in trees.values()):
         # GitHub listed only part of the files, so some would be missing from both readings.
         raise RepoError(422, f"{repo} is too large to read here; try a smaller repository")
-    paths = {
+    candidates = {
         sha: sorted(
             (i["path"] for i in t.get("tree", []) if i.get("type") == "blob" and wanted(i["path"])),
             key=lambda p: (p.count("/"), p),
-        )[:MAX_FILES]
+        )
         for sha, t in trees.items()
     }
+    paths = {sha: eligible[:MAX_FILES] for sha, eligible in candidates.items()}
 
     def raw(item: tuple[str, str]) -> tuple[str, str, str]:
         sha, path = item
@@ -470,6 +471,10 @@ def learn(
             "old": old,
             "head": head,
             "files": {"old": len(texts[old["sha"]]), "head": len(texts[head["sha"]])},
+            "files_skipped": {
+                label: len(candidates[c["sha"]]) - len(paths[c["sha"]])
+                for label, c in (("old", old), ("head", head))
+            },
             "learned": len(then),
             "proposed": len(proposed),
             "changed": changed,

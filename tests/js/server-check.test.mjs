@@ -1,9 +1,19 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { apiBase, compare, fetchRepoReview, fetchServerReview, MAX_MERGED, serverLine, serverRequest } from '../../site/server-check.js';
+import { apiBase, compare, fetchRepoReview, fetchServerReview, MAX_MERGED, repoCoverage, serverLine, serverRequest } from '../../site/server-check.js';
 
 const draft = (value) => ({ agent: 'visitor', entity: 'payments-api', predicate: 'database', value, source: 'docs/design.md' });
+
+test('a bounded repository scan reports actual and eligible files at both commits', () => {
+  const files = { old: 39, head: 40 };
+  assert.equal(repoCoverage({ files }), null);
+  assert.equal(repoCoverage({ files, files_skipped: { old: 0, head: 0 } }), null);
+  assert.equal(
+    repoCoverage({ files, files_skipped: { old: 0, head: 6 } }),
+    'Scan limit reached. Baseline: read 39 of 39 eligible files. Latest: read 40 of 46.',
+  );
+});
 
 test('the server is used on Vercel and from the Pages mirror, and nowhere else', () => {
   assert.equal(apiBase('memory-pr.vercel.app'), '');

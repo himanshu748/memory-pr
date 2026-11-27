@@ -78,6 +78,8 @@ either in the graph explorer, where Relate in the page reruns the rules.
 Older facts with no value in the latest scan are marked `unconfirmed` in both proposed
 graphs. The result keeps the original source link and says whether the file was removed,
 outside the scan limits, or read without finding the value.
+The scan reads up to 40 eligible files per commit. When it reaches that limit
+and omits files, the result and graph explorer show how many were read.
 
 On `GoogleCloudPlatform/microservices-demo` a year back it finds about a dozen moved values, such as
 the checkout service going from Go 1.23.0 to 1.25.0. The same works from Python:
