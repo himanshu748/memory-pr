@@ -53,14 +53,15 @@ properties. On `main`, the required check fails on the contradiction in
 
 ## Evidence
 
-- **[Replay the agent A/B in your browser](https://memory-pr.vercel.app/#agent-comparison).** Devin ran the same prompt in separate
-  checkouts. With stale memory it chose `postgres:15`; the local `mempr check`
-  blocked its proposal ([PR #1](https://github.com/himanshu748/memory-pr-ab-fixture/pull/1)).
-  With reviewed memory it chose `mongo:8`; its proposal passed the local check
-  ([PR #2](https://github.com/himanshu748/memory-pr-ab-fixture/pull/2)). See the
-  [check transcripts](docs/EVIDENCE.md#real-agent-run-ab) and
-  [demo/ab/RUNBOOK.md](demo/ab/RUNBOOK.md).
-- **[Fresh agent trial](docs/EVIDENCE.md#fresh-independent-agent-trial).** Two independent Codex runs recalled different facts. Both chose MongoDB: the stale-memory agent recovered by reading the project, while the reviewed-memory agent cited the current source directly.
+- **[Replay both agent trials in your browser](https://memory-pr.vercel.app/#agent-comparison).**
+  In the sequential Devin trial, the stale run chose `postgres:15` and the reviewed
+  run chose `mongo:8`. The first proposal failed graph review for missing provenance
+  and returned HTTP 503 when the app tried to use its PostgreSQL URL. The reviewed
+  proposal passed graph review. In two independent Codex runs, recall differed and
+  both agents chose `mongo:8` after checking the code. Both of those proposals passed
+  a live MongoDB health check in CI.
+  [Devin check transcripts](docs/EVIDENCE.md#real-agent-run-ab) ·
+  [Independent trial and CI runs](docs/EVIDENCE.md#fresh-independent-agent-trial)
 - **50 real repositories:** 154 of the 328 facts learned a year ago are wrong today;
   the check blocks all 154 until superseded —
   [docs/real-repos.json](docs/real-repos.json), details in
@@ -82,7 +83,7 @@ properties. On `main`, the required check fails on the contradiction in
   text diff is not enough, Relate's `directory` mode
 - [Try it / backend](docs/usage.md) — the browser playground, real repositories, the
   API, and how a page draft becomes a real GitHub PR
-- [Set up the GitHub Action](docs/agents.md#use-it-in-your-own-repository)
+- [Set up the GitHub Action](docs/action-setup.md) and require the memory review before merging
 - [Use it from an agent](docs/agents.md) — `mempr setup`, the MCP tools, the skill,
   and the composite Action for your own repo — plus the judge's scorecard map
 - [Benchmarks](docs/benchmarks.md) · [Evidence log](docs/EVIDENCE.md) ·
@@ -91,10 +92,11 @@ properties. On `main`, the required check fails on the contradiction in
 ## Disclosures
 
 - Built entirely during the contest (started Nov 20, 2026); no code reused from earlier projects.
-- Built with AI assistance (Devin). Third-party: Relate (`relate-db`,
+- Built with AI assistance (Devin and OpenAI Codex). The evidence includes
+  recorded Devin and Codex agent runs. Third-party libraries and tools include Relate (`relate-db`,
   `@relate/relate-wasm`), PyYAML, the MCP Python SDK, Cytoscape.js, the Geist and Geist
   Mono fonts, pytest, ruff.
-- The sample project and the scripted demo agents are fictional; the real-repository
-  scan reads public files on request and stores nothing. The backend sets no cookies,
-  has no accounts, keeps no state between requests.
+- The sample project is fictional. The five scripted demo agents run without a
+  model. The real-repository scan reads public files on request and stores nothing.
+  The backend sets no cookies, has no accounts, and keeps no state between requests.
 - License: [MIT](LICENSE).

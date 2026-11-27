@@ -2,8 +2,7 @@
 
 [Back to README](../README.md)
 
-Every numeric claim in the README and this file was produced by a command listed
-here, run 24-25 Nov 2026. Raw transcripts are reproduced verbatim where short.
+The commands and reports below record the results cited in the README.
 
 ## One-command quickstart (deliverable: fresh clone)
 
@@ -100,21 +99,21 @@ The local check outcomes shown beside the recall are linked to their original PR
 
 Two sequential agent runs on the public fixture
 [`himanshu748/memory-pr-ab-fixture`](https://github.com/himanshu748/memory-pr-ab-fixture),
-same clone of the fixture, same `mempr` install, same prompt (verbatim in
-[`demo/ab/RUNBOOK.md`](../demo/ab/RUNBOOK.md) §3). The only variable: run A's checkout
-carried **stale** shared memory (`demo/run-a` branch, `payments-api database =
+same fixture, `mempr` install, and [prompt](../demo/ab/RUNBOOK.md#3-the-two-runs).
+Run A's checkout carried **stale** shared memory (`demo/run-a` branch, `payments-api database =
 postgres-15` active), run B's carried **reviewed** memory (`demo/run-b`,
 `postgres-15` retracted, `mongodb-8` active and sourced).
 
-Scope, stated plainly: this A/B evidence shows **reviewed memory changing what an
-agent decides** — nothing more. Both runs were executed by one model (Devin)
-back-to-back in isolated checkouts — spawning two independent Devin sessions was
-impossible because the organization was out of quota (HTTP 403 `out_of_quota` on
-`POST /v3/organizations/org_26wI5SzJHOJ806YQ/sessions`, 24-25 Nov). The fixture
-repository has no `memory-review` workflow, so the checks below were run locally
-with `mempr check` on the exact pushed commits and posted as PR comments; the
-shared-memory workflow on GitHub itself is demonstrated by the independent PRs
-below. The fresh trial used the same setup commands from the runbook.
+One Devin session ran both arms in order, in separate checkouts. Its proposals
+used different database images. The local graph check blocked the first proposal
+for a dangling author link and a missing source. A separate replay of the stale
+proposal returned HTTP 503 when PyMongo received its PostgreSQL URL. The fixture's
+PR comments contain the local graph check output for the exact pushed commits.
+
+| Trial | Stale memory | Reviewed memory | What the trial establishes |
+| --- | --- | --- | --- |
+| Sequential Devin runs | Recalled `postgres-15`, proposed `postgres:15`, failed graph review, and returned HTTP 503 in a local replay | Recalled `mongodb-8`, proposed `mongo:8`, and passed graph review | The proposals differed in one sequential trial. The app rejected the stale proposal's database URL. |
+| Independent Codex sessions | Recalled `postgres-15` and chose `mongo:8` after inspecting the project | Recalled `mongodb-8` and corroborated it in code | The shared context and provenance differed. Both proposals chose the same database and passed the runtime probe. |
 
 ## Fresh independent agent trial
 
@@ -133,7 +132,7 @@ by choosing **Fresh Codex trial**.
 | Reviewed | `mongodb-8` | [`mongo:8`](https://github.com/himanshu748/memory-pr/pull/74) | The recalled fact linked to the current PyMongo code, which the agent corroborated locally. |
 
 Both agents independently reached the same database choice in this trial. Their
-read of shared memory and the provenance in their commit messages differed. Both
+recall and the provenance in their commit messages differed. Both
 proposals changed only the fixture's Compose and local environment files. Local
 `mempr check` passed on both proposals with no graph changes. The linked proof
 PRs keep each proposal and its GitHub checks separate from main.
@@ -162,6 +161,22 @@ the real `memory-review` status check:
   a database contradiction, with the `SUPERSEDES` fix spelled out in the comment.
 - [PR #6](https://github.com/himanshu748/memory-pr/pull/6) — **passes** against
   current main: the same check green on a correct proposal.
+
+## Sequential Devin trial transcripts
+
+### Runtime replay of the stale proposal
+
+On 27 Nov 2026, the unmodified `src/app.py` and `src/db.py` from
+[fixture PR #1 at `f4eccc4`](https://github.com/himanshu748/memory-pr-ab-fixture/tree/f4eccc4d00d3a3e2b8177225393ff82af68be3bf)
+ran locally with that commit's `.env` and PyMongo 4.20.2. `GET /db` returned
+HTTP 503 with `ok: false` and `Invalid URI scheme`. PyMongo rejected the
+`postgresql://` URL before opening a database connection. The reviewed
+proposal's `mongodb://` URL was accepted by the client. The live MongoDB ping
+results are from the separate independent Codex trial above.
+
+To reproduce the stale outcome, check out `f4eccc4` in the fixture repository,
+install `pymongo==4.20.2`, load `DATABASE_URL` from its `.env`, and run
+`python src/app.py`. From another terminal, run `curl -i http://localhost:8080/db`.
 
 ### What each agent read
 

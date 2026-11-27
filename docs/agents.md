@@ -70,42 +70,15 @@ or wherever your agent reads skills from.
 
 ## Use it in your own repository
 
-1. Keep your memory as Markdown notes under `memory/` (or pass `vault:`), one note per
-   fact, in the [graph shape](how-it-works.md#the-graph). `mempr add-fact` writes them.
-2. Add this workflow as `.github/workflows/memory-review.yml`:
-
-   ```yaml
-   name: memory-review
-   on: pull_request
-   permissions:
-     contents: read
-     pull-requests: write
-   jobs:
-     memory-review:
-       runs-on: ubuntu-latest
-       steps:
-         - uses: actions/checkout@v4
-           with:
-             fetch-depth: 0
-         - uses: himanshu748/memory-pr@v1
-   ```
-
-   The action installs `mempr`, reviews the pull request against its base branch, posts
-   the review as one comment that it keeps up to date, and fails when the merge would
-   damage the graph. Inputs: `base`, `head`, `vault`, `rules` (an extra rules file, read
-   from the base branch), `comment` and `python-version`.
-3. In the branch protection for your main branch, require the `memory-review` check.
-
-This repository's own [`memory-review.yml`](../.github/workflows/memory-review.yml) does the
-same steps by hand, because it also installs `mempr` from the base branch and reviews
-pull requests that the Actions token opened.
+The [GitHub Action setup guide](action-setup.md) has the workflow, the branch
+protection steps, and the commands to run a first passing and blocked review.
 
 ## For judges
 
 | Criterion | Where to see it |
 | --- | --- |
 | Relate and connected context (30) | The store is the Markdown vault [`memory/`](../memory/), opened by Relate in `directory` mode; facts link to the entity they are `ABOUT`, the agent they are `ASSERTED_BY`, their `SOURCE`, and the facts they `SUPERSEDES` or are `DERIVED_FROM`. Every review rule is Cypher ([`default_rules.yaml`](../src/mempr/default_rules.yaml)), including a 1–6 hop contradiction and a retracted-source chain, and the check comment prints the query. `mempr search` is a keyword match plus that same hop. The rules run in CI, on the server and in the page (WebAssembly). [`bench/real-memory/`](../bench/real-memory/) is a second store: 590 real facts from 50 public repositories. |
-| Functionality and completeness (25) | A required GitHub check ([`action.yml`](../action.yml)) that blocks pull requests [#15](https://github.com/himanshu748/memory-pr/pull/15) and passes [#6](https://github.com/himanshu748/memory-pr/pull/6); an [MCP server](#use-it-from-an-agent); a [backend](usage.md#backend); the [live page](https://memory-pr.vercel.app/), which reviews any public GitHub repository and can open a real pull request here. 253 tests run in CI. |
-| Usefulness (20) | [On 50 popular public repositories](benchmarks.md#measured-on-50-real-repositories), 154 of the 328 facts an agent would have learned a year ago are wrong today; the check blocks all 154 until the new fact replaces the old one. The [A/B agent run](EVIDENCE.md#real-agent-run-ab) shows reviewed memory changing what an agent ships. |
+| Functionality and completeness (25) | A [required GitHub check](action-setup.md) that blocks pull requests [#15](https://github.com/himanshu748/memory-pr/pull/15) and passes [#6](https://github.com/himanshu748/memory-pr/pull/6), an [MCP server](#use-it-from-an-agent), a [backend](usage.md#backend), and the [live playground](https://memory-pr.vercel.app/). [Test runs](EVIDENCE.md#test-count). |
+| Usefulness (20) | [On 50 popular public repositories](benchmarks.md#measured-on-50-real-repositories), 154 of the 328 facts learned a year ago had changed. The check blocks all 154 until superseded. The [sequential Devin trial](EVIDENCE.md#real-agent-run-ab) produced two different proposals. In the [independent Codex trial](EVIDENCE.md#fresh-independent-agent-trial), both agents checked the project and chose MongoDB despite recalling different facts. |
 | Documentation and reproducibility (15) | [`./quickstart.sh`](../quickstart.sh) serves the playground with no install. [`./test.sh`](../test.sh) creates a virtualenv and runs the Python tests and `node --test tests/js/*.test.mjs` (no `npm install`, no Docker, no API key). Both measurements are rerun by one command each, and their raw numbers are committed in [`docs/`](.). |
 | Creativity (10) | The thing under review is the merge git calls clean. A new note about a different entity can contradict a fact three hops back, and the comment shows the Cypher that caught it ([why a text diff is not enough](how-it-works.md#why-a-text-diff-is-not-enough)). |
