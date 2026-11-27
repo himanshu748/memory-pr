@@ -34,12 +34,11 @@ node --test tests/js/*.test.mjs   # no npm install
 ./test.sh                         # Python venv, then both suites
 ```
 
-Beside it, on GitHub: pull request
-[#60](https://github.com/himanshu748/memory-pr/pull/60) — git merges it cleanly and
-the required `memory-review` check blocks it for silently dropping 3 links, 4
-properties (the failure in the GIF);
-[#15](https://github.com/himanshu748/memory-pr/pull/15) blocks on a contradiction and
-[#6](https://github.com/himanshu748/memory-pr/pull/6) passes.
+On GitHub, [PR #60](https://github.com/himanshu748/memory-pr/pull/60) has a clean
+Git merge on the demo branch, but `memory-review` reports 3 lost links and 4 lost
+properties. On `main`, the required check fails on the contradiction in
+[PR #15](https://github.com/himanshu748/memory-pr/pull/15) and passes on
+[PR #6](https://github.com/himanshu748/memory-pr/pull/6).
 
 ## What Relate does here
 
@@ -74,7 +73,7 @@ properties (the failure in the GIF);
 - **300-PR replay (simulated):** wrong facts left in memory 21 → 1, zero correct PRs
   blocked — [docs/benchmark.json](docs/benchmark.json), details in
   [docs/benchmarks.md](docs/benchmarks.md).
-- **277 pytest cases and 13 standalone JavaScript tests passed** on 25 Nov 2026.
+- **288 pytest cases and 14 standalone JavaScript tests passed** on 27 Nov 2026.
   See the [test output](docs/EVIDENCE.md#test-count).
 
 ## Docs
@@ -83,6 +82,7 @@ properties (the failure in the GIF);
   text diff is not enough, Relate's `directory` mode
 - [Try it / backend](docs/usage.md) — the browser playground, real repositories, the
   API, and how a page draft becomes a real GitHub PR
+- [Set up the GitHub Action](docs/agents.md#use-it-in-your-own-repository)
 - [Use it from an agent](docs/agents.md) — `mempr setup`, the MCP tools, the skill,
   and the composite Action for your own repo — plus the judge's scorecard map
 - [Benchmarks](docs/benchmarks.md) · [Evidence log](docs/EVIDENCE.md) ·

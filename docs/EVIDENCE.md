@@ -48,6 +48,20 @@ visible in the first screen, everything else in the second. Screenshot captured
 
 ## Test count
 
+On 27 Nov 2026, [PR #77](https://github.com/himanshu748/memory-pr/pull/77) passed
+the complete local suites. The local Python run used two CPUs to fit the
+Relate query worker's memory limit. [GitHub CI](https://github.com/himanshu748/memory-pr/actions/runs/45936475980)
+passed on the same reviewed commit.
+
+```text
+$ taskset -c 0-1 python -m pytest -q
+288 passed
+$ node --test tests/js/*.test.mjs
+ℹ tests 14
+ℹ pass 14
+ℹ fail 0
+```
+
 Main at [`fa507d7`](https://github.com/himanshu748/memory-pr/commit/fa507d741624016f800db53e1d8a6a10fdcb96ad), checked on 25 Nov 2026:
 
 ```text
