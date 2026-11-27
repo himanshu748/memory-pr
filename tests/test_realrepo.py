@@ -143,6 +143,31 @@ def test_learn_blocks_values_that_moved_and_passes_once_they_replace_the_old():
     assert source["props"]["uri"] == f"https://github.com/acme/shop/blob/{OLD}/Dockerfile"
 
 
+def test_review_reads_the_literal_base_through_named_docker_stages():
+    dockerfile = "FROM alpine:{} AS base\nFROM base AS app\nFROM app AS final\n"
+    files = {
+        OLD: {"Dockerfile": dockerfile.format("3.19")},
+        NEW: {"Dockerfile": dockerfile.format("3.20")},
+    }
+    out = learn("acme/shop", 12, load_rules(None), fetch=lambda url: fake(url, files=files))
+    assert out["changed"] == [
+        {
+            "entity": "shop",
+            "predicate": "base-image",
+            "old": "alpine:3.19",
+            "new": "alpine:3.20",
+            "old_url": f"https://github.com/acme/shop/blob/{OLD}/Dockerfile",
+            "new_url": f"https://github.com/acme/shop/blob/{NEW}/Dockerfile",
+        }
+    ]
+    assert out["blocked"] and not out["fixed"]["blocked"]
+
+
+def test_docker_stage_inheriting_a_build_argument_stays_unknown():
+    dockerfile = "ARG BASE=alpine\nFROM ${BASE} AS base\nFROM base AS final\n"
+    assert extract("Dockerfile", dockerfile) == []
+
+
 def test_a_clean_bounded_review_reports_files_it_did_not_read(monkeypatch):
     monkeypatch.setattr("mempr.realrepo.MAX_FILES", 1)
     root = "module root\n\ngo 1.22\n"

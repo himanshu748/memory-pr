@@ -67,10 +67,11 @@ The sample memory is made up; this part is not. Under "Point it at a real reposi
 <https://memory-pr.vercel.app/>, name any public GitHub repository. Agent `scout` reads it
 at the last commit before the selected date and agent `builder` reads today's head.
 For a recent repository, choose **Previous commit** to start from the latest commit's
-first parent instead. Each
-writes what the files state as notes (the final `FROM` of each Dockerfile, `engines` and
-`packageManager` in package.json, the `go` line of go.mod, `requires-python`, Cargo's
-`rust-version` and `edition`, `.nvmrc`, `.python-version`), each fact linked to its
+first parent instead. Each writes what the files state as notes: the final Dockerfile
+stage's literal base image, including inheritance from earlier named stages,
+`engines` and `packageManager` in package.json, the `go` line of go.mod,
+`requires-python`, Cargo's `rust-version` and `edition`, `.nvmrc`, and `.python-version`.
+Each fact links to its
 `Source`: the file's URL at that commit. The review then runs the same Cypher rules as
 every pull request. Every value that moved is a `contradiction`, with both files linked,
 until the new fact says it `SUPERSEDES` the old one; the page shows both reviews and opens
