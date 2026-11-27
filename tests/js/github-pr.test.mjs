@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { again, prLine, safeUrl, settled, watchPullRequest, whyNot } from '../../site/github-pr.js';
+import { again, prLine, safeUrl, settled, submitPullRequest, watchPullRequest, whyNot } from '../../site/github-pr.js';
 
 const draft = (more = {}) => ({ kind: 'fact', agent: 'visitor', entity: 'payments-api', predicate: 'database', value: 'mysql-8.4', source: 'docs/design.md', ...more });
 
@@ -64,6 +64,47 @@ test('a request that came to nothing can be sent again', () => {
   assert.equal(again({ state: 'open', check: 'failure' }), false);
   assert.equal(again(undefined), false);
   assert.match(prLine({ state: 'failed' }).text, /try again/);
+});
+
+test('an unconfirmed creation request links to GitHub without inviting another dispatch', () => {
+  const state = { state: 'dispatch-unknown' };
+  assert.match(prLine(state).text, /could not confirm/);
+  assert.equal(prLine(state).link, 'https://github.com/himanshu748/memory-pr/pulls');
+  assert.equal(again(state), false);
+});
+
+test('a stalled creation request is aborted and made unconfirmed without another POST', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const requests = [];
+  t.mock.method(globalThis, 'fetch', (url, options) => {
+    requests.push({ url, ...options });
+    return new Promise((_, reject) => options.signal.addEventListener('abort', () => reject(options.signal.reason), { once: true }));
+  });
+  const sent = submitPullRequest('https://example.test', draft());
+  t.mock.timers.tick(20_000);
+  assert.deepEqual(await sent, { state: 'dispatch-unknown' });
+  assert.equal(requests.length, 1);
+  assert.equal(requests[0].url, 'https://example.test/api/pull-requests');
+  assert.equal(requests[0].method, 'POST');
+  assert.deepEqual(JSON.parse(requests[0].body), { draft: draft() });
+  assert.equal(requests[0].signal.aborted, true);
+});
+
+test('creation outcomes distinguish accepted requests, confirmed refusals, and ambiguous replies', async (t) => {
+  const responses = [
+    new Response('{"id":"0123456789"}', { status: 200 }),
+    new Response('{"error":"3 playground pull requests are already open."}', { status: 429 }),
+    new Response('{"error":"The upstream request timed out."}', { status: 502 }),
+    new Response('{"id":""}', { status: 200 }),
+    new Response('gateway error', { status: 504 }),
+  ];
+  t.mock.method(globalThis, 'fetch', async () => responses.shift());
+  const submit = () => submitPullRequest('https://example.test', draft());
+  assert.deepEqual(await submit(), { state: 'queued', id: '0123456789' });
+  const refused = await submit();
+  assert.deepEqual(refused, { state: 'refused', note: '3 playground pull requests are already open.' });
+  assert.equal(again(refused), true);
+  for (let n = 0; n < 3; n++) assert.deepEqual(await submit(), { state: 'dispatch-unknown' });
 });
 
 test('an expired status watch keeps the GitHub link without inviting another dispatch', () => {

@@ -2,6 +2,7 @@
 // what the server says. No DOM here, so tests/js/github-pr.test.mjs can run it in node.
 
 const REPO_URL = 'https://github.com/himanshu748/memory-pr/';
+const REQUEST_ID = /^[a-f0-9]{10}$/;
 const WORD = /^[a-z0-9]+(?:[.-][a-z0-9]+)*$/;
 const SOURCE = /^[a-z0-9]+(?:[.-][a-z0-9]+)*(?:\/[a-z0-9]+(?:[.-][a-z0-9]+)*)*$/;
 
@@ -32,6 +33,30 @@ export function settled(state) {
   if (!state) return false;
   if (state.state === 'failed' || state.state === 'closed' || state.state === 'refused' || state.state === 'status-timeout') return true;
   return state.state === 'open' && ['success', 'failure', 'error'].includes(state.check);
+}
+
+/** Submit once. An interrupted reply does not tell us whether GitHub received the draft. */
+export async function submitPullRequest(api, draft) {
+  const request = new AbortController();
+  const timer = setTimeout(() => request.abort(), 20_000);
+  try {
+    const response = await fetch(`${api}/api/pull-requests`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ draft }),
+      signal: request.signal,
+    });
+    const body = await response.json();
+    if (response.ok && typeof body?.id === 'string' && REQUEST_ID.test(body.id))
+      return { state: 'queued', id: body.id };
+    if (response.status >= 400 && response.status < 500 && typeof body?.error === 'string')
+      return { state: 'refused', note: body.error };
+  } catch {
+    // A deadline or lost reply can occur after the server accepted the request.
+  } finally {
+    clearTimeout(timer);
+  }
+  return { state: 'dispatch-unknown' };
 }
 
 /** Watch one accepted request. Stalled reads cannot outlast the five-minute watch. */
@@ -73,6 +98,8 @@ export function prLine(state) {
   const link = safeUrl(state.url) || safeUrl(state.find_url);
   if (state.state === 'sending') return { tone: '', text: 'Asking GitHub to open it.' };
   if (state.state === 'refused') return { tone: 'differs', text: state.note || 'The server could not ask GitHub. Try again in a minute.' };
+  if (state.state === 'dispatch-unknown')
+    return { tone: '', text: 'This page could not confirm that GitHub received the request. Check GitHub for its status.', link: `${REPO_URL}pulls`, label: 'Look on GitHub' };
   if (state.state === 'queued') return { tone: '', text: 'GitHub is opening the pull request. This takes about half a minute.' };
   if (state.state === 'status-timeout')
     return { tone: '', text: 'This page stopped checking after five minutes. Check GitHub for the current status.', link, label: 'Look on GitHub' };
