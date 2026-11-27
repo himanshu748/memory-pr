@@ -166,6 +166,37 @@ def test_commented_toml_header_ends_the_previous_table():
     assert extract("pyproject.toml", content) == []
 
 
+@pytest.mark.parametrize("latest", ["v20.11", "v22.13"])
+def test_review_reads_nvmrc_version_instead_of_comments(latest):
+    files = {
+        OLD: {"web/.nvmrc": "# Old explanation\nmetadata=stable\n\tv20.11 # runtime\n"},
+        NEW: {"web/.nvmrc": f"# New explanation\nmetadata=lts\n\n  {latest} # runtime\n"},
+    }
+    out = learn("acme/shop", 12, load_rules(None), fetch=lambda url: fake(url, files=files))
+    expected = (
+        []
+        if latest == "v20.11"
+        else [
+            {
+                "entity": "web",
+                "predicate": "node-version",
+                "old": "v20.11",
+                "new": latest,
+                "old_url": f"https://github.com/acme/shop/blob/{OLD}/web/.nvmrc",
+                "new_url": f"https://github.com/acme/shop/blob/{NEW}/web/.nvmrc",
+            }
+        ]
+    )
+    assert out["changed"] == expected
+    assert out["blocked"] is bool(expected)
+    assert not out["fixed"]["blocked"]
+
+
+@pytest.mark.parametrize("content", ["# Explanation only\n", "metadata=lts\n", "v20\nv22\n"])
+def test_nvmrc_does_not_guess_a_missing_or_ambiguous_version(content):
+    assert extract(".nvmrc", content) == []
+
+
 def test_review_reads_the_literal_base_through_named_docker_stages():
     dockerfile = "FROM alpine:{} AS base\nFROM base AS app\nFROM app AS final\n"
     files = {
