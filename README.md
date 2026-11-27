@@ -62,8 +62,8 @@ properties. On `main`, the required check fails on the contradiction in
   a live MongoDB health check in CI.
   [Devin check transcripts](docs/EVIDENCE.md#real-agent-run-ab) ·
   [Independent trial and CI runs](docs/EVIDENCE.md#fresh-independent-agent-trial)
-- **50 public repositories.** Comparing their recorded commits found 154 changed
-  values among 328 earlier facts. The check caught all 154 contradictions and
+- **50 public repositories.** Across the recorded commits, 154 of the 328 facts
+  had changed values. The check caught all 154 contradictions and
   passed after supersession. [Replay the archived scan offline](docs/benchmarks.md#measured-on-50-real-repositories).
 
   | | |
