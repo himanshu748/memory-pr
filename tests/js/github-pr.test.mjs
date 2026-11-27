@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { again, prLine, safeUrl, settled, whyNot } from '../../site/github-pr.js';
+import { again, prLine, safeUrl, settled, watchPullRequest, whyNot } from '../../site/github-pr.js';
 
 const draft = (more = {}) => ({ kind: 'fact', agent: 'visitor', entity: 'payments-api', predicate: 'database', value: 'mysql-8.4', source: 'docs/design.md', ...more });
 
@@ -64,4 +64,50 @@ test('a request that came to nothing can be sent again', () => {
   assert.equal(again({ state: 'open', check: 'failure' }), false);
   assert.equal(again(undefined), false);
   assert.match(prLine({ state: 'failed' }).text, /try again/);
+});
+
+test('an expired status watch keeps the GitHub link without inviting another dispatch', () => {
+  const state = { state: 'status-timeout', url: 'https://github.com/himanshu748/memory-pr/pull/41' };
+  assert.match(prLine(state).text, /stopped checking/);
+  assert.equal(prLine(state).link, state.url);
+  assert.equal(settled(state), true);
+  assert.equal(again(state), false);
+});
+
+test('a stalled status read is aborted and the next read can finish the watch', async (t) => {
+  t.mock.timers.enable({ apis: ['Date', 'setTimeout'] });
+  const final = { state: 'open', check: 'success' };
+  const requests = [];
+  t.mock.method(globalThis, 'fetch', (url, options) => {
+    requests.push({ url, ...options });
+    if (requests.length > 1) return Promise.resolve({ ok: true, json: async () => final });
+    return new Promise((_, reject) => options.signal.addEventListener('abort', () => reject(options.signal.reason), { once: true }));
+  });
+  const states = [];
+  const watched = watchPullRequest('https://example.test', 'accepted id', (state) => states.push(state));
+  t.mock.timers.tick(5_000);
+  await new Promise(setImmediate);
+  assert.equal(requests[0].url, 'https://example.test/api/pull-requests/accepted%20id');
+  assert.equal(requests[0].method, undefined);
+  t.mock.timers.tick(10_000);
+  await new Promise(setImmediate);
+  assert.equal(requests[0].signal.aborted, true);
+  t.mock.timers.tick(5_000);
+  await watched;
+  assert.deepEqual(states, [final]);
+});
+
+test('an accepted request has a wall-clock limit while retaining its known proof link', async (t) => {
+  t.mock.timers.enable({ apis: ['Date', 'setTimeout'] });
+  const url = 'https://github.com/himanshu748/memory-pr/pull/41';
+  t.mock.method(globalThis, 'fetch', async () => ({ ok: true, json: async () => ({ state: 'open', check: 'pending', url }) }));
+  const states = [];
+  const watched = watchPullRequest('https://example.test', 'id', (state) => states.push(state));
+  for (let tick = 0; tick < 60; tick++) {
+    t.mock.timers.tick(5_000);
+    await new Promise(setImmediate);
+  }
+  await watched;
+  assert.equal(states.length, 60);
+  assert.deepEqual(states.at(-1), { state: 'status-timeout', url });
 });

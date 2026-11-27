@@ -1,5 +1,5 @@
 import { apiBase, fetchServerReview, serverLine, serverRequest } from './server-check.js';
-import { again, prLine, settled, whyNot } from './github-pr.js';
+import { again, prLine, watchPullRequest, whyNot } from './github-pr.js';
 import { LEXICAL, NEIGHBORHOOD } from './search.js';
 
 // memory-pr browser view. No build step: plain ES module, Cytoscape for drawing, and
@@ -1249,24 +1249,11 @@ if (API !== null) {
     .catch(() => {}); // no server: the button stays hidden
 }
 
-const POLL_MS = 5000;
-const POLL_LIMIT = 60; // five minutes
-
 function openOnGithub(v) {
   if (!github.enabled || v.ruleError || (v.github && !again(v.github)) || whyNot(v.draft, play.landed, v.edited)) return;
   const show = (state) => {
     v.github = state;
     if (play.view === v) renderPlay();
-  };
-  const poll = (id, left) => {
-    if (left <= 0) return;
-    fetch(`${API}/api/pull-requests/${encodeURIComponent(id)}`)
-      .then((response) => (response.ok ? response.json() : Promise.reject(new Error(String(response.status)))))
-      .then((state) => {
-        show(state);
-        if (!settled(state)) setTimeout(() => poll(id, left - 1), POLL_MS);
-      })
-      .catch(() => setTimeout(() => poll(id, left - 1), POLL_MS));
   };
   show({ state: 'sending' });
   fetch(`${API}/api/pull-requests`, {
@@ -1278,7 +1265,7 @@ function openOnGithub(v) {
     .then(({ ok, body }) => {
       if (!ok || typeof body.id !== 'string') return show({ state: 'refused', note: typeof body.error === 'string' ? body.error : '' });
       show({ state: 'queued' });
-      setTimeout(() => poll(body.id, POLL_LIMIT), POLL_MS);
+      void watchPullRequest(API, body.id, show);
     })
     .catch(() => show({ state: 'refused', note: '' }));
 }
