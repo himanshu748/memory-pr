@@ -148,6 +148,52 @@ def test_a_value_whose_slug_matches_the_old_one_is_still_a_change():
     assert out["blocked"] and not out["fixed"]["blocked"]
 
 
+@pytest.mark.parametrize("old_flat, head_flat", [(True, True), (False, True), (True, False)])
+def test_distinct_folders_keep_separate_facts_and_sources(old_flat, head_flat):
+    flat = "packages/core-ui/package.json"
+    nested = "packages/core/ui/package.json"
+
+    def manifest(value):
+        return json.dumps({"engines": {"node": value}})
+
+    files = {OLD: {nested: manifest(">=18")}, NEW: {nested: manifest(">=22")}}
+    if old_flat:
+        files[OLD][flat] = manifest(">=18")
+    if head_flat:
+        files[NEW][flat] = manifest(">=18")
+
+    out = learn("acme/shop", 12, load_rules(None), fetch=lambda url: fake(url, files=files))
+    assert out["learned"] == 1 + old_flat
+    assert out["proposed"] == 1 + (head_flat and not old_flat)
+    assert out["blocked"] and out["rules"] == ["contradiction"]
+    assert not out["fixed"]["blocked"]
+    (change,) = out["changed"]
+    old_url = f"https://github.com/acme/shop/blob/{OLD}/{nested}"
+    new_url = f"https://github.com/acme/shop/blob/{NEW}/{nested}"
+    assert (change["old"], change["new"]) == (">=18", ">=22")
+    assert (change["old_url"], change["new_url"]) == (old_url, new_url)
+    expected = {
+        old_url,
+        new_url,
+        f"https://github.com/acme/shop/blob/{OLD if old_flat else NEW}/{flat}",
+    }
+
+    for graph in (out["after"], out["fixed_after"]):
+        nodes = {n["id"]: n for n in graph["nodes"]}
+        about = {r["source"]: r["target"] for r in graph["rels"] if r["type"] == "ABOUT"}
+        sources = [r for r in graph["rels"] if r["type"] == "SOURCE"]
+        assert len(sources) == len(expected)
+        source_entities = {nodes[r["target"]]["props"]["uri"]: about[r["source"]] for r in sources}
+        assert set(source_entities) == expected
+        assert source_entities[old_url] == source_entities[new_url] == f"Entity/{change['entity']}"
+        assert len(set(source_entities.values())) == 2
+
+    assert len(out["unconfirmed"]) == int(old_flat and not head_flat)
+    if out["unconfirmed"]:
+        assert out["unconfirmed"][0]["path"] == flat
+        assert out["unconfirmed"][0]["reason"] == "source-removed"
+
+
 @pytest.mark.parametrize(
     ("head_files", "reason"),
     [
