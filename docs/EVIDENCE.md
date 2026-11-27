@@ -106,13 +106,13 @@ postgres-15` active), run B's carried **reviewed** memory (`demo/run-b`,
 
 One Devin session ran both arms in order, in separate checkouts. Its proposals
 used different database images. The local graph check blocked the first proposal
-for a dangling author link and a missing source. The application database was
-verified separately in the independent Codex trial below. The fixture's PR
-comments contain the local check output for the exact pushed commits.
+for a dangling author link and a missing source. A separate replay of the stale
+proposal returned HTTP 503 when PyMongo received its PostgreSQL URL. The fixture's
+PR comments contain the local graph check output for the exact pushed commits.
 
 | Trial | Stale memory | Reviewed memory | What the trial establishes |
 | --- | --- | --- | --- |
-| Sequential Devin runs | Recalled `postgres-15`, proposed `postgres:15`, and failed graph review | Recalled `mongodb-8`, proposed `mongo:8`, and passed graph review | The proposals differed in one sequential trial. The review enforced graph provenance. |
+| Sequential Devin runs | Recalled `postgres-15`, proposed `postgres:15`, failed graph review, and returned HTTP 503 in a local replay | Recalled `mongodb-8`, proposed `mongo:8`, and passed graph review | The proposals differed in one sequential trial. The app rejected the stale proposal's database URL. |
 | Independent Codex sessions | Recalled `postgres-15` and chose `mongo:8` after inspecting the project | Recalled `mongodb-8` and corroborated it in code | The shared context and provenance differed. Both proposals chose the same database and passed the runtime probe. |
 
 ## Fresh independent agent trial
@@ -163,6 +163,20 @@ the real `memory-review` status check:
   current main: the same check green on a correct proposal.
 
 ## Sequential Devin trial transcripts
+
+### Runtime replay of the stale proposal
+
+On 27 Nov 2026, the unmodified `src/app.py` and `src/db.py` from
+[fixture PR #1 at `f4eccc4`](https://github.com/himanshu748/memory-pr-ab-fixture/tree/f4eccc4d00d3a3e2b8177225393ff82af68be3bf)
+ran locally with that commit's `.env` and PyMongo 4.20.2. `GET /db` returned
+HTTP 503 with `ok: false` and `Invalid URI scheme`. PyMongo rejected the
+`postgresql://` URL before opening a database connection. The reviewed
+proposal's `mongodb://` URL was accepted by the client. The live MongoDB ping
+results are from the separate independent Codex trial above.
+
+To reproduce the stale outcome, check out `f4eccc4` in the fixture repository,
+install `pymongo==4.20.2`, load `DATABASE_URL` from its `.env`, and run
+`python src/app.py`. From another terminal, run `curl -i http://localhost:8080/db`.
 
 ### What each agent read
 

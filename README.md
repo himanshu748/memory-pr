@@ -55,10 +55,11 @@ properties. On `main`, the required check fails on the contradiction in
 
 - **[Replay both agent trials in your browser](https://memory-pr.vercel.app/#agent-comparison).**
   In the sequential Devin trial, the stale run chose `postgres:15` and the reviewed
-  run chose `mongo:8`. The graph check blocked the first proposal for missing
-  provenance and passed the second. In two independent Codex runs, recall differed
-  and both agents chose `mongo:8` after checking the code. Both Compose proposals
-  passed a live MongoDB health check in CI.
+  run chose `mongo:8`. The first proposal failed graph review for missing provenance
+  and returned HTTP 503 when the app tried to use its PostgreSQL URL. The reviewed
+  proposal passed graph review. In two independent Codex runs, recall differed and
+  both agents chose `mongo:8` after checking the code. Both of those proposals passed
+  a live MongoDB health check in CI.
   [Devin check transcripts](docs/EVIDENCE.md#real-agent-run-ab) ·
   [Independent trial and CI runs](docs/EVIDENCE.md#fresh-independent-agent-trial)
 - **50 real repositories:** 154 of the 328 facts learned a year ago are wrong today;
