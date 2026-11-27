@@ -159,6 +159,18 @@ def test_review_reads_commented_runtime_versions():
     assert out["blocked"] and not out["fixed"]["blocked"]
 
 
+def test_review_reads_a_go_release_candidate_before_a_stable_release():
+    files = {
+        OLD: {"go.mod": "module acme/shop\n\ngo 1.23rc1 // preview\n"},
+        NEW: {"go.mod": "module acme/shop\n\ngo 1.23.0\n"},
+    }
+    out = learn("acme/shop", 12, load_rules(None), fetch=lambda url: fake(url, files=files))
+    assert [(change["predicate"], change["old"], change["new"]) for change in out["changed"]] == [
+        ("go-version", "1.23rc1", "1.23.0")
+    ]
+    assert out["blocked"] and not out["fixed"]["blocked"]
+
+
 def test_commented_toml_header_ends_the_previous_table():
     content = (
         '[project]\nname = "shop"\n[tool.example] # Tool-only setting\nrequires-python = ">=3.12"\n'

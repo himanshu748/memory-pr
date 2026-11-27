@@ -125,7 +125,13 @@ def extract(path: str, text: str) -> list[tuple[str, str]]:
         if isinstance(pkg, dict) and isinstance(pkg.get("packageManager"), str):
             out.append(("package-manager", pkg["packageManager"].split("+")[0]))
     elif name == "go.mod":
-        m = re.search(r"^[ \t]*go[ \t]+(\d+\.\d+(?:\.\d+)?)[ \t]*(?://[^\r\n]*)?\r?$", text, re.M)
+        # The module parser also accepts suffixes such as rc1 and beta1.
+        m = re.search(
+            r"^[ \t]*go[ \t]+([1-9][0-9]*\.(?:0|[1-9][0-9]*)(?:\.(?:0|[1-9][0-9]*))?"
+            r"(?:[a-z]+[0-9]+)?)[ \t]*(?://[^\r\n]*)?\r?$",
+            text,
+            re.M,
+        )
         if m:
             out.append(("go-version", m.group(1)))
     elif name == "pyproject.toml":
