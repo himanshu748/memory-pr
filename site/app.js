@@ -2052,7 +2052,7 @@ async function main() {
   });
   view = views[0];
   draw(); // lay out the memory first, so its notes keep their place in every view
-  const wanted = decodeURIComponent((location.hash.match(/pr=([^&]+)/) || [])[1] || '');
+  const wanted = new URLSearchParams(location.hash.slice(1)).get('pr');
   // Open on the proof: the clean merge that silently drops links, else any blocked pull.
   const first =
     views.find((v) => v.pull && problemsOf(v).some((x) => x.kind === 'dropped')) ||
