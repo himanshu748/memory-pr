@@ -75,3 +75,23 @@ export function serverLine(server, edited) {
   const theirs = server.blocked ? `blocked${server.rules.length ? ` by ${server.rules.join(', ')}` : ''}` : 'passed';
   return { tone: 'differs', text: `Server check differs. mempr check on the server says ${theirs}. It reviews against the committed memory plus what you merged here.` };
 }
+
+/** Read a public repository, allowing time for the server's 15-second deadline. */
+export async function fetchRepoReview(api, repo, period) {
+  const query = new URLSearchParams({ repo });
+  if (period === 'previous') query.set('baseline', 'previous');
+  else query.set('months', period);
+  const request = new AbortController();
+  const timer = setTimeout(() => request.abort(), 20_000);
+  try {
+    const response = await fetch(`${api}/api/learn?${query}`, { signal: request.signal });
+    if (response.ok) return await response.json();
+    const body = await response.json().catch(() => null);
+    throw new Error(body?.error || `the server answered ${response.status}`);
+  } catch (error) {
+    if (request.signal.aborted) throw new Error('The scan did not respond in 20 seconds. Try again.', { cause: error });
+    throw error;
+  } finally {
+    clearTimeout(timer);
+  }
+}

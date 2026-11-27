@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { apiBase, compare, fetchServerReview, MAX_MERGED, serverLine, serverRequest } from '../../site/server-check.js';
+import { apiBase, compare, fetchRepoReview, fetchServerReview, MAX_MERGED, serverLine, serverRequest } from '../../site/server-check.js';
 
 const draft = (value) => ({ agent: 'visitor', entity: 'payments-api', predicate: 'database', value, source: 'docs/design.md' });
 
@@ -103,4 +103,43 @@ test('a completed server check still compares the two verdicts', async (t) => {
   }) }));
   assert.deepEqual(await fetchServerReview('', { draft: draft('x'), merged: [] }, { blocked: false, rules: [] }),
     { state: 'agrees', blocked: false, rules: [], ms: 25 });
+});
+
+test('a stalled repository review ends after twenty seconds', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  let signal;
+  t.mock.method(globalThis, 'fetch', async (url, options) => {
+    assert.equal(url, '/api/learn?repo=owner%2Frepository&baseline=previous');
+    signal = options?.signal;
+    return {
+      ok: true,
+      json: () => new Promise((_resolve, reject) => {
+        signal?.addEventListener('abort', () => reject(signal.reason), { once: true });
+      }),
+    };
+  });
+  const pending = fetchRepoReview('', 'owner/repository', 'previous');
+  await Promise.resolve();
+  assert.ok(signal);
+  const expired = assert.rejects(pending, /did not respond in 20 seconds/);
+  t.mock.timers.tick(19_999);
+  assert.equal(signal.aborted, false);
+  t.mock.timers.tick(1);
+  assert.equal(signal.aborted, true);
+  await expired;
+});
+
+test('a repository review preserves the selected time window and API errors', async (t) => {
+  const body = { repo: 'owner/repository', changed: [] };
+  const fetch = t.mock.method(globalThis, 'fetch', async (url) => {
+    assert.equal(url, 'https://example.test/api/learn?repo=owner%2Frepository&months=6');
+    return { ok: true, json: async () => body };
+  });
+  assert.deepEqual(await fetchRepoReview('https://example.test', 'owner/repository', '6'), body);
+  fetch.mock.mockImplementation(async () => ({
+    ok: false,
+    status: 422,
+    json: async () => ({ error: 'No supported facts found' }),
+  }));
+  await assert.rejects(fetchRepoReview('', 'owner/repository', 'previous'), /No supported facts found/);
 });
