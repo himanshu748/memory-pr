@@ -1,4 +1,4 @@
-"""GET /api/learn?repo=owner/name&months=12: a real repository, learned then and now, reviewed.
+"""GET /api/learn?repo=owner/name&months=12 (or baseline=previous): review real changes.
 
 Reads only public files from GitHub, writes nothing to GitHub, and keeps nothing: the two
 memories are written to a temporary folder for the one response.
@@ -20,8 +20,11 @@ from mempr.web import Endpoint, HttpError  # noqa: E402
 
 class handler(Endpoint):  # noqa: N801 - the name Vercel's Python runtime looks for
     def get(self, query):
+        baseline = query.get("baseline")
+        if baseline is not None and baseline != "previous":
+            raise HttpError(422, "baseline must be previous")
         try:
-            months = int(query.get("months", "12"))
+            months = None if baseline == "previous" else int(query.get("months", "12"))
         except ValueError as error:
             raise HttpError(422, "months must be a whole number") from error
         token = os.environ.get("GITHUB_READ_TOKEN") or os.environ.get("GITHUB_DISPATCH_TOKEN")
