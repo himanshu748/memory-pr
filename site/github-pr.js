@@ -30,8 +30,38 @@ export function whyNot(draft, landed, edited) {
 /** True when polling can stop: the pull request has its check, is closed, or never opened. */
 export function settled(state) {
   if (!state) return false;
-  if (state.state === 'failed' || state.state === 'closed' || state.state === 'refused') return true;
+  if (state.state === 'failed' || state.state === 'closed' || state.state === 'refused' || state.state === 'status-timeout') return true;
   return state.state === 'open' && ['success', 'failure', 'error'].includes(state.check);
+}
+
+/** Watch one accepted request. Stalled reads cannot outlast the five-minute watch. */
+export async function watchPullRequest(api, id, show) {
+  const deadline = Date.now() + 300_000;
+  const endpoint = `${api}/api/pull-requests/${encodeURIComponent(id)}`;
+  let pullUrl;
+  let searchUrl;
+  while (Date.now() < deadline) {
+    await new Promise((resolve) => setTimeout(resolve, Math.min(5_000, deadline - Date.now())));
+    const remaining = deadline - Date.now();
+    if (remaining <= 0) break;
+    const request = new AbortController();
+    const timer = setTimeout(() => request.abort(), Math.min(10_000, remaining));
+    let state;
+    try {
+      const response = await fetch(endpoint, { signal: request.signal });
+      if (response.ok) state = await response.json();
+    } catch {
+      // Try the next status read without sending another creation request.
+    } finally {
+      clearTimeout(timer);
+    }
+    if (!state || typeof state.state !== 'string') continue;
+    pullUrl = safeUrl(state.url) || pullUrl;
+    searchUrl = safeUrl(state.find_url) || searchUrl;
+    show(state);
+    if (settled(state)) return;
+  }
+  show({ state: 'status-timeout', url: pullUrl || searchUrl || `${REPO_URL}pulls` });
 }
 
 /** True when the request came to nothing and the visitor may send it again. */
@@ -44,6 +74,8 @@ export function prLine(state) {
   if (state.state === 'sending') return { tone: '', text: 'Asking GitHub to open it.' };
   if (state.state === 'refused') return { tone: 'differs', text: state.note || 'The server could not ask GitHub. Try again in a minute.' };
   if (state.state === 'queued') return { tone: '', text: 'GitHub is opening the pull request. This takes about half a minute.' };
+  if (state.state === 'status-timeout')
+    return { tone: '', text: 'This page stopped checking after five minutes. Check GitHub for the current status.', link, label: 'Look on GitHub' };
   if (state.state === 'failed')
     return { tone: 'differs', text: 'GitHub did not open the pull request. It refuses when three are open or twenty were opened in the last 24 hours, and drops a request that arrives while two others wait. You can try again.', link: safeUrl(state.run_url), label: 'See the run' };
   if (state.state === 'closed')
