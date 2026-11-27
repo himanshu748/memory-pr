@@ -1,13 +1,14 @@
 #!/bin/sh
 # Run every test from a fresh clone. No Docker, no API key, no npm install.
-# Needs Python 3.10+ (with the venv module) and Node 18+.
+# Needs Python 3.10+ (with the venv module). Use Node.js 22+ for the JavaScript tests.
 # Usage: ./test.sh
 set -eu
 
 cd "$(dirname "$0")"
 
-if ! command -v node >/dev/null 2>&1; then
-  echo "error: node is not installed. The JavaScript tests need Node 18 or newer." >&2
+# Probe the API the timeout tests use, so older versions with it still work.
+if ! node -e 'require("node:test").mock.timers.enable({ apis: ["Date", "setTimeout"] })' >/dev/null 2>&1; then
+    echo "error: the JavaScript tests need Node.js mock timers with Date support. Use Node.js 22 or newer." >&2
   exit 1
 fi
 
