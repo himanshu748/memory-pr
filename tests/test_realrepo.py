@@ -178,6 +178,52 @@ def test_commented_toml_header_ends_the_previous_table():
     assert extract("pyproject.toml", content) == []
 
 
+def test_toml_example_inside_a_multiline_string_is_not_manifest_evidence():
+    doc = '[tool.examples]\ntext = """\n[project]\nrequires-python = ">=9.0"\n"""\n'
+    assert extract("pyproject.toml", doc) == []
+
+
+@pytest.mark.parametrize("error", [ValueError, RecursionError])
+def test_toml_parser_limits_leave_evidence_unconfirmed(monkeypatch, error):
+    def cannot_parse(_):
+        raise error("manifest exceeded a parser limit")
+
+    monkeypatch.setattr("mempr.realrepo.tomllib.loads", cannot_parse)
+    assert extract("pyproject.toml", '[project]\nrequires-python = ">=3.10"\n') == []
+
+
+def test_review_uses_structured_toml_values_instead_of_documentation_examples():
+    def manifest(version):
+        return (
+            '[tool.examples]\ntext = """\n[project]\nrequires-python = ">=9.0"\n"""\n'
+            f'["project"]\n"requires-python" = ">={version}"\n'
+        )
+
+    files = {
+        OLD: {"pyproject.toml": manifest("3.11")},
+        NEW: {"pyproject.toml": manifest("3.12")},
+    }
+    out = learn("acme/shop", 12, load_rules(None), fetch=lambda url: fake(url, files=files))
+    assert [(change["predicate"], change["old"], change["new"]) for change in out["changed"]] == [
+        ("python-requires", ">=3.11", ">=3.12")
+    ]
+    assert out["blocked"] and not out["fixed"]["blocked"]
+
+
+def test_cargo_reads_local_and_inherited_settings_from_their_tables():
+    doc = (
+        '[workspace.package]\nrust-version = "1.75"\nedition = "2021"\n'
+        '[package]\nrust-version.workspace = true\nedition = "2024"\n'
+    )
+    assert extract("Cargo.toml", doc) == [("rust-version", "1.75"), ("rust-edition", "2024")]
+
+
+def test_cargo_workspace_settings_do_not_apply_to_an_opted_out_root_package():
+    workspace = '[workspace.package]\nedition = "2021"\n'
+    assert extract("Cargo.toml", workspace) == [("rust-edition", "2021")]
+    assert extract("Cargo.toml", f'{workspace}[package]\nname = "shop"\n') == []
+
+
 @pytest.mark.parametrize("latest", ["v20.11", "v22.13"])
 def test_review_reads_nvmrc_version_instead_of_comments(latest):
     files = {
