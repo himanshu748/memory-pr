@@ -59,6 +59,16 @@ answers, and lookup totals without browser dependencies or network access.
 node --test tests/js/browser-handoff-evidence.test.mjs
 ```
 
+The optional Chromium check exercises the same browser controls using a
+deterministic fixture for a partial review. It verifies the blocked and corrected
+states, the copied payload, and Undo at 390 and 1440 pixels.
+
+```sh
+npm install --no-save --package-lock=false playwright@1.65.1
+npx playwright install chromium
+node tests/browser/handoff-smoke.mjs
+```
+
 This is a small sample with one model, two repositories, and prompt-controlled
 access to a bounded manifest set. It counts lookup during the handoff stage.
 The scan already read the repositories to produce the handoffs. Elapsed time,
