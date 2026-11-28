@@ -1,0 +1,77 @@
+{
+  "removed_relationship": [
+    "rel",
+    "Fact/payments-api--restore-drill--quarterly-pg-restore",
+    "DERIVED_FROM",
+    "Fact/payments-api--backup-job--nightly-pg-dump",
+    "{}"
+  ],
+  "linked": {
+    "keyword_hits": [
+      {
+        "fact": "ledger-worker--database--postgres-15",
+        "value": "postgres-15"
+      },
+      {
+        "fact": "payments-api--database--postgres-15",
+        "value": "postgres-15"
+      }
+    ],
+    "restore_drill_hops": 2,
+    "proposal_blocked": true,
+    "blockers": [
+      {
+        "rule": "stale-derivation",
+        "fact": "payments-api--restore-drill--quarterly-pg-restore",
+        "path": "Fact/payments-api--restore-drill--quarterly-pg-restore -[:DERIVED_FROM]-> Fact/payments-api--backup-job--nightly-pg-dump"
+      }
+    ],
+    "added": [
+      [
+        "prop",
+        "Fact/payments-api--backup-job--nightly-pg-dump",
+        "status",
+        "\"retracted\""
+      ]
+    ],
+    "removed": [
+      [
+        "prop",
+        "Fact/payments-api--backup-job--nightly-pg-dump",
+        "status",
+        "\"active\""
+      ]
+    ]
+  },
+  "detached": {
+    "keyword_hits": [
+      {
+        "fact": "ledger-worker--database--postgres-15",
+        "value": "postgres-15"
+      },
+      {
+        "fact": "payments-api--database--postgres-15",
+        "value": "postgres-15"
+      }
+    ],
+    "restore_drill_hops": null,
+    "proposal_blocked": false,
+    "blockers": [],
+    "added": [
+      [
+        "prop",
+        "Fact/payments-api--backup-job--nightly-pg-dump",
+        "status",
+        "\"retracted\""
+      ]
+    ],
+    "removed": [
+      [
+        "prop",
+        "Fact/payments-api--backup-job--nightly-pg-dump",
+        "status",
+        "\"active\""
+      ]
+    ]
+  }
+}

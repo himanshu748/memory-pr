@@ -53,6 +53,11 @@ properties. On `main`, the required check fails on the contradiction in
 
 ## Evidence
 
+- **One relationship changes recall and review.** The shipped restore drill is
+  two hops from the `postgres` match. Remove only its dependency edge in a
+  disposable copy and the same keyword hits omit it. The same backup retraction
+  is blocked with the edge and passes the default checks without it.
+  [Replay the relationship control](demo/ab/relationship-control.md).
 - **Agent reads follow the reviewed branch.** With `mcp --read-ref origin/main`,
   an agent can work in a feature checkout and keep reading reviewed facts. An
   [end-to-end test](docs/agents.md#read-from-the-reviewed-branch) follows one MCP
