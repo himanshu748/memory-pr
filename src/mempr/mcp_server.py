@@ -57,6 +57,7 @@ class Settings:
     base: str = "origin/main"
     rules: str = "memory-rules.yaml"
     remote: str = "origin"
+    read_ref: str | None = None
 
 
 def _plain(value: Any) -> Any:
@@ -66,6 +67,8 @@ def _plain(value: Any) -> Any:
 @contextmanager
 def _vault_at(cfg: Settings, ref: str | None) -> Iterator[Path]:
     """The vault folder in the working tree, or a temporary export of it at `ref`."""
+    if ref is None:
+        ref = cfg.read_ref
     if ref is None:
         path = cfg.repo / cfg.vault
         if not path.is_dir():
@@ -282,8 +285,7 @@ def build_server(cfg: Settings) -> FastMCP:
         """Current facts about one entity (a service, a tool, a person), each with the
         sources and agents behind it. Retracted and replaced facts are left out.
 
-        `ref` reads the memory at a git revision (for example `origin/main`) instead of the
-        working tree.
+        `ref` overrides the server's default with a git revision such as `origin/main`.
         """
         with _vault_at(cfg, ref) as vault:
             facts = _plain(memory.recall(vault, entity))
@@ -312,6 +314,8 @@ def build_server(cfg: Settings) -> FastMCP:
         names, predicates, values, statements and source paths. `connected` holds facts
         derived from a match (`via` is `follows`) and facts a match was derived from
         (`via` is `supports`). No model and no API key. `cypher` is the two queries.
+
+        `ref` overrides the server's default git revision.
         """
         from .search import search as run_search
 
@@ -325,6 +329,8 @@ def build_server(cfg: Settings) -> FastMCP:
         Labels: Fact, Entity, Source, Agent, Predicate. Relationships: ABOUT, SOURCE,
         ASSERTED_BY, SUPERSEDES, DERIVED_FROM. Writing clauses are refused; use
         propose_fact and retract_fact to change the memory.
+
+        `ref` overrides the server's default git revision.
         """
         if not is_read_only(cypher):
             raise ValueError(

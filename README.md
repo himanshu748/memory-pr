@@ -53,6 +53,10 @@ properties. On `main`, the required check fails on the contradiction in
 
 ## Evidence
 
+- **Agent reads follow the reviewed branch.** With `mcp --read-ref origin/main`,
+  an agent can work in a feature checkout and keep reading reviewed facts. An
+  [end-to-end test](docs/agents.md#read-from-the-reviewed-branch) follows one MCP
+  session from a blocked contradiction through a corrected, merged fact.
 - **[Replay both agent trials in your browser](https://memory-pr.vercel.app/#agent-comparison).**
   In the sequential Devin trial, the stale run chose `postgres:15` and the reviewed
   run chose `mongo:8`. The first proposal failed graph review for missing provenance

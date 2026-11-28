@@ -59,6 +59,28 @@ is merged.
 `--base` sets the branch proposals start from and are reviewed against (default
 `origin/main`).
 
+### Read from the reviewed branch
+
+Run the MCP server with `--read-ref origin/main` when agents work in feature
+checkouts of a repository with a protected `main`:
+
+```bash
+mempr --repo /absolute/path/to/your/repo mcp --read-ref origin/main
+```
+
+`recall`, `search`, and `query` then read the reviewed ref by default, even when
+the current checkout holds an open proposal. The server resolves the ref on
+every call. Run `git fetch origin` as part of your usual update to pick up merges.
+An explicit tool argument such as `ref: "agent/example"` previews a proposal.
+A missing configured ref reports an error. Without `--read-ref`, those tools
+read the current working tree by default.
+
+The [end-to-end MCP test](../tests/test_mcp.py) opens a contradictory proposal
+and checks out its branch. A client reading the reviewed ref still sees the old
+shared fact. The same client sees the new fact and source after the agent adds a
+`SUPERSEDES` link, retracts the obsolete derivation, and the corrected branch is
+merged. Run that test with `pytest -q tests/test_mcp.py -k reviewed_ref_controls`.
+
 ### A skill for coding agents
 
 [`.claude/skills/memory-pr/SKILL.md`](../.claude/skills/memory-pr/SKILL.md) is an

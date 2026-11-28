@@ -101,7 +101,7 @@ def cmd_retract(args: argparse.Namespace) -> int:
 def cmd_mcp(args: argparse.Namespace) -> int:
     from .mcp_server import Settings, serve
 
-    serve(Settings(_repo(args), args.vault, args.base, args.rules, args.remote))
+    serve(Settings(_repo(args), args.vault, args.base, args.rules, args.remote, args.read_ref))
     return 0
 
 
@@ -182,6 +182,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     mcp = sub.add_parser("mcp", help="serve the memory to an agent over MCP (stdio)")
     mcp.add_argument("--base", default="origin/main", help="branch proposals start from")
+    mcp.add_argument("--read-ref", help="git ref to read by default instead of the working tree")
     mcp.add_argument("--rules", default="memory-rules.yaml", help="extra rules file on the base")
     mcp.add_argument("--remote", default="origin", help="remote that pull requests are pushed to")
     mcp.set_defaults(func=cmd_mcp)
