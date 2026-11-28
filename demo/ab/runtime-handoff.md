@@ -112,3 +112,20 @@ Give each fresh session this task, using its own vault directory.
 > with one object per case and keys `case`, `value`, and `source`. Use only those
 > probe commands in the directory given to you. No manual edits, deployment, or
 > installing software.
+
+## Reviewed-branch MCP replay
+
+A separate local MCP client session reused the FastAPI fixture on Memory PR
+commit `d5a5492`. With the reviewed update checked out on its proposal branch,
+default recall against `main` returned `>=3.8`. Explicitly reading the proposal
+returned `>=3.11`. After a local fast-forward merge, the same client's default
+recall returned `>=3.11` without restarting the server.
+
+The [recorded JSONL](approved_ref_session.jsonl) contains the proposal verdict
+and the values observed on each read. This scripted branch-visibility check
+adds no model sessions or scores to the paired trials. With Memory PR installed,
+run the [replay](approved_ref_session.py) from the repository root:
+
+```sh
+python demo/ab/approved_ref_session.py
+```

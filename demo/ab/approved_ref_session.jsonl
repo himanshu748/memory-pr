@@ -1,0 +1,4 @@
+{"tool": "propose_fact", "branch": "agent/runtime-update", "blocked": false}
+{"phase": "proposal checked out", "tool": "recall", "arguments": {}, "entity": "fastapi", "values": [">=3.8"]}
+{"phase": "proposal checked out", "tool": "recall", "arguments": {"ref": "agent/runtime-update"}, "entity": "fastapi", "values": [">=3.11"]}
+{"phase": "after local fast-forward", "tool": "recall", "arguments": {}, "entity": "fastapi", "values": [">=3.11"]}
