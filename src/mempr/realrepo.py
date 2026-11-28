@@ -15,12 +15,13 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import shlex
 import tempfile
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from collections import Counter
+from collections import Counter, deque
 from collections.abc import Callable, Iterator
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
@@ -76,12 +77,33 @@ def wanted(path: str) -> bool:
     return name in MANIFESTS or name == "Dockerfile" or name.startswith("Dockerfile.")
 
 
+def _dockerfile_heredocs(instruction: str) -> Iterator[tuple[str, bool]]:
+    if "<<" not in instruction:
+        return
+    command = re.match(r"\s*(?:ONBUILD\s+)?(?:ADD|COPY|RUN)\s+(.+)", instruction, re.I)
+    if not command:
+        return
+    # Find words with their quotes intact so a literal "<<EOF" cannot start a heredoc.
+    for word in re.finditer(r"""(?:[^\s'"\\]|\\.|'[^']*'|"(?:[^"\\]|\\.)*")+""", command[1]):
+        marker = re.fullmatch(r"\d*<<(-?)([^<]+)", word[0])
+        if marker:
+            delimiter = shlex.split(marker[2])
+            if len(delimiter) == 1:
+                yield delimiter[0], bool(marker[1])
+
+
 def _dockerfile_instructions(text: str) -> Iterator[str]:
-    """Join Dockerfile continuation lines, preserving their whitespace."""
+    """Join Dockerfile continuations and skip inline heredoc bodies."""
     escape = "\\"
     directives = True
     parts = []
+    heredocs: deque[tuple[str, bool]] = deque()
     for line in text.removeprefix("\ufeff").splitlines():
+        if heredocs:
+            delimiter, strip_tabs = heredocs[0]
+            if (line.lstrip("\t") if strip_tabs else line) == delimiter:
+                heredocs.popleft()
+            continue
         stripped = line.strip()
         if directives:
             directive = re.fullmatch(r"#\s*(syntax|escape|check)\s*=\s*(\S.*)", stripped, re.I)
@@ -97,8 +119,10 @@ def _dockerfile_instructions(text: str) -> Iterator[str]:
             parts.append(end[:-1])
         else:
             parts.append(line)
-            yield "".join(parts)
+            instruction = "".join(parts)
             parts.clear()
+            heredocs.extend(_dockerfile_heredocs(instruction))
+            yield instruction
     if parts:
         yield "".join(parts)
 
