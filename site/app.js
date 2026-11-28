@@ -1,6 +1,8 @@
 import { apiBase, fetchRepoReview, fetchServerReview, repoCoverage, serverLine, serverRequest } from './server-check.js';
 import { again, prLine, submitPullRequest, watchPullRequest, whyNot } from './github-pr.js';
 import { LEXICAL, NEIGHBORHOOD } from './search.js';
+import { runRelationshipControl } from './relationship-control.js';
+import { importGraph, run } from './relate-runtime.js';
 
 // memory-pr browser view. No build step: plain ES module, Cytoscape for drawing, and
 // Relate (WebAssembly) holding each graph so the visitor's Cypher runs on it live.
@@ -28,42 +30,8 @@ const positions = new Map();
 
 // ---------------------------------------------------------------- Relate
 
-function run(db, query, params) {
-  const out = JSON.parse(db.execute(query, params ? JSON.stringify(params) : null));
-  if (out.error) throw new Error(out.error);
-  return out;
-}
-
-function groupBy(items, key) {
-  const groups = new Map();
-  for (const item of items) {
-    const k = key(item);
-    if (!groups.has(k)) groups.set(k, []);
-    groups.get(k).push(item);
-  }
-  return groups;
-}
-
-/** Load an exported graph into a new in-memory Relate database, with Cypher. */
 function loadDb(graph) {
-  const db = new relate.RelateDb();
-  for (const [label, nodes] of groupBy(graph.nodes, (n) => n.label)) {
-    const rows = nodes.map((n) => (n.stub ? { ...n.props, stub: true } : n.props));
-    run(db, `UNWIND $rows AS row CREATE (n:\`${label}\`) SET n = row`, { rows });
-  }
-  const label = (id) => id.split('/')[0];
-  const name = (id) => id.slice(id.indexOf('/') + 1);
-  const groups = groupBy(graph.rels, (r) => `${label(r.source)}|${r.type}|${label(r.target)}`);
-  for (const [key, rels] of groups) {
-    const [from, type, to] = key.split('|');
-    run(
-      db,
-      `UNWIND $rows AS row MATCH (a:\`${from}\` {name: row.a}), (b:\`${to}\` {name: row.b}) ` +
-        `CREATE (a)-[r:\`${type}\`]->(b) SET r = row.props`,
-      { rows: rels.map((r) => ({ a: name(r.source), b: name(r.target), props: r.props })) },
-    );
-  }
-  return db;
+  return importGraph(relate.RelateDb, graph);
 }
 
 /** Read the graph back out of Relate, so the drawing is what the database holds. */
@@ -1796,6 +1764,49 @@ async function startRelate() {
   }
 }
 
+function wireRelationshipControl(starting) {
+  const button = $('run-relationship-control');
+  const results = $('relationship-control-results');
+  const status = $('relationship-control-status');
+  const rule = data.rules.find(({ id }) => id === 'stale-derivation');
+  button.disabled = false;
+  button.addEventListener('click', async () => {
+    button.disabled = true;
+    results.hidden = true;
+    $('relationship-control-rules').hidden = true;
+    status.textContent = 'Running both copies in Relate.';
+    try {
+      await starting;
+      if (!relate) throw new Error('Relate could not start. The CLI reproduction is linked above.');
+      const common = { graph: data.memory, rules: data.rules, loadDb, run };
+      const linked = runRelationshipControl({ ...common, linked: true });
+      const detached = runRelationshipControl({ ...common, linked: false });
+      for (const card of results.children) {
+        const result = card.dataset.control === 'linked' ? linked : detached;
+        const field = (name) => card.querySelector(`[data-result="${name}"]`);
+        card.dataset.verdict = result.blocked ? 'blocked' : 'passed';
+        field('hits').textContent = String(result.keywordHits.length);
+        field('recall').textContent = result.restoreHops === null ? 'Absent' : plural(result.restoreHops, 'hop', 'hops');
+        field('review').textContent = result.blocked ? 'Blocked' : 'Passed';
+        const finding = field('finding');
+        finding.hidden = result.blockers.length === 0;
+        finding.textContent = result.blockers.map((blocker) => blocker.rule).join(', ');
+      }
+      $('relationship-control-cypher').textContent = rule.cypher;
+      $('relationship-control-rules').hidden = false;
+      results.hidden = false;
+      const sameHits = JSON.stringify(linked.keywordHits) === JSON.stringify(detached.keywordHits);
+      status.textContent = sameHits
+        ? 'Both copies returned the same keyword matches.'
+        : 'The keyword matches differed between copies.';
+    } catch (error) {
+      status.textContent = error.message;
+    } finally {
+      button.disabled = false;
+    }
+  });
+}
+
 const AGENT_RECALL = `MATCH (f:Fact)-[:ABOUT]->(:Entity {name: 'payments-api'})
 WHERE f.predicate = 'database' AND f.status = 'active'
 OPTIONAL MATCH (f)-[:SOURCE]->(s:Source)
@@ -2035,6 +2046,7 @@ async function main() {
   const starting = startRelate();
   wireAgentComparison(starting);
   data = await (await fetch('data/demo.json')).json();
+  wireRelationshipControl(starting);
   memory = data.memory;
   views = [
     { pull: null, short: 'main', title: 'Shared memory', before: data.memory, after: data.memory },
