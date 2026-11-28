@@ -22,11 +22,14 @@ TOOL = "payments-api--migration-tool--pg-migrate"
 class Agent:
     """Runs one MCP session per call batch against the repo's server."""
 
-    def __init__(self, repo, env: dict[str, str] | None = None):
+    def __init__(self, repo, env: dict[str, str] | None = None, *, read_ref: str | None = None):
         self.repo = repo
+        args = ["-m", "mempr.cli", "--repo", str(repo.path), "mcp", "--base", "main"]
+        if read_ref is not None:
+            args.extend(["--read-ref", read_ref])
         self.params = StdioServerParameters(
             command=sys.executable,
-            args=["-m", "mempr.cli", "--repo", str(repo.path), "mcp", "--base", "main"],
+            args=args,
             env={**os.environ, **(env or {})},
         )
 
@@ -215,6 +218,62 @@ def test_contradicting_proposal_is_blocked_then_fixed_on_the_same_branch(agent, 
     again = agent.ok("review", head=bad["branch"])
     assert again["blocked"] is False
     assert again["head"] == done["commit"]
+
+
+def test_reviewed_ref_controls_agent_reads_through_a_merge(agent, repo):
+    reviewed = Agent(repo, read_ref="main")
+    proposal = {
+        "entity": "payments-api",
+        "predicate": "database",
+        "value": "mysql-8",
+        "source": "docs/migration.md",
+        "agent": "builder",
+    }
+    bad = reviewed.ok("propose_fact", **proposal)
+    branch = bad["branch"]
+    assert bad["blocked"] is True
+
+    repo.git("checkout", "-q", branch)
+
+    async def read(session, tool, **arguments):
+        result = await session.call_tool(tool, arguments)
+        assert not result.isError, result.content[0].text
+        return json.loads(result.content[0].text)
+
+    def databases(result):
+        return {fact["value"] for fact in result["facts"] if fact["predicate"] == "database"}
+
+    entity = "payments-api"
+    assert databases(agent.ok("recall", entity=entity)) == {"postgres-15", "mysql-8"}
+
+    async def through_merge(session, _init):
+        assert databases(await read(session, "recall", entity=entity)) == {"postgres-15"}
+        draft = await read(session, "recall", entity=entity, ref=branch)
+        assert databases(draft) == {"postgres-15", "mysql-8"}
+        assert (await read(session, "search", text="mysql-8"))["hits"] == []
+        cypher = "MATCH (f:Fact {value: 'mysql-8'}) RETURN f.value AS value"
+        assert (await read(session, "query", cypher=cypher))["rows"] == []
+
+        repo.git("checkout", "-q", "main")
+        fixed = await read(session, "propose_fact", **proposal, branch=branch, supersedes=[DB])
+        assert fixed["blocked"] is True
+        accepted = await read(session, "retract_fact", fact=TOOL, agent="builder", branch=branch)
+        assert accepted["blocked"] is False
+        assert databases(await read(session, "recall", entity=entity)) == {"postgres-15"}
+
+        repo.git("merge", "--ff-only", branch)
+        current = await read(session, "recall", entity=entity)
+        assert databases(current) == {"mysql-8"}
+        assert current["facts"][0]["sources"] == ["docs-migration-md"]
+        assert (await read(session, "query", cypher=cypher))["rows"] == [{"value": "mysql-8"}]
+
+    reviewed.session(through_merge)
+
+
+def test_missing_read_ref_does_not_read_the_working_tree(repo):
+    agent = Agent(repo, read_ref="missing-branch")
+    is_error, message = agent.call("recall", entity="payments-api")
+    assert is_error and "missing-branch" in message
 
 
 def test_retract_fact_on_its_own_branch_is_reviewed(agent, repo):
