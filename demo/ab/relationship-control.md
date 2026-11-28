@@ -17,11 +17,17 @@ cannot flag an implied dependency that the vault never records. This is a
 deterministic control using the shipped example. The paired model trials remain
 a small sample, with one model and the same cases in each pair.
 
-After [installing Memory PR](../../README.md#try-it), run from the repository root:
+From a fresh clone, run this in the repository root with Python 3.10 or newer:
 
 ```sh
+python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install -e .
 python demo/ab/relationship_control.py
 ```
+
+If [Memory PR is already installed](../../docs/usage.md#run-it-locally), run
+the last command in that environment.
 
 The [recorded output](relationship-control.json) includes the exact removed edge,
 unchanged property-level proposal and the path the reviewer reported.
