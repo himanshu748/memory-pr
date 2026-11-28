@@ -54,6 +54,27 @@ unavailable. Historical memory yielded six safe deferrals. Both arms followed
 the citation check in the task. The offline trial reused the same three cases
 and one model. It measures handoff completeness under restricted source access.
 
+## Agent follow-up with a draft checked out
+
+Two fresh Astra sessions used the same three cases and could look up the same
+primary manifest excerpts. Both opened a repository with reviewed facts on
+`main` and a draft restoring historical facts in the checked-out tree. Each
+session started with the same prompt and a recall command that queried its
+actual MCP server over stdio. Juniper's server used `--read-ref main`; Birch's
+used the standard working-tree default. The prompt left direct source lookup
+to each session's judgment.
+
+| Session | Default MCP reads | Current citations at recall | Final exact values and current citations | Direct source reads |
+| --- | --- | ---: | ---: | ---: |
+| Juniper | Reviewed `main` | 3/3 | 3/3 | 3 |
+| Birch | Checked-out draft | 0/3 | 3/3 | 3 |
+
+The reviewed-ref setting changed which facts reached the agent before source
+lookup. Both agents verified all three manifests and produced the same handoff.
+This is one pair, one model and the same cases, with no measured accuracy or
+lookup difference under these conditions.
+[Actual tool access log](reviewed-ref-agent-reads.jsonl).
+
 ## Reproduce
 
 In a fresh directory, seed `historical/` with the three historical rows via
