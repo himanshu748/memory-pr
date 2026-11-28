@@ -1957,6 +1957,7 @@ function renderReal() {
   const unconfirmed = b.unconfirmed || [];
   const coverage = repoCoverage(b);
   const handoff = repoHandoff(b, real.fixed);
+  const expectsHandoff = !side.blocked && b.proposed > 0 && (real.fixed || !n);
   const needsVerification = unconfirmed.length || coverage;
   const state = reviewState(side.blocked, needsVerification);
   const summary = side.blocked
@@ -1994,10 +1995,11 @@ function renderReal() {
     (n ? `<button type="button" class="btn" id="real-fix">${real.fixed ? 'Undo' : 'Mark them as replacing the old facts'}</button>` : '') +
     '<button type="button" class="btn primary" id="real-explore">Explore the graph</button></div>' +
     (handoff ? '<details class="repo-handoff" id="real-handoff"><summary>Agent handoff</summary>' +
-      '<p>Copy the reviewed manifest changes and pinned source links.</p>' +
+      '<p>Copy the reviewed additions, replacements, and pinned source links.</p>' +
       '<textarea id="real-handoff-text" aria-label="Reviewed agent handoff" rows="8" readonly></textarea>' +
       '<div class="outcome-actions"><button type="button" class="btn" id="real-handoff-copy">Copy handoff</button>' +
-      '<p id="real-handoff-status" role="status"></p></div></details>' : '') + '</div>' +
+      '<p id="real-handoff-status" role="status"></p></div></details>' :
+      expectsHandoff ? '<p>Handoff unavailable. The scan’s source links could not be verified.</p>' : '') + '</div>' +
     (rows.length
       ? `<table class="moved"><thead><tr><th>About</th><th>What</th><th>${day(b.old.date)}</th><th>${day(b.head.date)}</th></tr></thead><tbody>${rows.join('')}</tbody></table>`
       : `<p class="outcome-empty">Read ${plural(b.files.head, 'file', 'files')} (Dockerfiles, package.json, go.mod, pyproject.toml, Cargo.toml, .nvmrc). Try a different starting point or another repository.</p>`);
