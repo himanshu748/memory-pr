@@ -403,6 +403,10 @@ td { font-family: var(--mono); font-size: 13px; }
 .outcome .problem { cursor: default; background: var(--surface); }
 .outcome-actions { display: flex; flex-wrap: wrap; gap: var(--s2); }
 .outcome-actions .btn { padding: 11px 18px; font-size: 15px; cursor: pointer; }
+.repo-handoff { margin-top: var(--s3); }
+.repo-handoff p { margin-block: var(--s2); }
+.repo-handoff textarea { margin-bottom: var(--s2); }
+.repo-handoff .outcome-actions { align-items: center; }
 .mine { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); padding-top: var(--s3); min-height: 20px; }
 .mine-item { display: inline-flex; align-items: center; gap: 10px; padding: 6px 14px; font-size: 13.5px; border-color: var(--rule); }
 .mine-item.on { border-color: var(--ink); }
