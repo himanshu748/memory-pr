@@ -32,6 +32,28 @@ direct source reads per session and both produced six correct answers with curre
 citations. This trial measures the handoff and its source reads when the primary
 manifests are available. Each condition has two independent sessions.
 
+## Offline follow-up
+
+Four fresh Astra sessions received the same pinned commits in separate working
+directories. We copied only the vault from each of the source-visible sessions.
+A recall-only probe ran the same Cypher lookup and logged each call. Each
+session used it once. The primary manifest excerpts were absent and the task
+limited evidence to the probe output. The instructions asked for a pin only
+when the recalled citation matched the requested commit, with a deferral
+otherwise.
+
+| Pair | Session | Initial memory | Correct pins | Deferrals | Incorrect pins |
+| --- | --- | --- | ---: | ---: | ---: |
+| 1 | Ash | Reviewed | 3 | 0 | 0 |
+| 1 | Beech | Historical | 0 | 3 | 0 |
+| 2 | Cedar | Reviewed | 3 | 0 | 0 |
+| 2 | Elm | Historical | 0 | 3 | 0 |
+
+Reviewed memory supplied six commit-matched pins when direct source lookup was
+unavailable. Historical memory yielded six safe deferrals. Both arms followed
+the citation check in the task. The offline trial reused the same three cases
+and one model. It measures handoff completeness under restricted source access.
+
 ## Reproduce
 
 In a fresh directory, seed `historical/` with the three historical rows via
