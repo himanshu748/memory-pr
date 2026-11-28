@@ -30,9 +30,7 @@ def observe(before: Path, after: Path) -> dict[str, Any]:
     recall = search(before, "postgres")
     review = review_vaults(before, after, default_rules())
     return {
-        "keyword_hits": [
-            {"fact": hit["fact"], "value": hit["value"]} for hit in recall["hits"]
-        ],
+        "keyword_hits": [{"fact": hit["fact"], "value": hit["value"]} for hit in recall["hits"]],
         "restore_drill_hops": next(
             (row["hops"] for row in recall["connected"] if row["fact"] == RESTORE),
             None,
@@ -60,17 +58,13 @@ def main() -> None:
 
         linked_graph, detached_graph = load(linked), load(detached)
         (removed_edge,) = linked_graph.triples - detached_graph.triples
-        assert removed_edge[:4] == (
-            "rel", f"Fact/{RESTORE}", "DERIVED_FROM", f"Fact/{BACKUP}"
-        )
+        assert removed_edge[:4] == ("rel", f"Fact/{RESTORE}", "DERIVED_FROM", f"Fact/{BACKUP}")
         assert not detached_graph.triples - linked_graph.triples
 
         observations = {}
         for before in (linked, detached):
             after = shutil.copytree(before, root / f"{before.name}-proposal")
-            replace_once(
-                after / "Fact" / f"{BACKUP}.md", "status: active\n", "status: retracted\n"
-            )
+            replace_once(after / "Fact" / f"{BACKUP}.md", "status: active\n", "status: retracted\n")
             observations[before.name] = observe(before, after)
 
     intact, cut = observations["linked"], observations["detached"]
