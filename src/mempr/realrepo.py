@@ -171,10 +171,11 @@ def extract(path: str, text: str) -> list[tuple[str, str]]:
             out.append(("python-requires", value))
     elif name == "Cargo.toml":
         manifest = _toml(text)
-        package = _table(manifest, "package")
+        package = manifest.get("package")
         workspace = _table(_table(manifest, "workspace"), "package")
         for key in ("rust-version", "edition"):
-            value = package.get(key, workspace.get(key))
+            # A root package uses its own settings unless it opts into workspace inheritance.
+            value = package.get(key) if isinstance(package, dict) else workspace.get(key)
             if isinstance(value, dict) and value.get("workspace") is True:
                 value = workspace.get(key)
             if isinstance(value, str):

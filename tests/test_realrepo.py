@@ -209,6 +209,12 @@ def test_cargo_reads_local_and_inherited_settings_from_their_tables():
     assert extract("Cargo.toml", doc) == [("rust-version", "1.75"), ("rust-edition", "2024")]
 
 
+def test_cargo_workspace_settings_do_not_apply_to_an_opted_out_root_package():
+    workspace = '[workspace.package]\nedition = "2021"\n'
+    assert extract("Cargo.toml", workspace) == [("rust-edition", "2021")]
+    assert extract("Cargo.toml", f'{workspace}[package]\nname = "shop"\n') == []
+
+
 @pytest.mark.parametrize("latest", ["v20.11", "v22.13"])
 def test_review_reads_nvmrc_version_instead_of_comments(latest):
     files = {
