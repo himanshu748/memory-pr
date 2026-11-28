@@ -129,6 +129,23 @@ then walks `DERIVED_FROM`. Searching for `postgres` also returns the restore dri
 hops away. `mempr search --json` includes the two Cypher queries. The page's search box
 runs the same queries in Relate's WebAssembly build.
 
+### Install the wheel from a checkout
+
+Build the same Python wheel checked by [CI](../.github/workflows/ci.yml). These
+commands install an artifact from your checkout in a separate environment.
+
+```bash
+python -m pip wheel --no-deps --wheel-dir dist .
+python -m venv dist/wheel-venv
+dist/wheel-venv/bin/python -m pip install dist/mempr-*.whl
+dist/wheel-venv/bin/python -m pip check
+dist/wheel-venv/bin/mempr --version
+```
+
+CI runs recall, review, and agent setup from that installed wheel in a separate
+temporary repository. This checks the bundled default rules and agent skill
+along with the command-line entry point.
+
 ## Backend
 
 The page works with no server. On <https://memory-pr.vercel.app/> it also has one: Python

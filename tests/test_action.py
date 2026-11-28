@@ -72,6 +72,23 @@ def test_the_action_step_fails_without_a_comment_on_a_bad_ref(repo, tmp_path):
     assert "Memory review could not run" in (tmp_path / "runner" / "summary").read_text()
 
 
+def test_repeated_action_does_not_reuse_a_previous_review_on_failure(repo, tmp_path):
+    output, comment = run_step(repo, tmp_path, "main")
+    assert output == "code=0"
+    assert "Memory review: passed" in comment
+
+    # GitHub creates new output and summary files for each step but reuses RUNNER_TEMP.
+    runner = tmp_path / "runner"
+    for name in ("output", "summary"):
+        (runner / name).unlink()
+    output, comment = run_step(repo, tmp_path, "no-such-ref")
+    assert output == "code=2"
+    assert comment == ""
+    assert (runner / "summary").read_text() == (
+        "Memory review could not run. See the review step log for details.\n"
+    )
+
+
 def test_native_workflow_summarizes_a_bad_ref_without_a_comment(repo, tmp_path):
     repo.git("update-ref", "refs/remotes/origin/main", repo.git("rev-parse", "main"))
     output, comment = run_step(repo, tmp_path, "no-such-ref", WORKFLOW)
