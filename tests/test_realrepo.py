@@ -183,6 +183,15 @@ def test_toml_example_inside_a_multiline_string_is_not_manifest_evidence():
     assert extract("pyproject.toml", doc) == []
 
 
+@pytest.mark.parametrize("error", [ValueError, RecursionError])
+def test_toml_parser_limits_leave_evidence_unconfirmed(monkeypatch, error):
+    def cannot_parse(_):
+        raise error("manifest exceeded a parser limit")
+
+    monkeypatch.setattr("mempr.realrepo.tomllib.loads", cannot_parse)
+    assert extract("pyproject.toml", '[project]\nrequires-python = ">=3.10"\n') == []
+
+
 def test_review_uses_structured_toml_values_instead_of_documentation_examples():
     def manifest(version):
         return (

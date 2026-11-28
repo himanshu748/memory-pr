@@ -126,7 +126,8 @@ def _from_line(text: str) -> str | None:
 def _toml(text: str) -> dict[str, Any]:
     try:
         return tomllib.loads(text)
-    except tomllib.TOMLDecodeError:
+    except (ValueError, RecursionError):
+        # Unparseable manifests, including parser limits, supply no evidence.
         return {}
 
 
