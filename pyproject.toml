@@ -9,7 +9,7 @@ description = "Pull requests for agent memory: review every change to a shared M
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
-dependencies = ["relate-db>=1.2,<2", "PyYAML>=6", "mcp>=1.12,<2"]
+dependencies = ["relate-db>=1.2,<2", "PyYAML>=6", "mcp>=1.12,<2", "tomli>=2; python_version < '3.11'"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "ruff>=0.6"]

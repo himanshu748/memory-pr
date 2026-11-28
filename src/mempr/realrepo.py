@@ -27,6 +27,11 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
+try:
+    import tomllib
+except ModuleNotFoundError:  # Python 3.10
+    import tomli as tomllib
+
 from .check import review_vaults
 from .export import graph_dict, problems
 from .memory import fact_name, slug
@@ -118,17 +123,16 @@ def _from_line(text: str) -> str | None:
     return f"{ref}@{digest[:19]}" if digest else ref
 
 
-def _toml(text: str, table: tuple[str, ...], key: str) -> str | None:
-    section = None
-    for line in text.splitlines():
-        head = re.match(r"\s*\[([^\]]+)\]\s*(?:#.*)?$", line)
-        if head:
-            section = head.group(1).strip()
-            continue
-        m = re.match(rf'\s*{re.escape(key)}\s*=\s*["\']([^"\']+)["\']', line)
-        if m and section in table:
-            return m.group(1)
-    return None
+def _toml(text: str) -> dict[str, Any]:
+    try:
+        return tomllib.loads(text)
+    except tomllib.TOMLDecodeError:
+        return {}
+
+
+def _table(doc: dict[str, Any], name: str) -> dict[str, Any]:
+    value = doc.get(name)
+    return value if isinstance(value, dict) else {}
 
 
 def extract(path: str, text: str) -> list[tuple[str, str]]:
@@ -162,13 +166,18 @@ def extract(path: str, text: str) -> list[tuple[str, str]]:
         if m:
             out.append(("go-version", m.group(1)))
     elif name == "pyproject.toml":
-        value = _toml(text, ("project",), "requires-python")
-        if value:
+        value = _table(_toml(text), "project").get("requires-python")
+        if isinstance(value, str):
             out.append(("python-requires", value))
     elif name == "Cargo.toml":
+        manifest = _toml(text)
+        package = _table(manifest, "package")
+        workspace = _table(_table(manifest, "workspace"), "package")
         for key in ("rust-version", "edition"):
-            value = _toml(text, ("package", "workspace.package"), key)
-            if value:
+            value = package.get(key, workspace.get(key))
+            if isinstance(value, dict) and value.get("workspace") is True:
+                value = workspace.get(key)
+            if isinstance(value, str):
                 out.append(("rust-" + key.removeprefix("rust-"), value))
     elif name == ".nvmrc":
         # nvm ignores blank lines, comments and reserved key/value metadata.
