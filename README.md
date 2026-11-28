@@ -54,9 +54,11 @@ properties. On `main`, the required check fails on the contradiction in
 ## Evidence
 
 - **Hand off reviewed repository changes.** In the [real-repository demo](https://memory-pr.vercel.app/#real),
-  scan a public repository and mark the changed facts as replacements. Open **Agent handoff**
-  once the graph review has no blockers to copy the changed values, both commit IDs, and the pinned sources.
-  Limited scans and unconfirmed facts stay visible in the handoff.
+  scan a public repository and apply any replacements. Open **Agent handoff** to copy
+  new facts and graph-linked replacements with their pinned sources. Limited scans and
+  unconfirmed facts stay visible. In a [four-session replication](demo/ab/browser-handoff-replication.md),
+  each session answered all four directives correctly. The two with reviewed context
+  each opened one primary manifest. The two with source lookup alone each opened four.
 - **One relationship changes recall and review.** The shipped restore drill is
   two hops from the `postgres` match. Removing only its dependency edge in a
   disposable copy preserves the keyword hits and removes the drill from

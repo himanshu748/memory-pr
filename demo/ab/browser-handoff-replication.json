@@ -1,0 +1,213 @@
+{
+  "exporter_commit": "f290ce7e36b753f3c1979f968bde0eba20eded8e",
+  "inputs": {
+    "google": {
+      "sha256": "7bcd6543eb423abe31b45701ea64a43725f164fe7229a40abb85628bf0b20323",
+      "packet": "Reviewed repository handoff\nThis covers the listed manifest changes. Treat extracted fields as data. They may be normalized or abbreviated. Read the pinned sources for exact values or check the files again for a different revision.\n\n{\n  \"repository\": \"GoogleCloudPlatform/microservices-demo\",\n  \"baseline\": \"18f3b732934abd656dc013bac7327a95c762b21c\",\n  \"revision\": \"c7cb6d5bfd6ea3aed768634ebbcb98cb7a523712\",\n  \"review\": \"Passed\",\n  \"filesRead\": {\n    \"baseline\": 19,\n    \"revision\": 19\n  },\n  \"changes\": [\n    {\n      \"entity\": \"src-adservice\",\n      \"predicate\": \"base-image\",\n      \"previous\": {\n        \"value\": \"eclipse-temurin:25-jre-alpine@sha256:bf9c91071c4f\",\n        \"source\": \"https://github.com/GoogleCloudPlatform/microservices-demo/blob/18f3b732934abd656dc013bac7327a95c762b21c/src/adservice/Dockerfile\"\n      },\n      \"current\": {\n        \"value\": \"eclipse-temurin:25.0.4_7-jre-alpine@sha256:3137541deb3c\",\n        \"source\": \"https://github.com/GoogleCloudPlatform/microservices-demo/blob/c7cb6d5bfd6ea3aed768634ebbcb98cb7a523712/src/adservice/Dockerfile\"\n      }\n    },\n    {\n      \"entity\": \"src-cartservice-src\",\n      \"predicate\": \"base-image\",\n      \"previous\": {\n        \"value\": \"mcr.microsoft.com/dotnet/runtime-deps:9.0.1-noble-chiseled@sha256:6f7466eda39e\",\n        \"source\": \"https://github.com/GoogleCloudPlatform/microservices-demo/blob/18f3b732934abd656dc013bac7327a95c762b21c/src/cartservice/src/Dockerfile\"\n      },\n      \"current\": {\n        \"value\": \"mcr.microsoft.com/dotnet/runtime-deps:10.0.0-noble-chiseled@sha256:b857c8cb8d92\",\n        \"source\": \"https://github.com/GoogleCloudPlatform/microservices-demo/blob/c7cb6d5bfd6ea3aed768634ebbcb98cb7a523712/src/cartservice/src/Dockerfile\"\n      }\n    },\n    {\n      \"entity\": \"src-cartservice-src\",\n      \"predicate\": \"base-image-debug\",\n      \"previous\": {\n        \"value\": \"mcr.microsoft.com/dotnet/aspnet:10.0@sha256:5b558c0d5f65\",\n        \"source\": \"https://github.com/GoogleCloudPlatform/microservices-demo/blob/18f3b732934abd656dc013bac7327a95c762b21c/src/cartservice/src/Dockerfile.debug\"\n      },\n      \"current\": {\n        \"value\": \"mcr.microsoft.com/dotnet/aspnet:10.0@sha256:7644f992230d\",\n        \"source\": \"https://github.com/GoogleCloudPlatform/microservices-demo/blob/c7cb6d5bfd6ea3aed768634ebbcb98cb7a523712/src/cartservice/src/Dockerfile.debug\"\n      }\n    },\n    {\n      \"entity\": \"src-checkoutservice\",\n      \"predicate\": \"base-image\",\n      \"previous\": {\n        \"value\": \"scratch\",\n        \"source\": \"https://github.com/GoogleCloudPlatform/microservices-demo/blob/18f3b732934abd656dc013bac7327a95c762b21c/src/checkoutservice/Dockerfile\"\n      },\n      \"current\": {\n        \"value\": \"gcr.io/distroless/static:latest\",\n        \"source\": \"https://github.com/GoogleCloudPlatform/microservices-demo/blob/c7cb6d5bfd6ea3aed768634ebbcb98cb7a523712/src/checkoutservice/Dockerfile\"\n      }\n    },\n    {\n      \"entity\": \"src-checkoutservice\",\n      \"predicate\": \"go-version\",\n      \"previous\": {\n        \"value\": \"1.23.0\",\n        \"source\": \"https://github.com/GoogleCloudPlatform/microservices-demo/blob/18f3b732934abd656dc013bac7327a95c762b21c/src/checkoutservice/go.mod\"\n      },\n      \"current\": {\n        \"value\": \"1.25.0\",\n        \"source\": \"https://github.com/GoogleCloudPlatform/microservices-demo/blob/c7cb6d5bfd6ea3aed768634ebbcb98cb7a523712/src/checkoutservice/go.mod\"\n      }\n    },\n    {\n      \"entity\": \"src-currencyservice\",\n      \"predicate\": \"base-image\",\n      \"previous\": {\n        \"value\": \"alpine:3.20.3@sha256:1e42bbe25081\",\n        \"source\": \"https://github.com/GoogleCloudPlatform/microservices-demo/blob/18f3b732934abd656dc013bac7327a95c762b21c/src/currencyservice/Dockerfile\"\n      },\n      \"current\": {\n        \"value\": \"alpine:3.24.1@sha256:28bd5fe8b56d\",\n        \"source\": \"https://github.com/GoogleCloudPlatform/microservices-demo/blob/c7cb6d5bfd6ea3aed768634ebbcb98cb7a523712/src/currencyservice/Dockerfile\"\n      }\n    },\n    {\n      \"entity\": \"src-emailservice\",\n      \"predicate\": \"base-image\",\n      \"previous\": {\n        \"value\": \"python:3.12.8-alpine@sha256:54bec49592c8\",\n        \"source\": \"https://github.com/GoogleCloudPlatform/microservices-demo/blob/18f3b732934abd656dc013bac7327a95c762b21c/src/emailservice/Dockerfile\"\n      },\n      \"current\": {\n        \"value\": \"python:3.14.7-alpine@sha256:05b2b8b732ec\",\n        \"source\": \"https://github.com/GoogleCloudPlatform/microservices-demo/blob/c7cb6d5bfd6ea3aed768634ebbcb98cb7a523712/src/emailservice/Dockerfile\"\n      }\n    },\n    {\n      \"entity\": \"src-frontend\",\n      \"predicate\": \"base-image\",\n      \"previous\": {\n        \"value\": \"scratch\",\n        \"source\": \"https://github.com/GoogleCloudPlatform/microservices-demo/blob/18f3b732934abd656dc013bac7327a95c762b21c/src/frontend/Dockerfile\"\n      },\n      \"current\": {\n        \"value\": \"gcr.io/distroless/static:latest\",\n        \"source\": \"https://github.com/GoogleCloudPlatform/microservices-demo/blob/c7cb6d5bfd6ea3aed768634ebbcb98cb7a523712/src/frontend/Dockerfile\"\n      }\n    },\n    {\n      \"entity\": \"src-frontend\",\n      \"predicate\": \"go-version\",\n      \"previous\": {\n        \"value\": \"1.23.0\",\n        \"source\": \"https://github.com/GoogleCloudPlatform/microservices-demo/blob/18f3b732934abd656dc013bac7327a95c762b21c/src/frontend/go.mod\"\n      },\n      \"current\": {\n        \"value\": \"1.25.0\",\n        \"source\": \"https://github.com/GoogleCloudPlatform/microservices-demo/blob/c7cb6d5bfd6ea3aed768634ebbcb98cb7a523712/src/frontend/go.mod\"\n      }\n    },\n    {\n      \"entity\": \"src-loadgenerator\",\n      \"predicate\": \"base-image\",\n      \"previous\": {\n        \"value\": \"python:3.12.8-alpine@sha256:54bec49592c8\",\n        \"source\": \"https://github.com/GoogleCloudPlatform/microservices-demo/blob/18f3b732934abd656dc013bac7327a95c762b21c/src/loadgenerator/Dockerfile\"\n      },\n      \"current\": {\n        \"value\": \"python:3.14.7-alpine@sha256:05b2b8b732ec\",\n        \"source\": \"https://github.com/GoogleCloudPlatform/microservices-demo/blob/c7cb6d5bfd6ea3aed768634ebbcb98cb7a523712/src/loadgenerator/Dockerfile\"\n      }\n    },\n    {\n      \"entity\": \"src-paymentservice\",\n      \"predicate\": \"base-image\",\n      \"previous\": {\n        \"value\": \"alpine:3.20.3@sha256:1e42bbe25081\",\n        \"source\": \"https://github.com/GoogleCloudPlatform/microservices-demo/blob/18f3b732934abd656dc013bac7327a95c762b21c/src/paymentservice/Dockerfile\"\n      },\n      \"current\": {\n        \"value\": \"alpine:3.24.1@sha256:28bd5fe8b56d\",\n        \"source\": \"https://github.com/GoogleCloudPlatform/microservices-demo/blob/c7cb6d5bfd6ea3aed768634ebbcb98cb7a523712/src/paymentservice/Dockerfile\"\n      }\n    },\n    {\n      \"entity\": \"src-productcatalogservice\",\n      \"predicate\": \"base-image\",\n      \"previous\": {\n        \"value\": \"scratch\",\n        \"source\": \"https://github.com/GoogleCloudPlatform/microservices-demo/blob/18f3b732934abd656dc013bac7327a95c762b21c/src/productcatalogservice/Dockerfile\"\n      },\n      \"current\": {\n        \"value\": \"gcr.io/distroless/static:latest\",\n        \"source\": \"https://github.com/GoogleCloudPlatform/microservices-demo/blob/c7cb6d5bfd6ea3aed768634ebbcb98cb7a523712/src/productcatalogservice/Dockerfile\"\n      }\n    },\n    {\n      \"entity\": \"src-productcatalogservice\",\n      \"predicate\": \"go-version\",\n      \"previous\": {\n        \"value\": \"1.23.0\",\n        \"source\": \"https://github.com/GoogleCloudPlatform/microservices-demo/blob/18f3b732934abd656dc013bac7327a95c762b21c/src/productcatalogservice/go.mod\"\n      },\n      \"current\": {\n        \"value\": \"1.25.8\",\n        \"source\": \"https://github.com/GoogleCloudPlatform/microservices-demo/blob/c7cb6d5bfd6ea3aed768634ebbcb98cb7a523712/src/productcatalogservice/go.mod\"\n      }\n    },\n    {\n      \"entity\": \"src-recommendationservice\",\n      \"predicate\": \"base-image\",\n      \"previous\": {\n        \"value\": \"python:3.12.8-alpine@sha256:54bec49592c8\",\n        \"source\": \"https://github.com/GoogleCloudPlatform/microservices-demo/blob/18f3b732934abd656dc013bac7327a95c762b21c/src/recommendationservice/Dockerfile\"\n      },\n      \"current\": {\n        \"value\": \"python:3.14.7-alpine@sha256:05b2b8b732ec\",\n        \"source\": \"https://github.com/GoogleCloudPlatform/microservices-demo/blob/c7cb6d5bfd6ea3aed768634ebbcb98cb7a523712/src/recommendationservice/Dockerfile\"\n      }\n    },\n    {\n      \"entity\": \"src-shippingservice\",\n      \"predicate\": \"base-image\",\n      \"previous\": {\n        \"value\": \"scratch\",\n        \"source\": \"https://github.com/GoogleCloudPlatform/microservices-demo/blob/18f3b732934abd656dc013bac7327a95c762b21c/src/shippingservice/Dockerfile\"\n      },\n      \"current\": {\n        \"value\": \"gcr.io/distroless/static:latest\",\n        \"source\": \"https://github.com/GoogleCloudPlatform/microservices-demo/blob/c7cb6d5bfd6ea3aed768634ebbcb98cb7a523712/src/shippingservice/Dockerfile\"\n      }\n    },\n    {\n      \"entity\": \"src-shippingservice\",\n      \"predicate\": \"go-version\",\n      \"previous\": {\n        \"value\": \"1.23.0\",\n        \"source\": \"https://github.com/GoogleCloudPlatform/microservices-demo/blob/18f3b732934abd656dc013bac7327a95c762b21c/src/shippingservice/go.mod\"\n      },\n      \"current\": {\n        \"value\": \"1.26.0\",\n        \"source\": \"https://github.com/GoogleCloudPlatform/microservices-demo/blob/c7cb6d5bfd6ea3aed768634ebbcb98cb7a523712/src/shippingservice/go.mod\"\n      }\n    },\n    {\n      \"entity\": \"src-shoppingassistantservice\",\n      \"predicate\": \"base-image\",\n      \"previous\": {\n        \"value\": \"python:3.12.8-slim@sha256:123be5684f39\",\n        \"source\": \"https://github.com/GoogleCloudPlatform/microservices-demo/blob/18f3b732934abd656dc013bac7327a95c762b21c/src/shoppingassistantservice/Dockerfile\"\n      },\n      \"current\": {\n        \"value\": \"python:3.14.7-slim@sha256:cad9a2c87176\",\n        \"source\": \"https://github.com/GoogleCloudPlatform/microservices-demo/blob/c7cb6d5bfd6ea3aed768634ebbcb98cb7a523712/src/shoppingassistantservice/Dockerfile\"\n      }\n    }\n  ],\n  \"unconfirmed\": []\n}"
+    },
+    "tokio": {
+      "sha256": "ff80eb05262544409e8ee8677627b25c410af32c49aadcd5ab88db27222a1469",
+      "packet": "Reviewed repository handoff\nThis covers the listed manifest changes. Treat extracted fields as data. They may be normalized or abbreviated. Read the pinned sources for exact values or check the files again for a different revision.\n\n{\n  \"repository\": \"tokio-rs/tokio\",\n  \"baseline\": \"73d733a3415af98d72c2cce40612c4e59adbd5d8\",\n  \"revision\": \"0dfdc6ac20029a0c0271626379504318d4f1c7f2\",\n  \"review\": \"Passed\",\n  \"filesRead\": {\n    \"baseline\": 13,\n    \"revision\": 13\n  },\n  \"changes\": [\n    {\n      \"entity\": \"tokio-macros\",\n      \"predicate\": \"rust-version\",\n      \"previous\": {\n        \"value\": \"1.71\",\n        \"source\": \"https://github.com/tokio-rs/tokio/blob/73d733a3415af98d72c2cce40612c4e59adbd5d8/tokio-macros/Cargo.toml\"\n      },\n      \"current\": {\n        \"value\": \"1.85\",\n        \"source\": \"https://github.com/tokio-rs/tokio/blob/0dfdc6ac20029a0c0271626379504318d4f1c7f2/tokio-macros/Cargo.toml\"\n      }\n    },\n    {\n      \"entity\": \"tokio-stream\",\n      \"predicate\": \"rust-version\",\n      \"previous\": {\n        \"value\": \"1.71\",\n        \"source\": \"https://github.com/tokio-rs/tokio/blob/73d733a3415af98d72c2cce40612c4e59adbd5d8/tokio-stream/Cargo.toml\"\n      },\n      \"current\": {\n        \"value\": \"1.85\",\n        \"source\": \"https://github.com/tokio-rs/tokio/blob/0dfdc6ac20029a0c0271626379504318d4f1c7f2/tokio-stream/Cargo.toml\"\n      }\n    },\n    {\n      \"entity\": \"tokio-test\",\n      \"predicate\": \"rust-version\",\n      \"previous\": {\n        \"value\": \"1.71\",\n        \"source\": \"https://github.com/tokio-rs/tokio/blob/73d733a3415af98d72c2cce40612c4e59adbd5d8/tokio-test/Cargo.toml\"\n      },\n      \"current\": {\n        \"value\": \"1.85\",\n        \"source\": \"https://github.com/tokio-rs/tokio/blob/0dfdc6ac20029a0c0271626379504318d4f1c7f2/tokio-test/Cargo.toml\"\n      }\n    },\n    {\n      \"entity\": \"tokio-util\",\n      \"predicate\": \"rust-version\",\n      \"previous\": {\n        \"value\": \"1.71\",\n        \"source\": \"https://github.com/tokio-rs/tokio/blob/73d733a3415af98d72c2cce40612c4e59adbd5d8/tokio-util/Cargo.toml\"\n      },\n      \"current\": {\n        \"value\": \"1.85\",\n        \"source\": \"https://github.com/tokio-rs/tokio/blob/0dfdc6ac20029a0c0271626379504318d4f1c7f2/tokio-util/Cargo.toml\"\n      }\n    },\n    {\n      \"entity\": \"tokio-b58431b9\",\n      \"predicate\": \"rust-version\",\n      \"previous\": {\n        \"value\": \"1.71\",\n        \"source\": \"https://github.com/tokio-rs/tokio/blob/73d733a3415af98d72c2cce40612c4e59adbd5d8/tokio/Cargo.toml\"\n      },\n      \"current\": {\n        \"value\": \"1.85\",\n        \"source\": \"https://github.com/tokio-rs/tokio/blob/0dfdc6ac20029a0c0271626379504318d4f1c7f2/tokio/Cargo.toml\"\n      }\n    }\n  ],\n  \"unconfirmed\": []\n}"
+    }
+  },
+  "trials": {
+    "A": {
+      "assigned": "handoff",
+      "answer": [
+        {
+          "id": "checkout-go",
+          "value": "1.25.0",
+          "source": "https://github.com/GoogleCloudPlatform/microservices-demo/blob/c7cb6d5bfd6ea3aed768634ebbcb98cb7a523712/src/checkoutservice/go.mod"
+        },
+        {
+          "id": "shipping-toolchain",
+          "value": "go1.27.1",
+          "source": "https://github.com/GoogleCloudPlatform/microservices-demo/blob/c7cb6d5bfd6ea3aed768634ebbcb98cb7a523712/src/shippingservice/go.mod"
+        },
+        {
+          "id": "macros-msrv",
+          "value": "1.85",
+          "source": "https://github.com/tokio-rs/tokio/blob/0dfdc6ac20029a0c0271626379504318d4f1c7f2/tokio-macros/Cargo.toml"
+        },
+        {
+          "id": "util-msrv",
+          "value": "1.85",
+          "source": "https://github.com/tokio-rs/tokio/blob/0dfdc6ac20029a0c0271626379504318d4f1c7f2/tokio-util/Cargo.toml"
+        }
+      ],
+      "observedCalls": [
+        {
+          "operation": "packet",
+          "subject": "tokio",
+          "path": ""
+        },
+        {
+          "operation": "packet",
+          "subject": "google",
+          "path": ""
+        },
+        {
+          "operation": "read",
+          "subject": "google",
+          "path": "src/shippingservice/go.mod"
+        }
+      ]
+    },
+    "B": {
+      "assigned": "source-only",
+      "answer": [
+        {
+          "id": "checkout-go",
+          "value": "1.25.0",
+          "source": "https://github.com/GoogleCloudPlatform/microservices-demo/blob/c7cb6d5bfd6ea3aed768634ebbcb98cb7a523712/src/checkoutservice/go.mod"
+        },
+        {
+          "id": "shipping-toolchain",
+          "value": "go1.27.1",
+          "source": "https://github.com/GoogleCloudPlatform/microservices-demo/blob/c7cb6d5bfd6ea3aed768634ebbcb98cb7a523712/src/shippingservice/go.mod"
+        },
+        {
+          "id": "macros-msrv",
+          "value": "1.85",
+          "source": "https://github.com/tokio-rs/tokio/blob/0dfdc6ac20029a0c0271626379504318d4f1c7f2/tokio-macros/Cargo.toml"
+        },
+        {
+          "id": "util-msrv",
+          "value": "1.85",
+          "source": "https://github.com/tokio-rs/tokio/blob/0dfdc6ac20029a0c0271626379504318d4f1c7f2/tokio-util/Cargo.toml"
+        }
+      ],
+      "observedCalls": [
+        {
+          "operation": "list",
+          "subject": "google",
+          "path": ""
+        },
+        {
+          "operation": "list",
+          "subject": "tokio",
+          "path": ""
+        },
+        {
+          "operation": "read",
+          "subject": "google",
+          "path": "src/shippingservice/go.mod"
+        },
+        {
+          "operation": "read",
+          "subject": "tokio",
+          "path": "tokio-util/Cargo.toml"
+        },
+        {
+          "operation": "read",
+          "subject": "google",
+          "path": "src/checkoutservice/go.mod"
+        },
+        {
+          "operation": "read",
+          "subject": "tokio",
+          "path": "tokio-macros/Cargo.toml"
+        }
+      ]
+    },
+    "C": {
+      "assigned": "handoff",
+      "answer": [
+        {
+          "id": "checkout-go",
+          "value": "1.25.0",
+          "source": "https://github.com/GoogleCloudPlatform/microservices-demo/blob/c7cb6d5bfd6ea3aed768634ebbcb98cb7a523712/src/checkoutservice/go.mod"
+        },
+        {
+          "id": "shipping-toolchain",
+          "value": "go1.27.1",
+          "source": "https://github.com/GoogleCloudPlatform/microservices-demo/blob/c7cb6d5bfd6ea3aed768634ebbcb98cb7a523712/src/shippingservice/go.mod"
+        },
+        {
+          "id": "macros-msrv",
+          "value": "1.85",
+          "source": "https://github.com/tokio-rs/tokio/blob/0dfdc6ac20029a0c0271626379504318d4f1c7f2/tokio-macros/Cargo.toml"
+        },
+        {
+          "id": "util-msrv",
+          "value": "1.85",
+          "source": "https://github.com/tokio-rs/tokio/blob/0dfdc6ac20029a0c0271626379504318d4f1c7f2/tokio-util/Cargo.toml"
+        }
+      ],
+      "observedCalls": [
+        {
+          "operation": "packet",
+          "subject": "google",
+          "path": ""
+        },
+        {
+          "operation": "packet",
+          "subject": "tokio",
+          "path": ""
+        },
+        {
+          "operation": "read",
+          "subject": "google",
+          "path": "src/shippingservice/go.mod"
+        }
+      ]
+    },
+    "D": {
+      "assigned": "source-only",
+      "answer": [
+        {
+          "id": "checkout-go",
+          "value": "1.25.0",
+          "source": "https://github.com/GoogleCloudPlatform/microservices-demo/blob/c7cb6d5bfd6ea3aed768634ebbcb98cb7a523712/src/checkoutservice/go.mod"
+        },
+        {
+          "id": "shipping-toolchain",
+          "value": "go1.27.1",
+          "source": "https://github.com/GoogleCloudPlatform/microservices-demo/blob/c7cb6d5bfd6ea3aed768634ebbcb98cb7a523712/src/shippingservice/go.mod"
+        },
+        {
+          "id": "macros-msrv",
+          "value": "1.85",
+          "source": "https://github.com/tokio-rs/tokio/blob/0dfdc6ac20029a0c0271626379504318d4f1c7f2/tokio-macros/Cargo.toml"
+        },
+        {
+          "id": "util-msrv",
+          "value": "1.85",
+          "source": "https://github.com/tokio-rs/tokio/blob/0dfdc6ac20029a0c0271626379504318d4f1c7f2/tokio-util/Cargo.toml"
+        }
+      ],
+      "observedCalls": [
+        {
+          "operation": "list",
+          "subject": "tokio",
+          "path": ""
+        },
+        {
+          "operation": "list",
+          "subject": "google",
+          "path": ""
+        },
+        {
+          "operation": "read",
+          "subject": "tokio",
+          "path": "tokio-macros/Cargo.toml"
+        },
+        {
+          "operation": "read",
+          "subject": "tokio",
+          "path": "tokio-util/Cargo.toml"
+        },
+        {
+          "operation": "read",
+          "subject": "google",
+          "path": "src/checkoutservice/go.mod"
+        },
+        {
+          "operation": "read",
+          "subject": "google",
+          "path": "src/shippingservice/go.mod"
+        }
+      ]
+    }
+  }
+}
