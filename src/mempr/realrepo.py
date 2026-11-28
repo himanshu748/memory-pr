@@ -94,6 +94,8 @@ def _dockerfile_instructions(text: str) -> Iterator[str]:
             parts.append(line)
             yield "".join(parts)
             parts.clear()
+    if parts:
+        yield "".join(parts)
 
 
 def _from_line(text: str) -> str | None:
