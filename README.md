@@ -58,7 +58,8 @@ properties. On `main`, the required check fails on the contradiction in
   disposable copy preserves the keyword hits and removes the drill from
   connected recall. The same backup retraction is blocked with the edge and
   passes the default checks without it.
-  [Replay the relationship control](demo/ab/relationship-control.md).
+  [Run both copies in the browser](https://memory-pr.vercel.app/#relationship-control) ·
+  [Replay the CLI experiment](demo/ab/relationship-control.md).
 - **Agent reads follow the reviewed branch.** With `mcp --read-ref origin/main`,
   an agent can work in a feature checkout and keep reading reviewed facts. An
   [end-to-end test](docs/agents.md#read-from-the-reviewed-branch) follows one MCP

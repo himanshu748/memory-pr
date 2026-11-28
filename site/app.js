@@ -1,6 +1,7 @@
 import { apiBase, fetchRepoReview, fetchServerReview, repoCoverage, serverLine, serverRequest } from './server-check.js';
 import { again, prLine, submitPullRequest, watchPullRequest, whyNot } from './github-pr.js';
 import { LEXICAL, NEIGHBORHOOD } from './search.js';
+import { runRelationshipControl } from './relationship-control.js';
 
 // memory-pr browser view. No build step: plain ES module, Cytoscape for drawing, and
 // Relate (WebAssembly) holding each graph so the visitor's Cypher runs on it live.
@@ -1796,6 +1797,49 @@ async function startRelate() {
   }
 }
 
+function wireRelationshipControl(starting) {
+  const button = $('run-relationship-control');
+  const results = $('relationship-control-results');
+  const status = $('relationship-control-status');
+  const rule = data.rules.find(({ id }) => id === 'stale-derivation');
+  button.disabled = false;
+  button.addEventListener('click', async () => {
+    button.disabled = true;
+    results.hidden = true;
+    $('relationship-control-rules').hidden = true;
+    status.textContent = 'Running both copies in Relate.';
+    try {
+      await starting;
+      if (!relate) throw new Error('Relate could not start. The CLI reproduction is linked above.');
+      const common = { graph: data.memory, rules: data.rules, loadDb, run };
+      const linked = runRelationshipControl({ ...common, linked: true });
+      const detached = runRelationshipControl({ ...common, linked: false });
+      for (const card of results.children) {
+        const result = card.dataset.control === 'linked' ? linked : detached;
+        const field = (name) => card.querySelector(`[data-result="${name}"]`);
+        card.dataset.verdict = result.blocked ? 'blocked' : 'passed';
+        field('hits').textContent = String(result.keywordHits.length);
+        field('recall').textContent = result.restoreHops === null ? 'Absent' : plural(result.restoreHops, 'hop', 'hops');
+        field('review').textContent = result.blocked ? 'Blocked' : 'Passed';
+        const finding = field('finding');
+        finding.hidden = result.blockers.length === 0;
+        finding.textContent = result.blockers.map((blocker) => blocker.rule).join(', ');
+      }
+      $('relationship-control-cypher').textContent = rule.cypher;
+      $('relationship-control-rules').hidden = false;
+      results.hidden = false;
+      const sameHits = JSON.stringify(linked.keywordHits) === JSON.stringify(detached.keywordHits);
+      status.textContent = sameHits
+        ? 'Both copies returned the same keyword matches.'
+        : 'The keyword matches differed between copies.';
+    } catch (error) {
+      status.textContent = error.message;
+    } finally {
+      button.disabled = false;
+    }
+  });
+}
+
 const AGENT_RECALL = `MATCH (f:Fact)-[:ABOUT]->(:Entity {name: 'payments-api'})
 WHERE f.predicate = 'database' AND f.status = 'active'
 OPTIONAL MATCH (f)-[:SOURCE]->(s:Source)
@@ -2035,6 +2079,7 @@ async function main() {
   const starting = startRelate();
   wireAgentComparison(starting);
   data = await (await fetch('data/demo.json')).json();
+  wireRelationshipControl(starting);
   memory = data.memory;
   views = [
     { pull: null, short: 'main', title: 'Shared memory', before: data.memory, after: data.memory },

@@ -28,6 +28,7 @@
     memory-pr reviews the pull request in Cypher and blocks it.</p>
   <div class="cta">
     <a class="btn primary" href="#explorer" data-open="auditor-stale-clone">See a blocked pull request</a>
+    <a class="btn" href="#relationship-control">Test one graph edge</a>
     <a class="btn" href="#agent-comparison">Compare the agent runs</a>
     <a class="btn" href="#console">Ask the graph in Cypher</a>
   </div>
@@ -52,6 +53,42 @@
     <li><span>2</span><div><strong>The problem</strong>A text diff looks fine while two facts contradict, a conclusion three hops away disagrees with its source, or a merge drops the links.</div></li>
     <li><span>3</span><div><strong>The proof</strong>Below, the review draws the problem on the graph. It runs live in this page.</div></li>
   </ol>
+</section>
+
+<section class="agent-comparison" id="relationship-control" aria-labelledby="relationship-control-title">
+  <div class="write-head">
+    <h2 id="relationship-control-title">What does one edge change?</h2>
+    <p>Retract the same nightly backup in two copies of the memory. Remove only the restore drill’s <code>DERIVED_FROM</code> edge in the second copy, then compare what Relate recalls and what the review catches.</p>
+  </div>
+  <div class="agent-run-actions control-actions">
+    <button type="button" class="btn primary" id="run-relationship-control" disabled>Run the one-edge check</button>
+    <a href="https://github.com/himanshu748/memory-pr/blob/main/demo/ab/relationship-control.md">Read the CLI reproduction</a>
+  </div>
+  <p class="control-status" id="relationship-control-status" role="status"></p>
+  <div class="agent-run-grid" id="relationship-control-results" hidden>
+    <article class="agent-run control-result" data-control="linked">
+      <h3>Edge intact</h3>
+      <dl>
+        <dt>Postgres keyword hits</dt><dd data-result="hits"></dd>
+        <dt>Restore drill in recall</dt><dd data-result="recall"></dd>
+        <dt>Backup retraction</dt><dd data-result="review"></dd>
+      </dl>
+      <p data-result="finding" class="agent-recall" hidden></p>
+    </article>
+    <article class="agent-run control-result" data-control="detached">
+      <h3>Edge removed</h3>
+      <dl>
+        <dt>Postgres keyword hits</dt><dd data-result="hits"></dd>
+        <dt>Restore drill in recall</dt><dd data-result="recall"></dd>
+        <dt>Backup retraction</dt><dd data-result="review"></dd>
+      </dl>
+      <p data-result="finding" class="agent-recall" hidden></p>
+    </article>
+  </div>
+  <details class="agent-query" id="relationship-control-rules" hidden>
+    <summary>View the Cypher used to find stale derivations</summary>
+    <pre id="relationship-control-cypher"></pre>
+  </details>
 </section>
 
 <section class="agent-comparison" id="agent-comparison" aria-labelledby="agent-comparison-title">
