@@ -20,6 +20,33 @@ jobs:
       - run: ruff check .
       - run: ruff format --check .
       - run: pytest -q
+  wheel:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build and install the wheel outside the source checkout
+        run: |
+          python -m pip wheel --no-deps --wheel-dir "$RUNNER_TEMP/wheels" .
+          python -m venv "$RUNNER_TEMP/wheel-venv"
+          mempr_bin="$RUNNER_TEMP/wheel-venv/bin"
+          "$mempr_bin/python" -m pip install "$RUNNER_TEMP"/wheels/mempr-*.whl
+          "$mempr_bin/python" -m pip check
+          mkdir "$RUNNER_TEMP/wheel-demo"
+          cp -R memory "$RUNNER_TEMP/wheel-demo/memory"
+          cd "$RUNNER_TEMP/wheel-demo"
+          git init -q -b main
+          git add memory
+          git -c user.name='Wheel smoke' -c user.email=wheel@example.invalid commit -qm 'Seed vault'
+          "$mempr_bin/mempr" --version
+          "$mempr_bin/mempr" recall payments-api > recall.txt
+          grep -q 'postgres-15' recall.txt
+          "$mempr_bin/mempr" check --base main --head main --out review.md
+          grep -q 'Memory review: passed' review.md
+          "$mempr_bin/mempr" setup --agent claude
+          test -s .claude/skills/memory-pr/SKILL.md
   action:
     # Runs the bundled action as another repository would, so a broken action.yml fails here.
     # It reviews main against itself: the result does not depend on the pull request.
