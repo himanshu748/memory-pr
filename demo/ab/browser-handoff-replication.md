@@ -52,6 +52,13 @@ apply replacements, and open **Agent handoff**. The live scanner follows the
 upstream head. [The recorded inputs and session logs](browser-handoff-replication.json)
 pin the experiment to the original commits and preserve the exact copied packets.
 
+From a clean clone, this command checks the archived packet hashes, pinned
+answers, and lookup totals without browser dependencies or network access.
+
+```sh
+node --test tests/js/browser-handoff-evidence.test.mjs
+```
+
 This is a small sample with one model, two repositories, and prompt-controlled
 access to a bounded manifest set. It counts lookup during the handoff stage.
 The scan already read the repositories to produce the handoffs. Elapsed time,
