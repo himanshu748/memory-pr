@@ -21,7 +21,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from collections import Counter
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -71,10 +71,35 @@ def wanted(path: str) -> bool:
     return name in MANIFESTS or name == "Dockerfile" or name.startswith("Dockerfile.")
 
 
+def _dockerfile_instructions(text: str) -> Iterator[str]:
+    """Join Dockerfile continuation lines, preserving their whitespace."""
+    escape = "\\"
+    directives = True
+    parts = []
+    for line in text.removeprefix("\ufeff").splitlines():
+        stripped = line.strip()
+        if directives:
+            directive = re.fullmatch(r"#\s*(syntax|escape|check)\s*=\s*(\S.*)", stripped, re.I)
+            if directive:
+                if directive[1].lower() == "escape" and directive[2] in ("\\", "`"):
+                    escape = directive[2]
+                continue
+            directives = False
+        if not stripped or stripped.startswith("#"):
+            continue
+        end = line.rstrip(" \t")
+        if end.endswith(escape) and not end.endswith(escape * 2):
+            parts.append(end[:-1])
+        else:
+            parts.append(line)
+            yield "".join(parts)
+            parts.clear()
+
+
 def _from_line(text: str) -> str | None:
     stages: dict[str, str | None] = {}
     last = None
-    for line in text.splitlines():
+    for line in _dockerfile_instructions(text):
         m = re.match(r"\s*FROM\s+(?:--\S+\s+)*(\S+)(?:\s+AS\s+(\S+))?", line, re.I)
         if not m:
             continue
