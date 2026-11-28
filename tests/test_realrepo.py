@@ -300,6 +300,38 @@ def test_extract_reads_a_continued_docker_stage_at_end_of_file():
     assert extract("Dockerfile", dockerfile) == [("base-image", "alpine:3.20")]
 
 
+@pytest.mark.parametrize(
+    ("instruction", "body"),
+    [
+        ("RUN <<EOF", "FROM debian:99\nEOF"),
+        ("COPY <<'DOC NAME' /example.txt", "FROM debian:99\nDOC NAME"),
+        ("ONBUILD RUN 3<<-EOF cat", "\tFROM debian:99\n\tEOF"),
+        ("RUN <<A cat && <<B cat", "FROM debian:99\nA\nFROM ubuntu:99\nB"),
+    ],
+)
+def test_extract_ignores_from_statements_in_dockerfile_heredocs(instruction, body):
+    dockerfile = f"FROM alpine:3.20\n{instruction}\n{body}\n"
+    assert extract("Dockerfile", dockerfile) == [("base-image", "alpine:3.20")]
+
+
+def test_review_reports_real_base_image_changes_after_heredocs():
+    dockerfile = (
+        "FROM alpine:{version} AS runtime\n"
+        'RUN echo "<<NOT_A_HEREDOC"\n'
+        "FROM runtime AS final\n"
+        "COPY <<EOF /example.txt\nFROM debian:99\nEOF\n"
+    )
+    files = {
+        OLD: {"Dockerfile": dockerfile.format(version="3.19")},
+        NEW: {"Dockerfile": dockerfile.format(version="3.20")},
+    }
+    out = learn("acme/shop", 12, load_rules(None), fetch=lambda url: fake(url, files=files))
+    assert [(c["predicate"], c["old"], c["new"]) for c in out["changed"]] == [
+        ("base-image", "alpine:3.19", "alpine:3.20")
+    ]
+    assert out["blocked"] and not out["fixed"]["blocked"]
+
+
 def test_docker_stage_inheriting_a_build_argument_stays_unknown():
     dockerfile = "ARG BASE=alpine\nFROM ${BASE} AS base\nFROM base AS final\n"
     assert extract("Dockerfile", dockerfile) == []
