@@ -229,6 +229,31 @@ def test_review_reads_the_literal_base_through_named_docker_stages():
     assert out["blocked"] and not out["fixed"]["blocked"]
 
 
+@pytest.mark.parametrize("escape", ["\\", "`"])
+def test_review_reads_multiline_docker_stage_bases(escape):
+    directive = f"# syntax=docker/dockerfile:1\n# escape={escape}\n" if escape == "`" else ""
+
+    def dockerfile(version):
+        return (
+            f"{directive}FROM --platform=$BUILDPLATFORM {escape}\n"
+            f"    # Pinned version for the final stage\n    alpine:{version} AS {escape}\n"
+            f"    base\nFROM {escape}\n    base AS final\n"
+            f"RUN echo {escape}\n    FROM not-an-instruction:1\n"
+        )
+
+    files = {OLD: {"Dockerfile": dockerfile("3.19")}, NEW: {"Dockerfile": dockerfile("3.20")}}
+    out = learn("acme/shop", 12, load_rules(None), fetch=lambda url: fake(url, files=files))
+    assert [(c["predicate"], c["old"], c["new"]) for c in out["changed"]] == [
+        ("base-image", "alpine:3.19", "alpine:3.20")
+    ]
+    assert out["blocked"] and not out["fixed"]["blocked"]
+
+
+def test_extract_reads_a_continued_docker_stage_at_end_of_file():
+    dockerfile = "FROM alpine:3.19 AS build\nFROM alpine:3.20 \\\n"
+    assert extract("Dockerfile", dockerfile) == [("base-image", "alpine:3.20")]
+
+
 def test_docker_stage_inheriting_a_build_argument_stays_unknown():
     dockerfile = "ARG BASE=alpine\nFROM ${BASE} AS base\nFROM base AS final\n"
     assert extract("Dockerfile", dockerfile) == []
